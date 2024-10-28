@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\NavBarController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\TopMenuController;
 // use Illuminate\Http\Request;
@@ -104,10 +105,21 @@ Route::delete('delete/{id}', [PackageController::class, 'destroydatas']);
 Route::delete('/delete-clients/{ids}', [PackageController::class, 'destroy_all_data']);
 
 
-/** top menu api routes */
+/** top menu api routes by ns*/
+
 Route::get('/menu', [TopMenuController::class, 'index']);
 Route::post('/store', [TopMenuController::class, 'store']);
-Route::get('/menuedit/{id}', [TopMenuController::class, 'edit']);
+Route::get('/menu-edit/{id}', [TopMenuController::class, 'edit']);
 Route::post('/update/{id}', [TopMenuController::class, 'updateMenu']);
 Route::get('/show/{id}', [TopMenuController::class, 'show']);
 Route::delete('/delete/{id}', [TopMenuController::class, 'destroy']);
+
+
+/** Nav bar api routes by ns */
+
+Route::get('/navbar', [NavBarController::class, 'index']);
+Route::post('/store', [NavBarController::class, 'store']);
+Route::get('/show/{id}', [NavBarController::class, 'show']);
+Route::get('/navbar-edit/{id}', [NavBarController::class, 'edit']);
+Route::post('/update/{id}', [NavBarController::class, 'updateNavbar']);
+Route::delete('/delete/{id}', [NavBarController::class, 'destroy']);
