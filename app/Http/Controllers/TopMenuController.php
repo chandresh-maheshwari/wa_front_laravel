@@ -10,8 +10,7 @@ class TopMenuController extends Controller
 
     public function index()
     {
-        $menu = TopMenu::all();
-
+        $menu = TopMenu::where('deleted_at', 0)->get(); 
         // return json format
         return response()->json([
             'results' => $menu,
@@ -61,7 +60,7 @@ class TopMenuController extends Controller
 
     public function show($id)
     {
-        $menu = TopMenu::find($id);
+        $menu = TopMenu::where('id', $id)->where('deleted_at', 0)->first();
         if (!$menu) {
             return response()->json([
                 'status' => 0,
@@ -106,21 +105,26 @@ class TopMenuController extends Controller
         // }
 
         // Handling the site logo image
-        $file1 = $request->file('site_logo_img');
-        $imageName1 = date('ymdhis') . rand(1000, 100000) . '.png';
-        $file1->move(public_path('/images/topmenu'), $imageName1);
+        if ($request->hasFile('site_logo_img')) {
+            $file1 = $request->file('site_logo_img');
+            $imageName1 = date('ymdhis') . rand(1000, 100000) . '.png';
+            $file1->move(public_path('/images/topmenu'), $imageName1);
+            $menu->site_logo_img = url('/images/topmenu/' . $imageName1);
+        }
 
-        // Handling the mts logo image
-        $file2 = $request->file('mts_logo_img');
-        $imageName2 = date('ymdhis') . rand(1000, 100000) . '.png';
-        $file2->move(public_path('/images/topmenu'), $imageName2);
+        if ($request->hasFile('mts_logo_img')) {
+            $file2 = $request->file('mts_logo_img');
+            $imageName2 = date('ymdhis') . rand(1000, 100000) . '.png';
+            $file2->move(public_path('/images/topmenu'), $imageName2);
+            $menu->mts_logo_img = url('/images/topmenu/' . $imageName2);
+        }
 
-        // Get the base URL
-        $baseUrl = url('/');
+        // // Get the base URL
+        // $baseUrl = url('/');
 
-        // Update the menu with the full URLs
-        $menu->site_logo_img = $baseUrl . '/images/topmenu/' . $imageName1;
-        $menu->mts_logo_img = $baseUrl . '/images/topmenu/' . $imageName2;
+        // // Update the menu with the full URLs
+        // $menu->site_logo_img = $baseUrl . '/images/topmenu/' . $imageName1;
+        // $menu->mts_logo_img = $baseUrl . '/images/topmenu/' . $imageName2;
         $menu->site_logo_img_link = $request->site_logo_img_link;
         $menu->mts_logo_img_link = $request->mts_logo_img_link;
         $menu->mts_group_text1 = $request->mts_group_text1;
@@ -132,6 +136,23 @@ class TopMenuController extends Controller
             'status' => 1,
             'message' => 'Top Menu updated successfully',
         ], 200);
+    }
+
+    public function active(Request $request, $id)
+    { {
+            $status = TopMenu::find($id);
+
+            if (!$status) {
+                return response()->json(['error' => 'Record not found'], 404);
+            }
+
+            $status->active = $status->active ? 0 : 1;
+            $status->save();
+
+            return response()->json([
+                'status' => $status->active,
+            ]);
+        }
     }
 
     public function destroy(Request $request, $id)
@@ -151,21 +172,21 @@ class TopMenuController extends Controller
         // } else {
         //     return response()->json(['status' => 'error', 'message' => 'No matching Top Menu found for deletion', 'code' => 404]);
         // }
+
         $deletemenu = TopMenu::find($request->id);
-        // dd($deletemenu);
         if ($deletemenu) {
             $deletemenu->deleted_at = 1;
             if ($deletemenu->save()) {
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Top Menu deleted successfully',
-
-                ],200);
+                ], 200);
             }
         }
+
         return response()->json([
             'status' => 'error',
             'message' => 'No matching Top Menu found for deletion',
-        ],404);
+        ], 404);
     }
 }
