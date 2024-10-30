@@ -10,8 +10,7 @@ class NavBarController extends Controller
 
     public function index()
     {
-        $navbar = NavBar::all();
-
+        $navbar = NavBar::where('deleted_at', 0)->get(); 
         return response()->json([
             'results' => $navbar,
         ], 200);
