@@ -14,7 +14,7 @@ class ProducerReceiverController extends Controller
         if ($producerReceiverData->isNotEmpty()) {
             return response()->json([
                 'status' => 1,
-                'message' => 'Producer & Receiver added successfully',
+                'message' => 'Producer & Receiver fetch successfully',
                 'results' => $producerReceiverData,
             ], 200);
         } else {
