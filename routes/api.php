@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\PackageController;
+use App\Http\Controllers\ProducerReceiverController;
 use App\Http\Controllers\TopMenuController;
 // use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -111,3 +112,12 @@ Route::get('/menuedit/{id}', [TopMenuController::class, 'edit']);
 Route::post('/update/{id}', [TopMenuController::class, 'updateMenu']);
 Route::get('/show/{id}', [TopMenuController::class, 'show']);
 Route::delete('/delete/{id}', [TopMenuController::class, 'destroy']);
+
+/** Producer & Receiver apis routes by ns */
+
+Route::get('/producer-receiver-list', [ProducerReceiverController::class, 'index']);
+Route::post('/producer-receiver-store', [ProducerReceiverController::class, 'store']);
+Route::get('/producer-receiver-show/{id}', [ProducerReceiverController::class, 'show']);
+Route::get('/producer-receiver-edit/{id}', [ProducerReceiverController::class, 'edit']);
+Route::post('/producer-receiver-update/{id}', [ProducerReceiverController::class, 'update']);
+Route::delete('/producer-receiver-delete/{id}', [ProducerReceiverController::class, 'destroy']);
