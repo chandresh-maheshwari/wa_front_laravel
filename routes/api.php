@@ -11,6 +11,7 @@ use App\Http\Controllers\NavBarController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\ProducerReceiverController;
+use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\TopMenuController;
 // use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -147,3 +148,11 @@ Route::get('/producer-receiver-show/{id}', [ProducerReceiverController::class, '
 Route::get('/producer-receiver-edit/{id}', [ProducerReceiverController::class, 'edit']);
 Route::post('/producer-receiver-update/{id}', [ProducerReceiverController::class, 'update']);
 Route::delete('/producer-receiver-delete/{id}', [ProducerReceiverController::class, 'destroy']);
+
+/** Quote section api routes by ns */
+Route::get('/quote-section-list', [QuoteController::class, 'index']);
+Route::post('/quote-store', [QuoteController::class, 'store']);
+Route::get('/quote-show/{id}', [QuoteController::class, 'show']);
+Route::get('/quote-edit/{id}', [QuoteController::class, 'edit']);
+Route::post('/quote-update/{id}', [QuoteController::class, 'updateQuoteSection']);
+Route::delete('/quote-delete/{id}', [QuoteController::class, 'destroy']);
