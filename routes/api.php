@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\PackageController;
+use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\TopMenuController;
 // use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -111,3 +112,12 @@ Route::get('/menuedit/{id}', [TopMenuController::class, 'edit']);
 Route::post('/update/{id}', [TopMenuController::class, 'updateMenu']);
 Route::get('/show/{id}', [TopMenuController::class, 'show']);
 Route::delete('/delete/{id}', [TopMenuController::class, 'destroy']);
+
+
+/** Quote section api routes by ns */
+Route::get('/quote-section-list', [QuoteController::class, 'index']);
+Route::post('/quote-store', [QuoteController::class, 'store']);
+Route::get('/quote-show/{id}', [QuoteController::class, 'show']);
+Route::get('/quote-edit/{id}', [QuoteController::class, 'edit']);
+Route::post('/quote-update/{id}', [QuoteController::class, 'updateQuoteSection']);
+Route::delete('/quote-delete/{id}', [QuoteController::class, 'destroy']);
