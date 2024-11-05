@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\NavBarController;
+use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\TopMenuController;
 // use Illuminate\Http\Request;
@@ -112,7 +113,7 @@ Route::post('/store', [TopMenuController::class, 'store']);
 Route::get('/menu-edit/{id}', [TopMenuController::class, 'edit']);
 Route::post('/update/{id}', [TopMenuController::class, 'updateMenu']);
 Route::get('/show/{id}', [TopMenuController::class, 'show']);
-Route::delete('/delete/{id}', [TopMenuController::class, 'destroy']);
+// Route::delete('/delete/{id}', [TopMenuController::class, 'destroy']);
 
 
 /** Nav bar api routes by ns */
@@ -123,3 +124,15 @@ Route::get('/show/{id}', [NavBarController::class, 'show']);
 Route::get('/navbar-edit/{id}', [NavBarController::class, 'edit']);
 Route::post('/update/{id}', [NavBarController::class, 'updateNavbar']);
 Route::delete('/delete/{id}', [NavBarController::class, 'destroy']);
+Route::delete('/top-menu-delete/{id}', [TopMenuController::class, 'destroy']);
+Route::post('/top-menu-active/{id}', [TopMenuController::class, 'active']);
+
+
+/** Home Page api routes by ns */
+
+Route::get('/home-page', [HomePageController::class, 'index']);
+Route::post('/store', [HomePageController::class, 'store']);
+Route::get('/home-page-edit/{id}', [HomePageController::class, 'edit']);
+Route::post('/home-update/{id}', [HomePageController::class, 'update']);
+Route::get('/home-page-show/{id}', [HomePageController::class, 'show']);
+Route::delete('/home-page-delete/{id}', [HomePageController::class, 'destroy']);

@@ -5,19 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class TopMenu extends Model
+class HomePage extends Model
 {
     use HasFactory;
-    protected $table = 'top_menu';
+    protected $table = 'home_page';
 
     protected $fillable = [
-        'site_logo_img',
-        'mts_logo_img',
-        'site_logo_img_link',
-        'mts_logo_img_link',
-        'mts_group_text1',
-        'mts_group_text2',
-        'active',
+        'home_section_img',
+        'home_section_title',
+        'home_section_description',
+        'home_section_button_name',
+        'home_section_button_name_link',
         'deleted_at',
         'created_at',
         'updated_at'
