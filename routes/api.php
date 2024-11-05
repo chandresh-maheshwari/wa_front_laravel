@@ -10,6 +10,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\NavBarController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\PackageController;
+use App\Http\Controllers\ProducerReceiverController;
 use App\Http\Controllers\TopMenuController;
 // use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -136,3 +137,13 @@ Route::get('/home-page-edit/{id}', [HomePageController::class, 'edit']);
 Route::post('/home-update/{id}', [HomePageController::class, 'update']);
 Route::get('/home-page-show/{id}', [HomePageController::class, 'show']);
 Route::delete('/home-page-delete/{id}', [HomePageController::class, 'destroy']);
+Route::delete('/delete/{id}', [TopMenuController::class, 'destroy']);
+
+/** Producer & Receiver apis routes by ns */
+
+Route::get('/producer-receiver-list', [ProducerReceiverController::class, 'index']);
+Route::post('/producer-receiver-store', [ProducerReceiverController::class, 'store']);
+Route::get('/producer-receiver-show/{id}', [ProducerReceiverController::class, 'show']);
+Route::get('/producer-receiver-edit/{id}', [ProducerReceiverController::class, 'edit']);
+Route::post('/producer-receiver-update/{id}', [ProducerReceiverController::class, 'update']);
+Route::delete('/producer-receiver-delete/{id}', [ProducerReceiverController::class, 'destroy']);
