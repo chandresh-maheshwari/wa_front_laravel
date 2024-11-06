@@ -7,12 +7,20 @@ use Illuminate\Http\Request;
 
 class TopMenuController extends Controller
 {
-
     public function index()
     {
-        $menu = TopMenu::where('deleted_at', 0)->get(); 
-        // return json format
+        $menu = TopMenu::where('deleted_at', 0)->get();
+        if (!$menu) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '404',
+                'message' => 'Top Menu Data Not Found',
+            ], 404);
+        }
         return response()->json([
+            'status' => 'Success',
+            'code' => '200',
+            'message' => 'Top Menu Data Fetch Successfully',
             'results' => $menu,
         ], 200);
     }
@@ -45,12 +53,14 @@ class TopMenuController extends Controller
 
         if ($menu->save() == true) {
             return response()->json([
-                'status' => 1,
-                'message' => 'Top Menu added successfully',
+                'status' => 'Success',
+                'code' => '200',
+                'message' => 'Top Menu Added Successfully',
             ], 200);
         } else {
             return response()->json([
-                'status' => 0,
+                'status' => 'Error',
+                'code' => '404',
                 'message' => 'Something went wrong'
             ], 404);
         }
@@ -61,85 +71,79 @@ class TopMenuController extends Controller
         $menu = TopMenu::where('id', $id)->where('deleted_at', 0)->first();
         if (!$menu) {
             return response()->json([
-                'status' => 0,
-                'message' => 'Not Found',
+                'status' => 'Error',
+                'code' => '404',
+                'message' => 'Top Menu Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 1,
+            'status' => 'Success',
+            'code' => '200',
+            'message' => 'Top Menu Data Fetch Successfully',
             'results' => $menu,
         ], 200);
     }
 
     public function edit($id)
     {
-        $data = TopMenu::findOrFail($id);
-        return response()->json($data);
+        $data = TopMenu::where('deleted_at', 0)->findOrFail($id);
+        if (!$data) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '404',
+                'message' => 'Top Menu Data Not Found',
+            ], 404);
+        }
+        return response()->json([
+            'status' => 'Success',
+            'message' => 'Top Menu Data Fetch Successfully',
+            'results' => $data,
+        ], 200);
     }
 
     public function updateMenu(Request $request, $id)
     {
         $menu = TopMenu::find($request->id);
 
-        // if ($request->hasFile('site_logo_img')) {
-        //     $siteImage = $request->file('site_logo_img');
-        //     // Log file information for debugging
-        //     \info('Uploaded File Name: ' . $siteImage->getClientOriginalName());
-        //     \info('Uploaded File Size: ' . $siteImage->getSize());
-        //     \info('Uploaded File MIME Type: ' . $siteImage->getMimeType());
-        //     $siteImageUpdate = time() . '.' . $siteImage->getClientOriginalExtension();
-        //     $siteImage->move(public_path('images/topmenu'), $siteImageUpdate);
-        //     $menu->site_logo_img = $siteImageUpdate;
-        // }
-        // if ($request->hasFile('site_logo_img')) {
-        //     $mtsImage = $request->file('site_logo_img');
-        //     // Log file information for debugging
-        //     \info('Uploaded File Name: ' . $mtsImage->getClientOriginalName());
-        //     \info('Uploaded File Size: ' . $mtsImage->getSize());
-        //     \info('Uploaded File MIME Type: ' . $mtsImage->getMimeType());
-        //     $mtsImageUpdate = time() . '.' . $mtsImage->getClientOriginalExtension();
-        //     $mtsImage->move(public_path('images/topmenu'), $mtsImageUpdate);
-        //     $menu->mts_logo_img = $mtsImageUpdate;
-        // }
-
-        // Handling the site logo image
         if ($request->hasFile('site_logo_img')) {
             $file1 = $request->file('site_logo_img');
             $imageName1 = date('ymdhis') . rand(1000, 100000) . '.png';
             $file1->move(public_path('/images/topmenu'), $imageName1);
+
             $menu->site_logo_img = url('/images/topmenu/' . $imageName1);
         }
-
         if ($request->hasFile('mts_logo_img')) {
             $file2 = $request->file('mts_logo_img');
             $imageName2 = date('ymdhis') . rand(1000, 100000) . '.png';
             $file2->move(public_path('/images/topmenu'), $imageName2);
+
             $menu->mts_logo_img = url('/images/topmenu/' . $imageName2);
         }
-
-        // // Get the base URL
-        // $baseUrl = url('/');
-
-        // // Update the menu with the full URLs
-        // $menu->site_logo_img = $baseUrl . '/images/topmenu/' . $imageName1;
-        // $menu->mts_logo_img = $baseUrl . '/images/topmenu/' . $imageName2;
         $menu->site_logo_img_link = $request->site_logo_img_link;
         $menu->mts_logo_img_link = $request->mts_logo_img_link;
         $menu->mts_group_text1 = $request->mts_group_text1;
         $menu->mts_group_text2 = $request->mts_group_text2;
         $menu->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
+        if (!$menu) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '404',
+                'message' => 'Top Menu Data Not Found',
+            ], 404);
+        }
+        
         $menu->update();
-
         return response()->json([
-            'status' => 1,
-            'message' => 'Top Menu updated successfully',
+            'status' => 'Success',
+            'code' => '200',
+            'message' => 'Top Menu Updated Successfully',
         ], 200);
+        
     }
 
     public function active(Request $request, $id)
     { {
             $status = TopMenu::find($id);
-
             if (!$status) {
                 return response()->json(['error' => 'Record not found'], 404);
             }
@@ -147,44 +151,32 @@ class TopMenuController extends Controller
             $status->active = $status->active ? 0 : 1;
             $status->save();
 
+            $message = $status->active ? 'Activated Successfully' : 'Deactivated Successfully';
+
             return response()->json([
                 'status' => $status->active,
+                'message' => $message,
             ]);
         }
     }
 
     public function destroy(Request $request, $id)
     {
-
-        // if (empty($id)) {
-        //     return response()->json(['status' => 'error', 'message' => 'No ID provided for deletion', 'code' => 400]);
-        // }
-
-        // $idArray = explode(',', $id);
-
-        // // Perform soft delete
-        // $deletedRows = TopMenu::whereIn('id', $idArray)->delete();
-
-        // if ($deletedRows > 0) {
-        //     return response()->json(['status' => 'success', 'message' => 'Top Menu deleted successfully', 'code' => 200]);
-        // } else {
-        //     return response()->json(['status' => 'error', 'message' => 'No matching Top Menu found for deletion', 'code' => 404]);
-        // }
-
         $deletemenu = TopMenu::find($request->id);
         if ($deletemenu) {
             $deletemenu->deleted_at = 1;
             if ($deletemenu->save()) {
                 return response()->json([
-                    'status' => 'success',
-                    'message' => 'Top Menu deleted successfully',
+                    'status' => 'Success',
+                    'code' => '200',
+                    'message' => 'Top Menu Data Deleted Successfully',
                 ], 200);
             }
         }
-
         return response()->json([
-            'status' => 'error',
-            'message' => 'No matching Top Menu found for deletion',
+            'status' => 'Error',
+            'code' => '404',
+            'message' => 'No Matching Top Menu Found For Deletion',
         ], 404);
     }
 }

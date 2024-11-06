@@ -11,9 +11,17 @@ class QuoteController extends Controller
     public function index()
     {
         $quoteSection = Quote::where('deleted_at', 0)->get();
-
-        // return json format
+        if (!$quoteSection) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '404',
+                'message' => 'Quote Section Data Not Found',
+            ], 404);
+        }
         return response()->json([
+            'status' => 'Success',
+            'code' => '200',
+            'message' => 'Quote Section Data Fetch Successfully',
             'results' => $quoteSection,
         ], 200);
     }
@@ -35,12 +43,14 @@ class QuoteController extends Controller
 
         if ($quoteSection->save() == true) {
             return response()->json([
-                'status' => 1,
-                'message' => 'Quote Section added successfully',
+                'status' => 'Success',
+                'code' => '200',
+                'message' => 'Quote Section Added Successfully',
             ], 200);
         } else {
             return response()->json([
-                'status' => 0,
+                'status' => 'Error',
+                'code' => '404',
                 'message' => 'Something went wrong'
             ], 404);
         }
@@ -48,67 +58,84 @@ class QuoteController extends Controller
 
     public function show($id)
     {
-        $quoteSection = Quote::find($id);
+        $quoteSection = Quote::where('id', $id)->where('deleted_at', 0)->first();
         if (!$quoteSection) {
             return response()->json([
-                'status' => 0,
-                'message' => 'Not Found',
+                'status' => 'Error',
+                'code' => '404',
+                'message' => 'Quote Section Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 1,
+            'status' => 'Success',
+            'code' => '200',
+            'message' => 'Quote Section Data Fetch Successfully',
             'results' => $quoteSection,
         ], 200);
     }
 
     public function edit($id)
     {
-        $data = Quote::findOrFail($id);
+        $data = Quote::where('deleted_at', 0)->findOrFail($id);
         if (!$data) {
             return response()->json([
-                'status' => 0,
-                'message' => 'Not Found',
+                'status' => 'Error',
+                'code' => '404',
+                'message' => 'Quote Section Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 1,
-            'message' => 'Quote section data fetch successfully',
+            'status' => 'Success',
+            'code' => '200',
+            'message' => 'Quote section Data Fetch Successfully',
             'results' => $data,
         ], 200);
     }
 
-    public function updateQuoteSection(Request $request ,$id)
+    public function updateQuoteSection(Request $request, $id)
     {
         $quoteSection = Quote::find($request->id);
         $quoteSection->title = $request->title;
         $quoteSection->designation = $request->designation;
         $quoteSection->company_name = $request->company_name;
         $quoteSection->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
-        $quoteSection->update();
 
+        if (!$quoteSection) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '404',
+                'message' => 'Quote Section Data Not Found',
+
+            ], 404);
+        }
+
+        $quoteSection->update();
         return response()->json([
-            'status' => 1,
-            'message' => 'Quote Section updated successfully',
+            'status' => 'Success',
+            'code' => '200',
+            'message' => 'Quote Section Data Updated Successfully',
         ], 200);
     }
 
     public function destroy(Request $request, $id)
     {
         $deletequote = Quote::find($request->id);
-        // dd($deletemenu);
+
         if ($deletequote) {
             $deletequote->deleted_at = 1;
             if ($deletequote->save()) {
                 return response()->json([
-                    'status' => 'success',
-                    'message' => 'Quote Section deleted successfully',
+                    'status' => 'Success',
+                    'code' => '200',
+                    'message' => 'Quote Section Data Deleted Successfully',
 
-                ],200);
+                ], 200);
             }
         }
         return response()->json([
-            'status' => 'error',
-            'message' => 'No matching Quote Section found for deletion',
-        ],404);
+            'status' => 'Error',
+            'code' => '404',
+            'message' => 'No Matching Quote Section Found For Deletion',
+        ], 404);
     }
 }

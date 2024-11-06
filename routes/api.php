@@ -110,35 +110,33 @@ Route::delete('/delete-clients/{ids}', [PackageController::class, 'destroy_all_d
 
 /** top menu api routes by ns*/
 
-Route::get('/menu', [TopMenuController::class, 'index']);
-Route::post('/store', [TopMenuController::class, 'store']);
-Route::get('/menu-edit/{id}', [TopMenuController::class, 'edit']);
-Route::post('/update/{id}', [TopMenuController::class, 'updateMenu']);
-Route::get('/show/{id}', [TopMenuController::class, 'show']);
-// Route::delete('/delete/{id}', [TopMenuController::class, 'destroy']);
+Route::get('/top-menu', [TopMenuController::class, 'index']);
+Route::post('/top-menu-store', [TopMenuController::class, 'store']);
+Route::get('/top-menu-edit/{id}', [TopMenuController::class, 'edit']);
+Route::post('/top-menu-update/{id}', [TopMenuController::class, 'updateMenu']);
+Route::get('/top-menu-show/{id}', [TopMenuController::class, 'show']);
+Route::delete('/top-menu-delete/{id}', [TopMenuController::class, 'destroy']);
+Route::post('/top-menu-active/{id}', [TopMenuController::class, 'active']);
 
 
 /** Nav bar api routes by ns */
 
 Route::get('/navbar', [NavBarController::class, 'index']);
-Route::post('/store', [NavBarController::class, 'store']);
-Route::get('/show/{id}', [NavBarController::class, 'show']);
+Route::post('/navbar-store', [NavBarController::class, 'store']);
+Route::get('/narbar-show/{id}', [NavBarController::class, 'show']);
 Route::get('/navbar-edit/{id}', [NavBarController::class, 'edit']);
-Route::post('/update/{id}', [NavBarController::class, 'updateNavbar']);
-Route::delete('/delete/{id}', [NavBarController::class, 'destroy']);
-Route::delete('/top-menu-delete/{id}', [TopMenuController::class, 'destroy']);
-Route::post('/top-menu-active/{id}', [TopMenuController::class, 'active']);
+Route::post('/navbar-update/{id}', [NavBarController::class, 'updateNavbar']);
+Route::delete('/navbar-delete/{id}', [NavBarController::class, 'destroy']);
 
 
 /** Home Page api routes by ns */
 
 Route::get('/home-page', [HomePageController::class, 'index']);
-Route::post('/store', [HomePageController::class, 'store']);
+Route::post('/home-page-store', [HomePageController::class, 'store']);
 Route::get('/home-page-edit/{id}', [HomePageController::class, 'edit']);
-Route::post('/home-update/{id}', [HomePageController::class, 'update']);
+Route::post('/home-page-update/{id}', [HomePageController::class, 'updateHomePage']);
 Route::get('/home-page-show/{id}', [HomePageController::class, 'show']);
 Route::delete('/home-page-delete/{id}', [HomePageController::class, 'destroy']);
-Route::delete('/delete/{id}', [TopMenuController::class, 'destroy']);
 
 /** Producer & Receiver apis routes by ns */
 
@@ -150,6 +148,7 @@ Route::post('/producer-receiver-update/{id}', [ProducerReceiverController::class
 Route::delete('/producer-receiver-delete/{id}', [ProducerReceiverController::class, 'destroy']);
 
 /** Quote section api routes by ns */
+
 Route::get('/quote-section-list', [QuoteController::class, 'index']);
 Route::post('/quote-store', [QuoteController::class, 'store']);
 Route::get('/quote-show/{id}', [QuoteController::class, 'show']);

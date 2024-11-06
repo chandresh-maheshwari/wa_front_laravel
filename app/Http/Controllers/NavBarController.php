@@ -10,13 +10,24 @@ class NavBarController extends Controller
 
     public function index()
     {
-        $navbar = NavBar::where('deleted_at', 0)->get(); 
+        $navbar = NavBar::where('deleted_at', 0)->get();
+        if (!$navbar) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '404',
+                'message' => 'Nav Bar Data Not Found',
+            ], 404);
+        }
         return response()->json([
+            'status' => 'Success',
+            'code' => '200',
+            'message' => 'Nav Bar Data Fetch Successfully',
             'results' => $navbar,
         ], 200);
     }
     public function store(Request $request)
     {
+
         $this->validate($request, [
             'nav_menu_name' => 'required',
             'nav_menu_link' => 'required',
@@ -36,12 +47,14 @@ class NavBarController extends Controller
 
         if ($navbar->save() == true) {
             return response()->json([
-                'status' => 1,
-                'message' => 'Navbar added successfully',
+                'status' => 'Success',
+                'code' => '200',
+                'message' => 'Nav Bar Added Successfully',
             ], 200);
         } else {
             return response()->json([
-                'status' => 0,
+                'status' => 'Error',
+                'code' => '404',
                 'message' => 'Something went wrong'
             ], 404);
         }
@@ -49,23 +62,38 @@ class NavBarController extends Controller
 
     public function show($id)
     {
-        $navbar = NavBar::find($id);
+        $navbar = NavBar::where('id', $id)->where('deleted_at', 0)->first();
         if (!$navbar) {
             return response()->json([
-                'status' => 0,
-                'message' => 'Navbar Not Found',
+                'status' => 'Error',
+                'code' => '404',
+                'message' => 'Nav Bar Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 1,
+            'status' => 'Success',
+            'code' => '200',
+            'message' => 'Nav Bar Data Fetch Successfully',
             'results' => $navbar,
         ], 200);
     }
 
     public function edit($id)
     {
-        $data = NavBar::findOrFail($id);
-        return response()->json($data);
+        $data = NavBar::where('deleted_at', 0)->findOrFail($id);
+        if (!$data) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '404',
+                'message' => 'Nav Bar Data Not Found',
+            ], 404);
+        }
+        return response()->json([
+            'status' => 'Success',
+            'code' => '200',
+            'message' => 'Nav Bar Data Fetch Successfully',
+            'results' => $data,
+        ], 200);
     }
 
     public function updateNavbar(Request $request, $id)
@@ -80,11 +108,19 @@ class NavBarController extends Controller
             $navbar->menu_ordering = $request['menu_ordering'];
         }
         $navbar->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
+        if (!$navbar) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '404',
+                'message' => 'Nav Bar Data Not Found',
+            ], 404);
+        }
+        
         $navbar->update();
-
         return response()->json([
-            'status' => 1,
-            'message' => 'Nav Bar updated successfully',
+            'status' => 'Success',
+            'code' => '200',
+            'message' => 'Nav Bar Updated Successfully',
         ], 200);
     }
     public function destroy(Request $request, $id)
@@ -94,15 +130,17 @@ class NavBarController extends Controller
             $deletenavbar->deleted_at = 1;
             if ($deletenavbar->save()) {
                 return response()->json([
-                    'status' => 'success',
-                    'message' => 'Nav Bar deleted successfully',
+                    'status' => 'Success',
+                    'code' => '200',
+                    'message' => 'Nav Bar Data Deleted Successfully',
 
                 ], 200);
             }
         }
         return response()->json([
-            'status' => 'error',
-            'message' => 'No matching Nav Bar found for deletion',
+            'status' => 'Error',
+            'code' => '404',
+            'message' => 'No Matching Nav Bar Found For Deletion',
         ], 404);
     }
 }
