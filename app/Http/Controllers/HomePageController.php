@@ -102,12 +102,14 @@ class HomePageController extends Controller
     public function updateHomePage(Request $request, $id)
     {
         $homePage = HomePage::find($request->id);
+        
         if ($request->hasFile('home_section_img')) {
             $file1 = $request->file('home_section_img');
+            $originalName = $file1->getClientOriginalName();
             $imageName1 = date('ymdhis') . rand(1000, 100000) . '.png';
             $file1->move(public_path('/images/homePage'), $imageName1);
-
             $homePage->home_section_img = url('/images/homePage/' . $imageName1);
+            $homePage->home_section_img = url('/images/homePage/' . $originalName);
         }
 
         $homePage->home_section_title = $request->home_section_title;

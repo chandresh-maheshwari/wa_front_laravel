@@ -105,13 +105,13 @@ class ProducerReceiverController extends Controller
     public function update(Request $request, $id)
     {
         $producerReceiver = ProducerReceiver::find($request->id);
-
         if ($request->hasFile('section_image')) {
             $file1 = $request->file('section_image');
+            $originalName = $file1->getClientOriginalName();
             $imageName1 = date('ymdhis') . rand(1000, 100000) . '.png';
             $file1->move(public_path('/images/sectionProducerReceiver'), $imageName1);
-
             $producerReceiver->section_image = url('/images/sectionProducerReceiver/' . $imageName1);
+            $producerReceiver->section_image = url('/images/sectionProducerReceiver/' . $originalName);
         }
 
         $producerReceiver->section_title = $request->section_title;

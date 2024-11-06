@@ -107,17 +107,20 @@ class TopMenuController extends Controller
 
         if ($request->hasFile('site_logo_img')) {
             $file1 = $request->file('site_logo_img');
+            $originalName = $file1->getClientOriginalName();
             $imageName1 = date('ymdhis') . rand(1000, 100000) . '.png';
             $file1->move(public_path('/images/topmenu'), $imageName1);
-
             $menu->site_logo_img = url('/images/topmenu/' . $imageName1);
+            $menu->site_logo_img = url('/images/topmenu/' . $originalName);
         }
+
         if ($request->hasFile('mts_logo_img')) {
             $file2 = $request->file('mts_logo_img');
+            $originalName1 = $file1->getClientOriginalName();
             $imageName2 = date('ymdhis') . rand(1000, 100000) . '.png';
             $file2->move(public_path('/images/topmenu'), $imageName2);
-
             $menu->mts_logo_img = url('/images/topmenu/' . $imageName2);
+            $menu->mts_logo_img = url('/images/topmenu/' . $originalName1);
         }
         $menu->site_logo_img_link = $request->site_logo_img_link;
         $menu->mts_logo_img_link = $request->mts_logo_img_link;
