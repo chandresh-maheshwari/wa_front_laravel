@@ -84,9 +84,9 @@ class TopMenuController extends Controller
         ], 200);
     }
 
-    public function edit($id)
+    public function edit()
     {
-        $data = TopMenu::where('deleted_at', 0)->findOrFail($id);
+        $data = TopMenu::where('deleted_at', 0)->first();
         if (!$data) {
             return response()->json([
                 'status' => 'Error',
@@ -101,9 +101,9 @@ class TopMenuController extends Controller
         ], 200);
     }
 
-    public function updateMenu(Request $request, $id)
+    public function updateMenu(Request $request)
     {
-        $menu = TopMenu::find($request->id);
+        $menu = TopMenu::first();
 
         if ($request->hasFile('site_logo_img')) {
             $file1 = $request->file('site_logo_img');

@@ -23,14 +23,6 @@ class precontroller extends Controller
         }
     }
 
-    public function login(Request $req)
-    {
-        $device = User::where('email', $req->email)->first();
-        if (!$device || !Hash::check($req->password, $device->password)) {
-            return ["error-> email and password no match"];
-        }
-        return $device;
-    }
     
     
     public function userlist()

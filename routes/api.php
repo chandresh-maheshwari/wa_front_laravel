@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AuthController;
 // use App\Http\Controllers\precontroller;
 use App\Models\User;
@@ -31,23 +32,13 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Route::get('/users', function () {
-//     $users = User::get();
-//     return response()->json($users);
-// });
+Route::middleware('auth:api')->group(function () {
+    // Route::get('/quote/testing', [QuoteController::class, 'testing']);
+   });
 
-// Route::group([
-//     'prefix' => 'auth',
-// ], function ($router) {
-//     Route::post('/login', [UserAuthController::class, 'login']);
-//     Route::post('/logout', [UserAuthController::class, 'logout']);
-//     Route::post('/refresh', [UserAuthController::class, 'refresh']);
-// });
 
 Route::post("/add", [App\Http\Controllers\precontroller::class, 'add']);
 
-// login api
-Route::post("/login", [App\Http\Controllers\precontroller::class, 'login']);
 // Route::get("/userlist", [App\Http\Controllers\precontroller::class, 'userlist']);
 Route::post("/userstore", [App\Http\Controllers\precontroller::class, 'userstore']);
 // login api end
@@ -112,8 +103,8 @@ Route::delete('/delete-clients/{ids}', [PackageController::class, 'destroy_all_d
 
 Route::get('/top-menu', [TopMenuController::class, 'index']);
 Route::post('/top-menu-store', [TopMenuController::class, 'store']);
-Route::get('/top-menu-edit/{id}', [TopMenuController::class, 'edit']);
-Route::post('/top-menu-update/{id}', [TopMenuController::class, 'updateMenu']);
+Route::get('/top-menu-edit', [TopMenuController::class, 'edit']);
+Route::post('/top-menu-update', [TopMenuController::class, 'updateMenu']);
 Route::get('/top-menu-show/{id}', [TopMenuController::class, 'show']);
 Route::delete('/top-menu-delete/{id}', [TopMenuController::class, 'destroy']);
 Route::post('/top-menu-active/{id}', [TopMenuController::class, 'active']);
@@ -155,3 +146,11 @@ Route::get('/quote-show/{id}', [QuoteController::class, 'show']);
 Route::get('/quote-edit/{id}', [QuoteController::class, 'edit']);
 Route::post('/quote-update/{id}', [QuoteController::class, 'updateQuoteSection']);
 Route::delete('/quote-delete/{id}', [QuoteController::class, 'destroy']);
+
+
+/** Login api routes by ns */
+
+Route::post('/login', [LoginController::class, 'login']);
+Route::post('/logoutpage', [LoginController::class, 'logoutpage']);
+Route::post('/refresh', [LoginController::class, 'refresh']);
+

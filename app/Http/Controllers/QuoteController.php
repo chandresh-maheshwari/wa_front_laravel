@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Quote;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class QuoteController extends Controller
 {
@@ -138,4 +139,5 @@ class QuoteController extends Controller
             'message' => 'No Matching Quote Section Found For Deletion',
         ], 404);
     }
+
 }
