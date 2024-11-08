@@ -4,13 +4,26 @@ namespace App\Http\Controllers;
 
 use App\Models\TopMenu;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TopMenuController extends Controller
 {
+
     public function index()
     {
+
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'Authenticated user not found or incorrect',
+            ], 401);
+        }
+
+        $userId = $user->id;
         $menu = TopMenu::where('deleted_at', 0)->get();
-        if (!$menu) {
+        if ($menu->isEmpty()) {
             return response()->json([
                 'status' => 'Error',
                 'code' => '404',
@@ -27,6 +40,14 @@ class TopMenuController extends Controller
 
     public function store(Request $request)
     {
+        if (!Auth::check()) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+        $userId = Auth::user()->id;
         $this->validate($request, [
             'site_logo_img' => 'required|image|mimes:jpeg,png,jpg',
             'mts_logo_img' => 'required|image|mimes:jpeg,png,jpg',
@@ -51,6 +72,7 @@ class TopMenuController extends Controller
         $request->mts_logo_img->move(public_path('/images/topmenu'), $mtsImage);
 
         $menu = new TopMenu();
+        // $menu->user_id = $userId;
         $menu->site_logo_img = $siteImage;
         $menu->mts_logo_img = $mtsImage;
         $menu->site_logo_img_link = $request['site_logo_img_link'];
@@ -84,6 +106,7 @@ class TopMenuController extends Controller
 
     public function show($id)
     {
+
         $menu = TopMenu::where('id', $id)->where('deleted_at', 0)->first();
         if (!$menu) {
             return response()->json([
@@ -121,22 +144,25 @@ class TopMenuController extends Controller
     {
         $menu = TopMenu::first();
 
+        if (!$menu) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '404',
+                'message' => 'Top Menu Data Not Found',
+            ], 404);
+        }
         if ($request->hasFile('site_logo_img')) {
             $file1 = $request->file('site_logo_img');
-            $originalName = $file1->getClientOriginalName();
-            $imageName1 = date('ymdhis') . rand(1000, 100000) . '.png';
-            $file1->move(public_path('/images/topmenu'), $imageName1);
-            $menu->site_logo_img = url('/images/topmenu/' . $imageName1);
-            $menu->site_logo_img = url('/images/topmenu/' . $originalName);
+            $originalName1 = $file1->getClientOriginalName(); 
+            $file1->move(public_path('/images/topmenu'), $originalName1);
+            $menu->site_logo_img = url('/images/topmenu/' . $originalName1);
         }
-
+        
         if ($request->hasFile('mts_logo_img')) {
             $file2 = $request->file('mts_logo_img');
-            $originalName1 = $file1->getClientOriginalName();
-            $imageName2 = date('ymdhis') . rand(1000, 100000) . '.png';
-            $file2->move(public_path('/images/topmenu'), $imageName2);
-            $menu->mts_logo_img = url('/images/topmenu/' . $imageName2);
-            $menu->mts_logo_img = url('/images/topmenu/' . $originalName1);
+            $originalName2 = $file2->getClientOriginalName();
+            $file2->move(public_path('/images/topmenu'), $originalName2);
+            $menu->mts_logo_img = url('/images/topmenu/' . $originalName2);
         }
         $menu->site_logo_img_link = $request->site_logo_img_link;
         $menu->mts_logo_img_link = $request->mts_logo_img_link;
@@ -151,6 +177,7 @@ class TopMenuController extends Controller
         $menu->login_button_color_code = $request->login_button_color_code;
         $menu->login_button_hover_color_code = $request->login_button_hover_color_code;
         $menu->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
+
         if (!$menu) {
             return response()->json([
                 'status' => 'Error',
@@ -185,6 +212,7 @@ class TopMenuController extends Controller
             ]);
         }
     }
+
 
     public function destroy(Request $request, $id)
     {
