@@ -123,6 +123,28 @@ class NavBarController extends Controller
             'message' => 'Nav Bar Updated Successfully',
         ], 200);
     }
+    
+    /** Function used for the if status active or deactive by ns */
+
+    public function active(Request $request, $id)
+    { {
+            $status = NavBar::find($id);
+            if (!$status) {
+                return response()->json(['error' => 'Record not found'], 404);
+            }
+
+            $status->active = $status->active ? 0 : 1;
+            $status->save();
+
+            $message = $status->active ? 'Activated Successfully' : 'Deactivated Successfully';
+
+            return response()->json([
+                'status' => $status->active,
+                'message' => $message,
+            ]);
+        }
+    }
+
     public function destroy(Request $request, $id)
     {
         $deletenavbar = NavBar::find($request->id);

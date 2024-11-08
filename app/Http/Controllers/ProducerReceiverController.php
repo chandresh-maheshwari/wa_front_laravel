@@ -138,6 +138,24 @@ class ProducerReceiverController extends Controller
         ], 200);
     }
 
+    public function active($id)
+    { {
+            $status = ProducerReceiver::find($id);
+            if (!$status) {
+                return response()->json(['error' => 'Record not found'], 404);
+            }
+
+            $status->active = $status->active ? 0 : 1;
+            $status->save();
+
+            $message = $status->active ? 'Activated Successfully' : 'Deactivated Successfully';
+
+            return response()->json([
+                'status' => $status->active,
+                'message' => $message,
+            ]);
+        }
+    }
     public function destroy(Request $request, $id)
     {
         $deleteData = ProducerReceiver::find($request->id);

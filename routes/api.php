@@ -118,6 +118,7 @@ Route::get('/narbar-show/{id}', [NavBarController::class, 'show']);
 Route::get('/navbar-edit/{id}', [NavBarController::class, 'edit']);
 Route::post('/navbar-update/{id}', [NavBarController::class, 'updateNavbar']);
 Route::delete('/navbar-delete/{id}', [NavBarController::class, 'destroy']);
+Route::post('/navbar-active/{id}', [NavBarController::class, 'active']);
 
 
 /** Home Page api routes by ns */
@@ -128,6 +129,7 @@ Route::get('/home-page-edit/{id}', [HomePageController::class, 'edit']);
 Route::post('/home-page-update/{id}', [HomePageController::class, 'updateHomePage']);
 Route::get('/home-page-show/{id}', [HomePageController::class, 'show']);
 Route::delete('/home-page-delete/{id}', [HomePageController::class, 'destroy']);
+Route::post('/home-page-active/{id}', [HomePageController::class, 'active']);
 
 /** Producer & Receiver apis routes by ns */
 
@@ -137,6 +139,7 @@ Route::get('/producer-receiver-show/{id}', [ProducerReceiverController::class, '
 Route::get('/producer-receiver-edit/{id}', [ProducerReceiverController::class, 'edit']);
 Route::post('/producer-receiver-update/{id}', [ProducerReceiverController::class, 'update']);
 Route::delete('/producer-receiver-delete/{id}', [ProducerReceiverController::class, 'destroy']);
+Route::post('/producer-receiver-active/{id}', [ProducerReceiverController::class, 'active']);
 
 /** Quote section api routes by ns */
 
