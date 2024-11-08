@@ -33,7 +33,15 @@ class TopMenuController extends Controller
             'site_logo_img_link' => 'required',
             'mts_logo_img_link' => 'required',
             'mts_group_text1' => 'required',
-            'mts_group_text2' => 'required'
+            'mts_group_text2' => 'required',
+            // 'contact_us_button_name' => 'required',
+            // 'contact_us_button_link' => 'required',
+            // 'contact_us_button_color_code' => 'required',
+            // 'contact_us_button_hover_color_code' => 'required',
+            // 'login_button_name' => 'required',
+            // 'login_button_link' => 'required',
+            // 'login_button_color_code' => 'required',
+            // 'login_button_hover_color_code' => 'required'
 
         ]);
 
@@ -49,6 +57,14 @@ class TopMenuController extends Controller
         $menu->mts_logo_img_link = $request['mts_logo_img_link'];
         $menu->mts_group_text1 = $request['mts_group_text1'];
         $menu->mts_group_text2 = $request['mts_group_text2'];
+        $menu->contact_us_button_name = $request['contact_us_button_name'];
+        $menu->contact_us_button_link = $request['contact_us_button_link'];
+        $menu->contact_us_button_color_code = $request['contact_us_button_color_code'];
+        $menu->contact_us_button_hover_color_code = $request['contact_us_button_hover_color_code'];
+        $menu->login_button_name = $request['login_button_name'];
+        $menu->login_button_link = $request['login_button_link'];
+        $menu->login_button_color_code = $request['login_button_color_code'];
+        $menu->login_button_hover_color_code = $request['login_button_hover_color_code'];
         $menu->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
 
         if ($menu->save() == true) {
@@ -126,6 +142,14 @@ class TopMenuController extends Controller
         $menu->mts_logo_img_link = $request->mts_logo_img_link;
         $menu->mts_group_text1 = $request->mts_group_text1;
         $menu->mts_group_text2 = $request->mts_group_text2;
+        $menu->contact_us_button_name = $request->contact_us_button_name;
+        $menu->contact_us_button_link = $request->contact_us_button_link;
+        $menu->contact_us_button_color_code = $request->contact_us_button_color_code;
+        $menu->contact_us_button_hover_color_code = $request->contact_us_button_hover_color_code;
+        $menu->login_button_name = $request->login_button_name;
+        $menu->login_button_link = $request->login_button_link;
+        $menu->login_button_color_code = $request->login_button_color_code;
+        $menu->login_button_hover_color_code = $request->login_button_hover_color_code;
         $menu->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
         if (!$menu) {
             return response()->json([
@@ -134,14 +158,13 @@ class TopMenuController extends Controller
                 'message' => 'Top Menu Data Not Found',
             ], 404);
         }
-        
+
         $menu->update();
         return response()->json([
             'status' => 'Success',
             'code' => '200',
             'message' => 'Top Menu Updated Successfully',
         ], 200);
-        
     }
 
     public function active(Request $request, $id)
