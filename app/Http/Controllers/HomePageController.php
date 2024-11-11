@@ -91,6 +91,9 @@ class HomePageController extends Controller
                 'message' => 'Home Page Data Not Found',
             ], 404);
         }
+
+        $data->home_section_img_url = url('/images/homePage/' . $data->home_section_img);
+
         return response()->json([
             'status' => 'Success',
             'code' => '200',
@@ -102,16 +105,22 @@ class HomePageController extends Controller
     public function updateHomePage(Request $request, $id)
     {
         $homePage = HomePage::find($request->id);
-        
-        if ($request->hasFile('home_section_img')) {
-            $file1 = $request->file('home_section_img');
-            $originalName = $file1->getClientOriginalName();
-            $imageName1 = date('ymdhis') . rand(1000, 100000) . '.png';
-            $file1->move(public_path('/images/homePage'), $imageName1);
-            $homePage->home_section_img = url('/images/homePage/' . $imageName1);
-            $homePage->home_section_img = url('/images/homePage/' . $originalName);
-        }
 
+        // if ($request->hasFile('home_section_img')) {
+        //     $file1 = $request->file('home_section_img');
+        //     $originalName = $file1->getClientOriginalName();
+        //     $imageName1 = date('ymdhis') . rand(1000, 100000) . '.png';
+        //     $file1->move(public_path('/images/homePage'), $imageName1);
+        //     $homePage->home_section_img = url('/images/homePage/' . $imageName1);
+        //     $homePage->home_section_img = url('/images/homePage/' . $originalName);
+        // }
+
+        if ($request->hasFile('home_section_img')) {
+            $homePageImage = $request->home_section_img->getClientOriginalName();
+            $request->home_section_img->move(public_path('/images/homePage'), $homePageImage);
+            $homePage->home_section_img = $homePageImage;
+        }
+    
         $homePage->home_section_title = $request->home_section_title;
         $homePage->home_section_description = $request->home_section_description;
         $homePage->home_section_button_name = $request->home_section_button_name;
@@ -126,7 +135,7 @@ class HomePageController extends Controller
 
             ], 404);
         }
-        
+
         $homePage->update();
         return response()->json([
             'status' => 'Success',

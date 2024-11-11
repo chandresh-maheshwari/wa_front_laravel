@@ -152,9 +152,14 @@ Route::delete('/delete-clients/{ids}', [PackageController::class, 'destroy_all_d
  Route::get('/quote-edit/{id}', [QuoteController::class, 'edit']);
  Route::post('/quote-update/{id}', [QuoteController::class, 'updateQuoteSection']);
  Route::delete('/quote-delete/{id}', [QuoteController::class, 'destroy']);
- 
+
 /** Login api routes by ns */
 
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logoutpage', [LoginController::class, 'logoutpage']);
 Route::post('/refresh', [LoginController::class, 'refresh']);
+
+Route::post('/send-otp', [LoginController::class, 'sendOtp']);
+Route::post('/verify-otp', [LoginController::class, 'verifyOtp']);
+Route::post('/reset-password', [LoginController::class, 'resetPassword']);
+
