@@ -106,15 +106,6 @@ class HomePageController extends Controller
     {
         $homePage = HomePage::find($request->id);
 
-        // if ($request->hasFile('home_section_img')) {
-        //     $file1 = $request->file('home_section_img');
-        //     $originalName = $file1->getClientOriginalName();
-        //     $imageName1 = date('ymdhis') . rand(1000, 100000) . '.png';
-        //     $file1->move(public_path('/images/homePage'), $imageName1);
-        //     $homePage->home_section_img = url('/images/homePage/' . $imageName1);
-        //     $homePage->home_section_img = url('/images/homePage/' . $originalName);
-        // }
-
         if ($request->hasFile('home_section_img')) {
             $homePageImage = $request->home_section_img->getClientOriginalName();
             $request->home_section_img->move(public_path('/images/homePage'), $homePageImage);

@@ -94,6 +94,7 @@ class ProducerReceiverController extends Controller
                 'message' => 'Producer & Receiver Data Not Found',
             ], 404);
         }
+        $data->section_img_url = url('/images/sectionProducerReceiver/' . $data->section_image);
         return response()->json([
             'status' => 'Success',
             'code' => '200',
@@ -105,13 +106,11 @@ class ProducerReceiverController extends Controller
     public function update(Request $request, $id)
     {
         $producerReceiver = ProducerReceiver::find($request->id);
+
         if ($request->hasFile('section_image')) {
-            $file1 = $request->file('section_image');
-            $originalName = $file1->getClientOriginalName();
-            $imageName1 = date('ymdhis') . rand(1000, 100000) . '.png';
-            $file1->move(public_path('/images/sectionProducerReceiver'), $imageName1);
-            $producerReceiver->section_image = url('/images/sectionProducerReceiver/' . $imageName1);
-            $producerReceiver->section_image = url('/images/sectionProducerReceiver/' . $originalName);
+            $imageName1 = $request->section_image->getClientOriginalName();
+            $request->section_image->move(public_path('/images/sectionProducerReceiver'), $imageName1);
+            $producerReceiver->section_image = $imageName1;
         }
 
         $producerReceiver->section_title = $request->section_title;
@@ -120,7 +119,7 @@ class ProducerReceiverController extends Controller
         $producerReceiver->receiver_title = $request->receiver_title;
         $producerReceiver->receiver_description = $request->receiver_description;
         $producerReceiver->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
-       
+
         if (!$producerReceiver) {
             return response()->json([
                 'status' => 'Error',
@@ -129,7 +128,7 @@ class ProducerReceiverController extends Controller
 
             ], 404);
         }
-        
+
         $producerReceiver->update();
         return response()->json([
             'status' => 'Success',
@@ -167,14 +166,13 @@ class ProducerReceiverController extends Controller
                     'code' => '200',
                     'message' => 'Producer & Receiver Data Deleted Successfully',
 
-                ],200);
+                ], 200);
             }
         }
         return response()->json([
             'status' => 'Error',
             'code' => '404',
             'message' => 'No Matching Producer & Receiver Found For Deletion',
-        ],404);
+        ], 404);
     }
-    }
-
+}

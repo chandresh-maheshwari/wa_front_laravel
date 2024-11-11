@@ -29,7 +29,7 @@ class TopMenuController extends Controller
 
     public function store(Request $request)
     {
-    
+
         $this->validate($request, [
             'site_logo_img' => 'required|image|mimes:jpeg,png,jpg',
             'mts_logo_img' => 'required|image|mimes:jpeg,png,jpg',
@@ -49,7 +49,7 @@ class TopMenuController extends Controller
         ]);
 
         $siteImage = $request->site_logo_img->getClientOriginalName();
-        $mtsImage = $request->site_logo_img->getClientOriginalName();
+        $mtsImage = $request->mts_logo_img->getClientOriginalName();
         $request->site_logo_img->move(public_path('/images/topmenu'), $siteImage);
         $request->mts_logo_img->move(public_path('/images/topmenu'), $mtsImage);
 
@@ -114,6 +114,9 @@ class TopMenuController extends Controller
                 'message' => 'Top Menu Data Not Found',
             ], 404);
         }
+        $data->site_logo_img_url = url('/images/topmenu/' . $data->site_logo_img);
+        $data->mts_logo_img_url = url('/images/topmenu/' . $data->mts_logo_img);
+
         return response()->json([
             'status' => 'Success',
             'message' => 'Top Menu Data Fetch Successfully',
@@ -134,16 +137,16 @@ class TopMenuController extends Controller
         }
         if ($request->hasFile('site_logo_img')) {
             $file1 = $request->file('site_logo_img');
-            $originalName1 = $file1->getClientOriginalName(); 
+            $originalName1 = $file1->getClientOriginalName();
             $file1->move(public_path('/images/topmenu'), $originalName1);
-            $menu->site_logo_img = url('/images/topmenu/' . $originalName1);
+            $menu->site_logo_img = $originalName1;
         }
-        
+
         if ($request->hasFile('mts_logo_img')) {
             $file2 = $request->file('mts_logo_img');
             $originalName2 = $file2->getClientOriginalName();
             $file2->move(public_path('/images/topmenu'), $originalName2);
-            $menu->mts_logo_img = url('/images/topmenu/' . $originalName2);
+            $menu->mts_logo_img = $originalName2;
         }
         $menu->site_logo_img_link = $request->site_logo_img_link;
         $menu->mts_logo_img_link = $request->mts_logo_img_link;
