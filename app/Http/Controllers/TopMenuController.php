@@ -11,17 +11,6 @@ class TopMenuController extends Controller
 
     public function index()
     {
-
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json([
-                'status' => 'Error',
-                'code' => '401',
-                'message' => 'Authenticated user not found or incorrect',
-            ], 401);
-        }
-
-        $userId = $user->id;
         $menu = TopMenu::where('deleted_at', 0)->get();
         if ($menu->isEmpty()) {
             return response()->json([
@@ -40,14 +29,7 @@ class TopMenuController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::check()) {
-            return response()->json([
-                'status' => 'Error',
-                'code' => '401',
-                'message' => 'User not authenticated',
-            ], 401);
-        }
-        $userId = Auth::user()->id;
+    
         $this->validate($request, [
             'site_logo_img' => 'required|image|mimes:jpeg,png,jpg',
             'mts_logo_img' => 'required|image|mimes:jpeg,png,jpg',
@@ -72,7 +54,6 @@ class TopMenuController extends Controller
         $request->mts_logo_img->move(public_path('/images/topmenu'), $mtsImage);
 
         $menu = new TopMenu();
-        // $menu->user_id = $userId;
         $menu->site_logo_img = $siteImage;
         $menu->mts_logo_img = $mtsImage;
         $menu->site_logo_img_link = $request['site_logo_img_link'];
