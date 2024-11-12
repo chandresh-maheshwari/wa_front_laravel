@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Quote;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class QuoteController extends Controller
 {
@@ -77,7 +76,7 @@ class QuoteController extends Controller
 
     public function edit($id)
     {
-        $data = Quote::where('deleted_at', 0)->findOrFail($id);
+        $data = Quote::where('deleted_at', 0)->find($id);
         if (!$data) {
             return response()->json([
                 'status' => 'Error',
@@ -95,12 +94,7 @@ class QuoteController extends Controller
 
     public function updateQuoteSection(Request $request, $id)
     {
-        $quoteSection = Quote::find($request->id);
-        $quoteSection->title = $request->title;
-        $quoteSection->designation = $request->designation;
-        $quoteSection->company_name = $request->company_name;
-        $quoteSection->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
-
+        $quoteSection = Quote::find($id);
         if (!$quoteSection) {
             return response()->json([
                 'status' => 'Error',
@@ -109,6 +103,11 @@ class QuoteController extends Controller
 
             ], 404);
         }
+        $quoteSection->title = $request->title;
+        $quoteSection->designation = $request->designation;
+        $quoteSection->company_name = $request->company_name;
+        $quoteSection->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
+
 
         $quoteSection->update();
         return response()->json([
@@ -118,9 +117,9 @@ class QuoteController extends Controller
         ], 200);
     }
 
-    public function destroy(Request $request, $id)
+    public function destroy($id)
     {
-        $deletequote = Quote::find($request->id);
+        $deletequote = Quote::find($id);
 
         if ($deletequote) {
             $deletequote->deleted_at = 1;

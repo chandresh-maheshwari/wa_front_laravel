@@ -86,7 +86,7 @@ class ProducerReceiverController extends Controller
 
     public function edit($id)
     {
-        $data = ProducerReceiver::where('deleted_at', 0)->findOrFail($id);
+        $data = ProducerReceiver::where('deleted_at', 0)->find($id);
         if (!$data) {
             return response()->json([
                 'status' => 'Error',
@@ -105,8 +105,16 @@ class ProducerReceiverController extends Controller
 
     public function update(Request $request, $id)
     {
-        $producerReceiver = ProducerReceiver::find($request->id);
+        $producerReceiver = ProducerReceiver::find($id);
 
+        if (!$producerReceiver) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '404',
+                'message' => 'Producer & Receiver Data Not Found',
+
+            ], 404);
+        }
         if ($request->hasFile('section_image')) {
             $imageName1 = $request->section_image->getClientOriginalName();
             $request->section_image->move(public_path('/images/sectionProducerReceiver'), $imageName1);
@@ -120,14 +128,6 @@ class ProducerReceiverController extends Controller
         $producerReceiver->receiver_description = $request->receiver_description;
         $producerReceiver->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
 
-        if (!$producerReceiver) {
-            return response()->json([
-                'status' => 'Error',
-                'code' => '404',
-                'message' => 'Producer & Receiver Data Not Found',
-
-            ], 404);
-        }
 
         $producerReceiver->update();
         return response()->json([
@@ -155,9 +155,9 @@ class ProducerReceiverController extends Controller
             ]);
         }
     }
-    public function destroy(Request $request, $id)
+    public function destroy($id)
     {
-        $deleteData = ProducerReceiver::find($request->id);
+        $deleteData = ProducerReceiver::find($id);
         if ($deleteData) {
             $deleteData->deleted_at = 1;
             if ($deleteData->save()) {

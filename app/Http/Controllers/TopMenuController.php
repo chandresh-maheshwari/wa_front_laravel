@@ -178,7 +178,7 @@ class TopMenuController extends Controller
         ], 200);
     }
 
-    public function active(Request $request, $id)
+    public function active($id)
     { {
             $status = TopMenu::find($id);
             if (!$status) {
@@ -198,9 +198,9 @@ class TopMenuController extends Controller
     }
 
 
-    public function destroy(Request $request, $id)
+    public function destroy($id)
     {
-        $deletemenu = TopMenu::find($request->id);
+        $deletemenu = TopMenu::find($id);
         if ($deletemenu) {
             $deletemenu->deleted_at = 1;
             if ($deletemenu->save()) {

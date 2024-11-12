@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ChooseWasteAccountController;
 // use App\Http\Controllers\precontroller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -163,3 +164,13 @@ Route::post('/send-otp', [LoginController::class, 'sendOtp']);
 Route::post('/verify-otp', [LoginController::class, 'verifyOtp']);
 Route::post('/reset-password', [LoginController::class, 'resetPassword']);
 
+
+/** Choose waste accountant api routes by ns */
+
+Route::get('/choose-waste-accountant-list', [ChooseWasteAccountController::class, 'index']);
+Route::post('/choose-waste-accountant-store', [ChooseWasteAccountController::class, 'store']);
+Route::get('/choose-waste-accountant-show/{id}', [ChooseWasteAccountController::class, 'show']);
+Route::get('/choose-waste-accountant-edit/{id}', [ChooseWasteAccountController::class, 'edit']);
+Route::post('/choose-waste-accountant-update/{id}', [ChooseWasteAccountController::class, 'update']);
+Route::delete('/choose-waste-accountant-delete/{id}', [ChooseWasteAccountController::class, 'destroy']);
+Route::post('/choose-waste-accountant-active/{id}', [ChooseWasteAccountController::class, 'active']);

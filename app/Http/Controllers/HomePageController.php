@@ -104,8 +104,16 @@ class HomePageController extends Controller
 
     public function updateHomePage(Request $request, $id)
     {
-        $homePage = HomePage::find($request->id);
+        $homePage = HomePage::find($id);
 
+        if (!$homePage) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '404',
+                'message' => 'Home Page Data Not Found',
+
+            ], 404);
+        }
         if ($request->hasFile('home_section_img')) {
             $homePageImage = $request->home_section_img->getClientOriginalName();
             $request->home_section_img->move(public_path('/images/homePage'), $homePageImage);
@@ -118,14 +126,6 @@ class HomePageController extends Controller
         $homePage->home_section_button_name_link = $request->home_section_button_name_link;
         $homePage->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
 
-        if (!$homePage) {
-            return response()->json([
-                'status' => 'Error',
-                'code' => '404',
-                'message' => 'Home Page Data Not Found',
-
-            ], 404);
-        }
 
         $homePage->update();
         return response()->json([
@@ -135,7 +135,7 @@ class HomePageController extends Controller
         ], 200);
     }
 
-    public function active(Request $request, $id)
+    public function active($id)
     { {
             $status = HomePage::find($id);
             if (!$status) {
@@ -153,9 +153,9 @@ class HomePageController extends Controller
             ]);
         }
     }
-    public function destroy(Request $request, $id)
+    public function destroy($id)
     {
-        $deletepage = HomePage::find($request->id);
+        $deletepage = HomePage::find($id);
         if ($deletepage) {
             $deletepage->deleted_at = 1;
             if ($deletepage->save()) {

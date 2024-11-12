@@ -80,7 +80,7 @@ class NavBarController extends Controller
 
     public function edit($id)
     {
-        $data = NavBar::where('deleted_at', 0)->findOrFail($id);
+        $data = NavBar::where('deleted_at', 0)->find($id);
         if (!$data) {
             return response()->json([
                 'status' => 'Error',
@@ -98,8 +98,15 @@ class NavBarController extends Controller
 
     public function updateNavbar(Request $request, $id)
     {
-        $navbar = NavBar::find($request->id);
+        $navbar = NavBar::find($id);
 
+        if (!$navbar) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '404',
+                'message' => 'Nav Bar Data Not Found',
+            ], 404);
+        }
         $navbar->nav_menu_name = $request->nav_menu_name;
         $navbar->nav_menu_link = $request->nav_menu_link;
         if ($request['menu_ordering'] == 0) {
@@ -108,13 +115,6 @@ class NavBarController extends Controller
             $navbar->menu_ordering = $request['menu_ordering'];
         }
         $navbar->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
-        if (!$navbar) {
-            return response()->json([
-                'status' => 'Error',
-                'code' => '404',
-                'message' => 'Nav Bar Data Not Found',
-            ], 404);
-        }
         
         $navbar->update();
         return response()->json([
@@ -126,7 +126,7 @@ class NavBarController extends Controller
     
     /** Function used for the if status active or deactive by ns */
 
-    public function active(Request $request, $id)
+    public function active($id)
     { {
             $status = NavBar::find($id);
             if (!$status) {
@@ -145,9 +145,9 @@ class NavBarController extends Controller
         }
     }
 
-    public function destroy(Request $request, $id)
+    public function destroy($id)
     {
-        $deletenavbar = NavBar::find($request->id);
+        $deletenavbar = NavBar::find($id);
         if ($deletenavbar) {
             $deletenavbar->deleted_at = 1;
             if ($deletenavbar->save()) {
