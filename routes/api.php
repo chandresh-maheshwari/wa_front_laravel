@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\NavBarController;
 use App\Http\Controllers\HomePageController;
+use App\Http\Controllers\ImproveEnvirmentalPortectionController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\ProducerReceiverController;
 use App\Http\Controllers\QuoteController;
@@ -92,6 +93,16 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/choose-waste-accountant-update/{id}', [ChooseWasteAccountController::class, 'update']);
     Route::delete('/choose-waste-accountant-delete/{id}', [ChooseWasteAccountController::class, 'destroy']);
     Route::post('/choose-waste-accountant-active/{id}', [ChooseWasteAccountController::class, 'active']);
+
+    /** Improve Envirmental Protection api routes by ns */
+
+    Route::get('/improve-envirmental-protection-list', [ImproveEnvirmentalPortectionController::class, 'index']);
+    Route::post('/improve-envirmental-protection-store', [ImproveEnvirmentalPortectionController::class, 'store']);
+    Route::get('/improve-envirmental-protectiont-show/{id}', [ImproveEnvirmentalPortectionController::class, 'show']);
+    Route::get('/improve-envirmental-protectiont-edit/{id}', [ImproveEnvirmentalPortectionController::class, 'edit']);
+    Route::post('/improve-envirmental-protectiont-update/{id}', [ImproveEnvirmentalPortectionController::class, 'update']);
+    Route::delete('/improve-envirmental-protectiont-delete/{id}', [ImproveEnvirmentalPortectionController::class, 'destroy']);
+    Route::post('/improve-envirmental-protectiont-active/{id}', [ImproveEnvirmentalPortectionController::class, 'active']);
 });
 
 
