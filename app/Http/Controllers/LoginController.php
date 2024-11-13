@@ -22,7 +22,7 @@ class LoginController extends Controller
             'email' => 'required|email',
             'password' => 'required',
         ]);
-
+    
         $user = User::where('email', $request->email)->first();
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
@@ -31,20 +31,22 @@ class LoginController extends Controller
                 'message' => 'Invalid credentials',
             ], 401);
         }
-
+    
         $add_token = JWTAuth::fromUser($user);
         $user->add_token = $add_token;
-        $user->makeHidden(['add_token']);
         $user->save();
-
+        $userData = $user->toArray();
+        unset($userData['add_token']);
+    
         return response()->json([
             'status' => 'Success',
             'code' => '200',
             'message' => 'Login Successful',
-            'user' => $user,
+            'user' => $userData,
             'token' => $add_token,
         ], 200);
     }
+    
 
     /** Function used for refresh page then token change by ns */
     public function refresh(Request $request)
