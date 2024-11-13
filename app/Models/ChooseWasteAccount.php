@@ -11,6 +11,7 @@ class ChooseWasteAccount extends Model
     protected $table = 'choose_waste_account';
 
     protected $fillable = [
+        'name',
         'account_title',
         'account_description',
         'active',

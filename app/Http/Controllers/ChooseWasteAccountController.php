@@ -45,11 +45,13 @@ class ChooseWasteAccountController extends Controller
         }
 
         $this->validate($request, [
+            'name' => 'required',
             'account_title' => 'required',
             'account_description' => 'required'
         ]);
 
         $chooseWasteAccountant = new ChooseWasteAccount();
+        $chooseWasteAccountant->name = $request['name'];
         $chooseWasteAccountant->account_title = $request['account_title'];
         $chooseWasteAccountant->account_description = $request['account_description'];
         $chooseWasteAccountant->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
@@ -145,7 +147,7 @@ class ChooseWasteAccountController extends Controller
                 'message' => 'Choose Waste Accountant Data Not Found',
             ], 404);
         }
-
+        $chooseWasteAccountant->name = $request->name;
         $chooseWasteAccountant->account_title = $request->account_title;
         $chooseWasteAccountant->account_description = $request->account_description;
         $chooseWasteAccountant->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
