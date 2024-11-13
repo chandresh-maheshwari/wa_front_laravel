@@ -4,14 +4,25 @@ namespace App\Http\Controllers;
 
 use App\Models\NavBar;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class NavBarController extends Controller
 {
 
     public function index()
     {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
         $navbar = NavBar::where('deleted_at', 0)->get();
-        if (!$navbar) {
+
+        if ($navbar->isEmpty()) {
             return response()->json([
                 'status' => 'Error',
                 'code' => '404',
@@ -28,6 +39,14 @@ class NavBarController extends Controller
     public function store(Request $request)
     {
 
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
         $this->validate($request, [
             'nav_menu_name' => 'required',
             'nav_menu_link' => 'required',
@@ -62,6 +81,15 @@ class NavBarController extends Controller
 
     public function show($id)
     {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
         $navbar = NavBar::where('id', $id)->where('deleted_at', 0)->first();
         if (!$navbar) {
             return response()->json([
@@ -80,6 +108,15 @@ class NavBarController extends Controller
 
     public function edit($id)
     {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
         $data = NavBar::where('deleted_at', 0)->find($id);
         if (!$data) {
             return response()->json([
@@ -98,6 +135,15 @@ class NavBarController extends Controller
 
     public function updateNavbar(Request $request, $id)
     {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
         $navbar = NavBar::find($id);
 
         if (!$navbar) {
@@ -115,7 +161,7 @@ class NavBarController extends Controller
             $navbar->menu_ordering = $request['menu_ordering'];
         }
         $navbar->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
-        
+
         $navbar->update();
         return response()->json([
             'status' => 'Success',
@@ -123,30 +169,51 @@ class NavBarController extends Controller
             'message' => 'Nav Bar Updated Successfully',
         ], 200);
     }
-    
+
     /** Function used for the if status active or deactive by ns */
 
     public function active($id)
-    { {
-            $status = NavBar::find($id);
-            if (!$status) {
-                return response()->json(['error' => 'Record not found'], 404);
-            }
-
-            $status->active = $status->active ? 0 : 1;
-            $status->save();
-
-            $message = $status->active ? 'Activated Successfully' : 'Deactivated Successfully';
-
+    {
+        $user = Auth::user()->id;
+        if (!$user) {
             return response()->json([
-                'status' => $status->active,
-                'message' => $message,
-            ]);
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
         }
+
+        $status = NavBar::find($id);
+        if (!$status) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '404',
+                'message' => 'Record not found',
+            ], 404);
+        }
+
+        $status->active = $status->active ? 0 : 1;
+        $status->save();
+
+        $message = $status->active ? 'Activated Successfully' : 'Deactivated Successfully';
+
+        return response()->json([
+            'status' => $status->active,
+            'message' => $message,
+        ]);
     }
 
     public function destroy($id)
     {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
         $deletenavbar = NavBar::find($id);
         if ($deletenavbar) {
             $deletenavbar->deleted_at = 1;

@@ -4,13 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Models\ChooseWasteAccount;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ChooseWasteAccountController extends Controller
 {
     public function index()
     {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
         $chooseWasteAccountant = ChooseWasteAccount::where('deleted_at', 0)->get();
-        if (!$chooseWasteAccountant) {
+        if ($chooseWasteAccountant->isEmpty()) {
             return response()->json([
                 'status' => 'Error',
                 'code' => '404',
@@ -26,6 +35,15 @@ class ChooseWasteAccountController extends Controller
     }
     public function store(Request $request)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
         $this->validate($request, [
             'account_title' => 'required',
             'account_description' => 'required'
@@ -53,6 +71,15 @@ class ChooseWasteAccountController extends Controller
 
     public function show($id)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
         $chooseWasteAccountant = ChooseWasteAccount::where('id', $id)->where('deleted_at', 0)->first();
         if (!$chooseWasteAccountant) {
             return response()->json([
@@ -71,6 +98,15 @@ class ChooseWasteAccountController extends Controller
 
     public function edit($id)
     {
+
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
         $chooseWasteAccountant = ChooseWasteAccount::where('deleted_at', 0)->find($id);
 
         if (!$chooseWasteAccountant) {
@@ -92,21 +128,30 @@ class ChooseWasteAccountController extends Controller
     public function update(Request $request, $id)
     {
 
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
         $chooseWasteAccountant = ChooseWasteAccount::find($id);
         if (!$chooseWasteAccountant) {
             return response()->json([
                 'status' => 'Error',
                 'code' => '404',
                 'message' => 'Choose Waste Accountant Data Not Found',
-
             ], 404);
-            $chooseWasteAccountant->account_title = $request->account_title;
-            $chooseWasteAccountant->account_description = $request->account_description;
-            $chooseWasteAccountant->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
         }
 
+        $chooseWasteAccountant->account_title = $request->account_title;
+        $chooseWasteAccountant->account_description = $request->account_description;
+        $chooseWasteAccountant->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
 
         $chooseWasteAccountant->update();
+
         return response()->json([
             'status' => 'Success',
             'code' => '200',
@@ -116,6 +161,14 @@ class ChooseWasteAccountController extends Controller
 
     public function destroy($id)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
         $deleteAccountant = ChooseWasteAccount::find($id);
 
         if ($deleteAccountant) {
@@ -138,9 +191,21 @@ class ChooseWasteAccountController extends Controller
 
     public function active($id)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
         $status = ChooseWasteAccount::find($id);
         if (!$status) {
-            return response()->json(['error' => 'Record not found'], 404);
+            return response()->json([
+                'status' => 'Error',
+                'code' => '404',
+                'message' => 'Record not found',
+            ], 404);
         }
 
         $status->active = $status->active ? 0 : 1;

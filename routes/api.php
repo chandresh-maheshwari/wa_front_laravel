@@ -32,10 +32,66 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-
 Route::middleware('auth:api')->group(function () {
 
-   
+    /** top menu api routes by ns*/
+
+    Route::get('/top-menu', [TopMenuController::class, 'index']);
+    Route::post('/top-menu-store', [TopMenuController::class, 'store']);
+    Route::get('/top-menu-edit', [TopMenuController::class, 'edit']);
+    Route::post('/top-menu-update', [TopMenuController::class, 'updateMenu']);
+    Route::get('/top-menu-show/{id}', [TopMenuController::class, 'show']);
+    Route::delete('/top-menu-delete/{id}', [TopMenuController::class, 'destroy']);
+    Route::post('/top-menu-active/{id}', [TopMenuController::class, 'active']);
+
+    /** Nav bar api routes by ns */
+
+    Route::get('/navbar', [NavBarController::class, 'index']);
+    Route::post('/navbar-store', [NavBarController::class, 'store']);
+    Route::get('/narbar-show/{id}', [NavBarController::class, 'show']);
+    Route::get('/navbar-edit/{id}', [NavBarController::class, 'edit']);
+    Route::post('/navbar-update/{id}', [NavBarController::class, 'updateNavbar']);
+    Route::delete('/navbar-delete/{id}', [NavBarController::class, 'destroy']);
+    Route::post('/navbar-active/{id}', [NavBarController::class, 'active']);
+
+    /** Home Page api routes by ns */
+
+    Route::get('/home-page', [HomePageController::class, 'index']);
+    Route::post('/home-page-store', [HomePageController::class, 'store']);
+    Route::get('/home-page-edit/{id}', [HomePageController::class, 'edit']);
+    Route::post('/home-page-update/{id}', [HomePageController::class, 'updateHomePage']);
+    Route::get('/home-page-show/{id}', [HomePageController::class, 'show']);
+    Route::delete('/home-page-delete/{id}', [HomePageController::class, 'destroy']);
+    Route::post('/home-page-active/{id}', [HomePageController::class, 'active']);
+
+    /** Producer & Receiver apis routes by ns */
+
+    Route::get('/producer-receiver-list', [ProducerReceiverController::class, 'index']);
+    Route::post('/producer-receiver-store', [ProducerReceiverController::class, 'store']);
+    Route::get('/producer-receiver-show/{id}', [ProducerReceiverController::class, 'show']);
+    Route::get('/producer-receiver-edit/{id}', [ProducerReceiverController::class, 'edit']);
+    Route::post('/producer-receiver-update/{id}', [ProducerReceiverController::class, 'update']);
+    Route::delete('/producer-receiver-delete/{id}', [ProducerReceiverController::class, 'destroy']);
+    Route::post('/producer-receiver-active/{id}', [ProducerReceiverController::class, 'active']);
+
+    /** Quote section api routes by ns */
+
+    Route::get('/quote-section-list', [QuoteController::class, 'index']);
+    Route::post('/quote-store', [QuoteController::class, 'store']);
+    Route::get('/quote-show/{id}', [QuoteController::class, 'show']);
+    Route::get('/quote-edit/{id}', [QuoteController::class, 'edit']);
+    Route::post('/quote-update/{id}', [QuoteController::class, 'updateQuoteSection']);
+    Route::delete('/quote-delete/{id}', [QuoteController::class, 'destroy']);
+
+    /** Choose waste accountant api routes by ns */
+
+    Route::get('/choose-waste-accountant-list', [ChooseWasteAccountController::class, 'index']);
+    Route::post('/choose-waste-accountant-store', [ChooseWasteAccountController::class, 'store']);
+    Route::get('/choose-waste-accountant-show/{id}', [ChooseWasteAccountController::class, 'show']);
+    Route::get('/choose-waste-accountant-edit/{id}', [ChooseWasteAccountController::class, 'edit']);
+    Route::post('/choose-waste-accountant-update/{id}', [ChooseWasteAccountController::class, 'update']);
+    Route::delete('/choose-waste-accountant-delete/{id}', [ChooseWasteAccountController::class, 'destroy']);
+    Route::post('/choose-waste-accountant-active/{id}', [ChooseWasteAccountController::class, 'active']);
 });
 
 
@@ -100,77 +156,14 @@ Route::delete('delete/{id}', [PackageController::class, 'destroydatas']);
 
 Route::delete('/delete-clients/{ids}', [PackageController::class, 'destroy_all_data']);
 
-
-
-
- /** top menu api routes by ns*/
-
- Route::get('/top-menu', [TopMenuController::class, 'index']);
- Route::post('/top-menu-store', [TopMenuController::class, 'store']);
- Route::get('/top-menu-edit', [TopMenuController::class, 'edit']);
- Route::post('/top-menu-update', [TopMenuController::class, 'updateMenu']);
- Route::get('/top-menu-show/{id}', [TopMenuController::class, 'show']);
- Route::delete('/top-menu-delete/{id}', [TopMenuController::class, 'destroy']);
- Route::post('/top-menu-active/{id}', [TopMenuController::class, 'active']);
-
-
- /** Nav bar api routes by ns */
-
- Route::get('/navbar', [NavBarController::class, 'index']);
- Route::post('/navbar-store', [NavBarController::class, 'store']);
- Route::get('/narbar-show/{id}', [NavBarController::class, 'show']);
- Route::get('/navbar-edit/{id}', [NavBarController::class, 'edit']);
- Route::post('/navbar-update/{id}', [NavBarController::class, 'updateNavbar']);
- Route::delete('/navbar-delete/{id}', [NavBarController::class, 'destroy']);
- Route::post('/navbar-active/{id}', [NavBarController::class, 'active']);
-
-
- /** Home Page api routes by ns */
-
- Route::get('/home-page', [HomePageController::class, 'index']);
- Route::post('/home-page-store', [HomePageController::class, 'store']);
- Route::get('/home-page-edit/{id}', [HomePageController::class, 'edit']);
- Route::post('/home-page-update/{id}', [HomePageController::class, 'updateHomePage']);
- Route::get('/home-page-show/{id}', [HomePageController::class, 'show']);
- Route::delete('/home-page-delete/{id}', [HomePageController::class, 'destroy']);
- Route::post('/home-page-active/{id}', [HomePageController::class, 'active']);
-
- /** Producer & Receiver apis routes by ns */
-
- Route::get('/producer-receiver-list', [ProducerReceiverController::class, 'index']);
- Route::post('/producer-receiver-store', [ProducerReceiverController::class, 'store']);
- Route::get('/producer-receiver-show/{id}', [ProducerReceiverController::class, 'show']);
- Route::get('/producer-receiver-edit/{id}', [ProducerReceiverController::class, 'edit']);
- Route::post('/producer-receiver-update/{id}', [ProducerReceiverController::class, 'update']);
- Route::delete('/producer-receiver-delete/{id}', [ProducerReceiverController::class, 'destroy']);
- Route::post('/producer-receiver-active/{id}', [ProducerReceiverController::class, 'active']);
-
- /** Quote section api routes by ns */
-
- Route::get('/quote-section-list', [QuoteController::class, 'index']);
- Route::post('/quote-store', [QuoteController::class, 'store']);
- Route::get('/quote-show/{id}', [QuoteController::class, 'show']);
- Route::get('/quote-edit/{id}', [QuoteController::class, 'edit']);
- Route::post('/quote-update/{id}', [QuoteController::class, 'updateQuoteSection']);
- Route::delete('/quote-delete/{id}', [QuoteController::class, 'destroy']);
-
 /** Login api routes by ns */
 
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logoutpage', [LoginController::class, 'logoutpage']);
 Route::post('/refresh', [LoginController::class, 'refresh']);
 
+/** Forget password api routes by ns */
+
 Route::post('/send-otp', [LoginController::class, 'sendOtp']);
 Route::post('/verify-otp', [LoginController::class, 'verifyOtp']);
 Route::post('/reset-password', [LoginController::class, 'resetPassword']);
-
-
-/** Choose waste accountant api routes by ns */
-
-Route::get('/choose-waste-accountant-list', [ChooseWasteAccountController::class, 'index']);
-Route::post('/choose-waste-accountant-store', [ChooseWasteAccountController::class, 'store']);
-Route::get('/choose-waste-accountant-show/{id}', [ChooseWasteAccountController::class, 'show']);
-Route::get('/choose-waste-accountant-edit/{id}', [ChooseWasteAccountController::class, 'edit']);
-Route::post('/choose-waste-accountant-update/{id}', [ChooseWasteAccountController::class, 'update']);
-Route::delete('/choose-waste-accountant-delete/{id}', [ChooseWasteAccountController::class, 'destroy']);
-Route::post('/choose-waste-accountant-active/{id}', [ChooseWasteAccountController::class, 'active']);

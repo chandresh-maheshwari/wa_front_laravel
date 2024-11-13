@@ -32,9 +32,9 @@ class LoginController extends Controller
             ], 401);
         }
 
-        $token = JWTAuth::fromUser($user);
-        $user->token = $token;
-        $user->makeHidden(['token']);
+        $add_token = JWTAuth::fromUser($user);
+        $user->add_token = $add_token;
+        $user->makeHidden(['add_token']);
         $user->save();
 
         return response()->json([
@@ -42,7 +42,7 @@ class LoginController extends Controller
             'code' => '200',
             'message' => 'Login Successful',
             'user' => $user,
-            'token' => $token,
+            'token' => $add_token,
         ], 200);
     }
 
@@ -52,7 +52,7 @@ class LoginController extends Controller
         try {
             $newToken = JWTAuth::parseToken()->refresh();
             $user = JWTAuth::setToken($newToken)->toUser();
-            $user->token = $newToken;
+            $user->add_token = $newToken;
             $user->save();
 
             return response()->json([

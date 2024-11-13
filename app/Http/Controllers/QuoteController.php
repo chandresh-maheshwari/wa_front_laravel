@@ -4,30 +4,50 @@ namespace App\Http\Controllers;
 
 use App\Models\Quote;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class QuoteController extends Controller
 {
 
     public function index()
     {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
         $quoteSection = Quote::where('deleted_at', 0)->get();
-        if (!$quoteSection) {
+
+        if ($quoteSection->isEmpty()) {
             return response()->json([
                 'status' => 'Error',
                 'code' => '404',
-                'message' => 'Quote Section Data Not Found',
+                'message' => 'Home Page Data Not Found',
             ], 404);
         }
         return response()->json([
             'status' => 'Success',
             'code' => '200',
-            'message' => 'Quote Section Data Fetch Successfully',
+            'message' => 'Home Page Data Fetch Successfully',
             'results' => $quoteSection,
         ], 200);
     }
 
     public function store(Request $request)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
         $this->validate($request, [
             'title' => 'required',
             'designation' => 'required',
@@ -58,7 +78,17 @@ class QuoteController extends Controller
 
     public function show($id)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
         $quoteSection = Quote::where('id', $id)->where('deleted_at', 0)->first();
+
         if (!$quoteSection) {
             return response()->json([
                 'status' => 'Error',
@@ -76,7 +106,17 @@ class QuoteController extends Controller
 
     public function edit($id)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
         $data = Quote::where('deleted_at', 0)->find($id);
+
         if (!$data) {
             return response()->json([
                 'status' => 'Error',
@@ -94,7 +134,17 @@ class QuoteController extends Controller
 
     public function updateQuoteSection(Request $request, $id)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
         $quoteSection = Quote::find($id);
+
         if (!$quoteSection) {
             return response()->json([
                 'status' => 'Error',
@@ -119,6 +169,15 @@ class QuoteController extends Controller
 
     public function destroy($id)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
         $deletequote = Quote::find($id);
 
         if ($deletequote) {

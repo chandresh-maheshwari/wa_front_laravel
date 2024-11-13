@@ -4,12 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Models\ProducerReceiver;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProducerReceiverController extends Controller
 {
 
     public function index()
     {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
         $producerReceiverData = ProducerReceiver::where('deleted_at', 0)->get();
         if ($producerReceiverData->isNotEmpty()) {
             return response()->json([
@@ -29,6 +39,15 @@ class ProducerReceiverController extends Controller
 
     public function store(Request $request)
     {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
         $this->validate($request, [
             'section_title' => 'required',
             'section_image' => 'required|image|mimes:jpeg,png,jpg',
@@ -68,6 +87,15 @@ class ProducerReceiverController extends Controller
 
     public function show($id)
     {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
         $producerReceiver = ProducerReceiver::where('id', $id)->where('deleted_at', 0)->first();
         if (!$producerReceiver) {
             return response()->json([
@@ -86,6 +114,16 @@ class ProducerReceiverController extends Controller
 
     public function edit($id)
     {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+
         $data = ProducerReceiver::where('deleted_at', 0)->find($id);
         if (!$data) {
             return response()->json([
@@ -94,7 +132,9 @@ class ProducerReceiverController extends Controller
                 'message' => 'Producer & Receiver Data Not Found',
             ], 404);
         }
+
         $data->section_img_url = url('/images/sectionProducerReceiver/' . $data->section_image);
+
         return response()->json([
             'status' => 'Success',
             'code' => '200',
@@ -105,6 +145,15 @@ class ProducerReceiverController extends Controller
 
     public function update(Request $request, $id)
     {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
         $producerReceiver = ProducerReceiver::find($id);
 
         if (!$producerReceiver) {
@@ -115,6 +164,7 @@ class ProducerReceiverController extends Controller
 
             ], 404);
         }
+
         if ($request->hasFile('section_image')) {
             $imageName1 = $request->section_image->getClientOriginalName();
             $request->section_image->move(public_path('/images/sectionProducerReceiver'), $imageName1);
@@ -128,7 +178,6 @@ class ProducerReceiverController extends Controller
         $producerReceiver->receiver_description = $request->receiver_description;
         $producerReceiver->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
 
-
         $producerReceiver->update();
         return response()->json([
             'status' => 'Success',
@@ -138,25 +187,42 @@ class ProducerReceiverController extends Controller
     }
 
     public function active($id)
-    { {
-            $status = ProducerReceiver::find($id);
-            if (!$status) {
-                return response()->json(['error' => 'Record not found'], 404);
-            }
-
-            $status->active = $status->active ? 0 : 1;
-            $status->save();
-
-            $message = $status->active ? 'Activated Successfully' : 'Deactivated Successfully';
-
+    {
+        $user = Auth::user()->id;
+        if (!$user) {
             return response()->json([
-                'status' => $status->active,
-                'message' => $message,
-            ]);
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
         }
+
+        $status = ProducerReceiver::find($id);
+        if (!$status) {
+            return response()->json(['error' => 'Record not found'], 404);
+        }
+
+        $status->active = $status->active ? 0 : 1;
+        $status->save();
+
+        $message = $status->active ? 'Activated Successfully' : 'Deactivated Successfully';
+
+        return response()->json([
+            'status' => $status->active,
+            'message' => $message,
+        ]);
     }
     public function destroy($id)
     {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+        
         $deleteData = ProducerReceiver::find($id);
         if ($deleteData) {
             $deleteData->deleted_at = 1;

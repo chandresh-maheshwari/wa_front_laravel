@@ -44,6 +44,8 @@ return [
         'api' => [
             'driver' => 'jwt',
             'provider' => 'users',
+            'token_field' => 'add_token',
+            'hash' => false,
         ],
 
         'admin' => [
@@ -69,11 +71,11 @@ return [
     |
      */
 
-   'providers' => [
-       'users' => [
-           'driver' => 'eloquent',
-           'model' => App\Models\User::class,
-       ],
+    'providers' => [
+        'users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\User::class,
+        ],
 
         'admins' => [
             'driver' => 'eloquent',
@@ -96,14 +98,14 @@ return [
     |
      */
 
-     'passwords' => [
+    'passwords' => [
         'users' => [
             'provider' => 'users',
             'table' => 'password_resets',
             'expire' => 60,
             'throttle' => 60,
         ],
-    // ],
+        // ],
 
         'admins' => [
             'provider' => 'admins',
