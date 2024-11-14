@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AboutUsController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChooseWasteAccountController;
@@ -103,6 +104,16 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/improve-envirmental-protectiont-update/{id}', [ImproveEnvirmentalPortectionController::class, 'update']);
     Route::delete('/improve-envirmental-protectiont-delete/{id}', [ImproveEnvirmentalPortectionController::class, 'destroy']);
     Route::post('/improve-envirmental-protectiont-active/{id}', [ImproveEnvirmentalPortectionController::class, 'active']);
+
+    /** About Us page api routes create by ns */
+
+    Route::get('/about-us-list', [AboutUsController::class, 'index']);
+    Route::post('/about-us-store', [AboutUsController::class, 'store']);
+    Route::get('/about-us-show/{id}', [AboutUsController::class, 'show']);
+    Route::get('/about-us-edit/{id}', [AboutUsController::class, 'edit']);
+    Route::post('/about-us-update/{id}', [AboutUsController::class, 'update']);
+    Route::delete('/about-us-delete/{id}', [AboutUsController::class, 'destroy']);
+    Route::post('/about-us-active/{id}', [AboutUsController::class, 'active']);
 });
 
 
