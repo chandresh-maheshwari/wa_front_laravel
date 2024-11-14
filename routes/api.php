@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 
 
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ContactPageController;
 use App\Http\Controllers\NavBarController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\ImproveEnvirmentalPortectionController;
@@ -114,6 +115,16 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/about-us-update/{id}', [AboutUsController::class, 'update']);
     Route::delete('/about-us-delete/{id}', [AboutUsController::class, 'destroy']);
     Route::post('/about-us-active/{id}', [AboutUsController::class, 'active']);
+
+    /** Contact page detail api routes create by ns */
+
+    Route::get('/contact-page-list', [ContactPageController::class, 'index']);
+    Route::post('/contact-page-store', [ContactPageController::class, 'store']);
+    Route::get('/contact-page-show/{id}', [ContactPageController::class, 'show']);
+    Route::get('/contact-page-edit/{id}', [ContactPageController::class, 'edit']);
+    Route::post('/contact-page-update/{id}', [ContactPageController::class, 'update']);
+    Route::delete('/contact-page-delete/{id}', [ContactPageController::class, 'destroy']);
+    Route::post('/contact-page-active/{id}', [ContactPageController::class, 'active']);
 });
 
 
