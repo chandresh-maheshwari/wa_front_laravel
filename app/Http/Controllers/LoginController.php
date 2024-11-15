@@ -22,7 +22,7 @@ class LoginController extends Controller
             'email' => 'required|email',
             'password' => 'required',
         ]);
-    
+
         $user = User::where('email', $request->email)->first();
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
@@ -31,13 +31,13 @@ class LoginController extends Controller
                 'message' => 'Invalid credentials',
             ], 401);
         }
-    
+
         $add_token = JWTAuth::fromUser($user);
         $user->add_token = $add_token;
         $user->save();
         $userData = $user->toArray();
         unset($userData['add_token']);
-    
+
         return response()->json([
             'status' => 'Success',
             'code' => '200',
@@ -46,7 +46,7 @@ class LoginController extends Controller
             'token' => $add_token,
         ], 200);
     }
-    
+
 
     /** Function used for refresh page then token change by ns */
     public function refresh(Request $request)
@@ -54,14 +54,17 @@ class LoginController extends Controller
         try {
             $newToken = JWTAuth::parseToken()->refresh();
             $user = JWTAuth::setToken($newToken)->toUser();
-            $user->add_token = $newToken;
+
             $user->save();
+            $userArray = $user->toArray();
+            unset($userArray['add_token']); 
 
             return response()->json([
                 'status' => 'Success',
                 'code' => '200',
                 'message' => 'Token refreshed successfully',
-                'user' => $user,
+                'token' => $newToken, 
+                'user' => $userArray,
             ], 200);
         } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
             return response()->json([
