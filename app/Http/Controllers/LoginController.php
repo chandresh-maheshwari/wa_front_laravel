@@ -18,6 +18,7 @@ class LoginController extends Controller
     /** Function used for user login by ns */
     public function login(Request $request)
     {
+
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
@@ -32,9 +33,10 @@ class LoginController extends Controller
             ], 401);
         }
 
-        $add_token = JWTAuth::fromUser($user);
-        $user->add_token = $add_token;
-        $user->save();
+        // Set the token expiration to 10 minutes
+        $customClaims = ['exp' => now()->addMinutes(10)->timestamp];
+        $add_token = JWTAuth::claims($customClaims)->fromUser($user);
+
         $userData = $user->toArray();
         unset($userData['add_token']);
 
