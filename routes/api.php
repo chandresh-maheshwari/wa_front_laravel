@@ -15,6 +15,7 @@ use App\Http\Controllers\NavBarController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\ImproveEnvirmentalPortectionController;
 use App\Http\Controllers\PackageController;
+use App\Http\Controllers\PostsController;
 use App\Http\Controllers\ProducerReceiverController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\TopMenuController;
@@ -125,6 +126,16 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/contact-page-update/{id}', [ContactPageController::class, 'update']);
     Route::delete('/contact-page-delete/{id}', [ContactPageController::class, 'destroy']);
     Route::post('/contact-page-active/{id}', [ContactPageController::class, 'active']);
+
+    /** Posts page api routes create by ns */
+
+    Route::get('/post-page-list', [PostsController::class, 'index']);
+    Route::post('/post-page-store', [PostsController::class, 'store']);
+    Route::get('/post-page-show/{id}', [PostsController::class, 'show']);
+    Route::get('/post-page-edit/{id}', [PostsController::class, 'edit']);
+    Route::post('/post-page-update/{id}', [PostsController::class, 'update']);
+    Route::delete('/post-page-delete/{id}', [PostsController::class, 'destroy']);
+    Route::post('/post-page-active/{id}', [PostsController::class, 'active']);
 });
 
 
