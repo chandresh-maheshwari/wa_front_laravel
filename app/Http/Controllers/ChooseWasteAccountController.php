@@ -13,7 +13,7 @@ class ChooseWasteAccountController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -21,13 +21,13 @@ class ChooseWasteAccountController extends Controller
         $chooseWasteAccountant = ChooseWasteAccount::where('deleted_at', 0)->get();
         if ($chooseWasteAccountant->isEmpty()) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Choose Waste Accountant Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Choose Waste Accountant Data Fetch Successfully',
             'results' => $chooseWasteAccountant,
@@ -38,7 +38,7 @@ class ChooseWasteAccountController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -58,13 +58,13 @@ class ChooseWasteAccountController extends Controller
 
         if ($chooseWasteAccountant->save() == true) {
             return response()->json([
-                'status' => 'Success',
+                'status' => true,
                 'code' => '200',
                 'message' => 'Choose Waste Accountant Added Successfully',
             ], 200);
         } else {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Something went wrong'
             ], 404);
@@ -76,7 +76,7 @@ class ChooseWasteAccountController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -85,13 +85,13 @@ class ChooseWasteAccountController extends Controller
         $chooseWasteAccountant = ChooseWasteAccount::where('id', $id)->where('deleted_at', 0)->first();
         if (!$chooseWasteAccountant) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Choose Waste Accountant Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Choose Waste Accountant Data Fetch Successfully',
             'results' => $chooseWasteAccountant,
@@ -104,7 +104,7 @@ class ChooseWasteAccountController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -113,14 +113,14 @@ class ChooseWasteAccountController extends Controller
 
         if (!$chooseWasteAccountant) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Choose Waste Accountant Data Not Found',
             ], 404);
         }
 
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Choose Waste Accountant Data Fetch Successfully',
             'results' => $chooseWasteAccountant,
@@ -133,7 +133,7 @@ class ChooseWasteAccountController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -142,7 +142,7 @@ class ChooseWasteAccountController extends Controller
         $chooseWasteAccountant = ChooseWasteAccount::find($id);
         if (!$chooseWasteAccountant) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Choose Waste Accountant Data Not Found',
             ], 404);
@@ -155,7 +155,7 @@ class ChooseWasteAccountController extends Controller
         $chooseWasteAccountant->update();
 
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Choose Waste Accountant Updated Successfully',
         ], 200);
@@ -166,7 +166,7 @@ class ChooseWasteAccountController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -177,7 +177,7 @@ class ChooseWasteAccountController extends Controller
             $deleteAccountant->deleted_at = 1;
             if ($deleteAccountant->save()) {
                 return response()->json([
-                    'status' => 'Success',
+                    'status' => true,
                     'code' => '200',
                     'message' => 'Choose Waste Accountant Data Deleted Successfully',
 
@@ -185,7 +185,7 @@ class ChooseWasteAccountController extends Controller
             }
         }
         return response()->json([
-            'status' => 'Error',
+            'status' => false,
             'code' => '404',
             'message' => 'No Matching Choose Waste Accountant Found For Deletion',
         ], 404);
@@ -196,7 +196,7 @@ class ChooseWasteAccountController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -204,7 +204,7 @@ class ChooseWasteAccountController extends Controller
         $status = ChooseWasteAccount::find($id);
         if (!$status) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Record not found',
             ], 404);
@@ -216,8 +216,10 @@ class ChooseWasteAccountController extends Controller
         $message = $status->active ? 'Activated Successfully' : 'Deactivated Successfully';
 
         return response()->json([
-            'status' => $status->active,
+            'status' => true,
+            'code' => '200',
             'message' => $message,
+            'data' => $status->active
         ]);
     }
 }

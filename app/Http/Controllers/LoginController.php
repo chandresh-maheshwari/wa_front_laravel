@@ -27,7 +27,7 @@ class LoginController extends Controller
         $user = User::where('email', $request->email)->first();
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Invalid credentials',
             ], 401);
@@ -41,7 +41,7 @@ class LoginController extends Controller
         unset($userData['add_token']);
 
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Login Successful',
             'user' => $userData,
@@ -62,7 +62,7 @@ class LoginController extends Controller
             unset($userArray['add_token']); 
 
             return response()->json([
-                'status' => 'Success',
+                'status' => true,
                 'code' => '200',
                 'message' => 'Token refreshed successfully',
                 'token' => $newToken, 
@@ -70,13 +70,13 @@ class LoginController extends Controller
             ], 200);
         } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'Token is invalid',
             ], 401);
         } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '500',
                 'message' => 'Could not refresh token',
             ], 500);
@@ -89,19 +89,19 @@ class LoginController extends Controller
         try {
             JWTAuth::invalidate(JWTAuth::parseToken());
             return response()->json([
-                'status' => 'Success',
+                'status' => true,
                 'code' => '200',
                 'message' => 'User logged out successfully',
             ], 200);
         } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'Token is invalid',
             ], 401);
         } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '500',
                 'message' => 'Could not log out user',
             ], 500);
@@ -118,7 +118,7 @@ class LoginController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '400',
                 'message' => $validator->errors()
             ], 400);
@@ -128,7 +128,7 @@ class LoginController extends Controller
 
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'User not found.'
             ], 404);
@@ -145,7 +145,7 @@ class LoginController extends Controller
         Mail::to($user->email)->send(new \App\Mail\OtpMail($otp, $user));
 
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'OTP sent to your email.'
         ], 200);
@@ -162,7 +162,7 @@ class LoginController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '400',
                 'message' => $validator->errors()
             ], 400);
@@ -172,7 +172,7 @@ class LoginController extends Controller
 
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'User not found.'
             ], 404);
@@ -185,14 +185,14 @@ class LoginController extends Controller
 
         if (!$otpRecord) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '400',
                 'message' => 'Invalid or expired OTP.'
             ], 400);
         }
 
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'OTP Verified Successfully.'
         ], 200);
@@ -212,13 +212,13 @@ class LoginController extends Controller
         if ($validator->fails()) {
             if ($validator->errors()->has('password')) {
                 return response()->json([
-                    'status' => 'Error',
+                    'status' => false,
                     'code' => '400',
                     'message' => 'Password confirmation does not match.'
                 ], 400);
             }
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '400',
                 'message' => $validator->errors()->first()
             ], 400);
@@ -228,7 +228,7 @@ class LoginController extends Controller
 
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'User not found.'
             ], 404);
@@ -241,7 +241,7 @@ class LoginController extends Controller
 
         if (!$otpRecord) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '400',
                 'message' => 'Invalid or expired OTP.'
             ], 400);
@@ -253,7 +253,7 @@ class LoginController extends Controller
         $otpRecord->forceDelete();
 
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Password Reset Successfully.'
         ], 200);

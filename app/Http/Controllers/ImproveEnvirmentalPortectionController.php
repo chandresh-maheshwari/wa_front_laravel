@@ -13,7 +13,7 @@ class ImproveEnvirmentalPortectionController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -23,13 +23,13 @@ class ImproveEnvirmentalPortectionController extends Controller
 
         if ($improveEnvirmentalProtection->isEmpty()) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Improve Envirmental Protection Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Improve Envirmental Protection Data Fetch Successfully',
             'results' => $improveEnvirmentalProtection,
@@ -41,7 +41,7 @@ class ImproveEnvirmentalPortectionController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -60,13 +60,13 @@ class ImproveEnvirmentalPortectionController extends Controller
 
         if ($improveEnvirmentalProtection->save() == true) {
             return response()->json([
-                'status' => 'Success',
+                'status' => true,
                 'code' => '200',
                 'message' => 'Improve Envirmental Protection Added Successfully',
             ], 200);
         } else {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Something went wrong'
             ], 404);
@@ -78,7 +78,7 @@ class ImproveEnvirmentalPortectionController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -87,13 +87,13 @@ class ImproveEnvirmentalPortectionController extends Controller
 
         if (!$improveEnvirmentalProtection) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Improve Envirmental Protection Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Improve Envirmental Protection Data Fetch Successfully',
             'results' => $improveEnvirmentalProtection,
@@ -104,7 +104,7 @@ class ImproveEnvirmentalPortectionController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -114,13 +114,13 @@ class ImproveEnvirmentalPortectionController extends Controller
 
         if (!$data) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Improve Envirmental Protection Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Improve Envirmental Protection Data Fetch Successfully',
             'results' => $data,
@@ -132,7 +132,7 @@ class ImproveEnvirmentalPortectionController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -142,7 +142,7 @@ class ImproveEnvirmentalPortectionController extends Controller
 
         if (!$improveEnvirmentalProtection) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Improve Envirmental Protection Data Not Found',
 
@@ -156,7 +156,7 @@ class ImproveEnvirmentalPortectionController extends Controller
 
         $improveEnvirmentalProtection->update();
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Improve Envirmental Protection Updated Successfully',
         ], 200);
@@ -167,7 +167,7 @@ class ImproveEnvirmentalPortectionController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -179,7 +179,7 @@ class ImproveEnvirmentalPortectionController extends Controller
             $deleteProtection->deleted_at = 1;
             if ($deleteProtection->save()) {
                 return response()->json([
-                    'status' => 'Success',
+                    'status' => true,
                     'code' => '200',
                     'message' => 'Improve Envirmental Protection Data Deleted Successfully',
 
@@ -187,7 +187,7 @@ class ImproveEnvirmentalPortectionController extends Controller
             }
         }
         return response()->json([
-            'status' => 'Error',
+            'status' => false,
             'code' => '404',
             'message' => 'No Matching Improve Envirmental Protection Found For Deletion',
         ], 404);
@@ -198,7 +198,7 @@ class ImproveEnvirmentalPortectionController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -208,7 +208,7 @@ class ImproveEnvirmentalPortectionController extends Controller
 
         if (!$status) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Record not found'
             ], 404);
@@ -220,8 +220,10 @@ class ImproveEnvirmentalPortectionController extends Controller
         $message = $status->active ? 'Activated Successfully' : 'Deactivated Successfully';
 
         return response()->json([
-            'status' => $status->active,
+            'status' => true,
+            'code' => '200',
             'message' => $message,
+            'data' => $status->active
         ]);
     }
 }

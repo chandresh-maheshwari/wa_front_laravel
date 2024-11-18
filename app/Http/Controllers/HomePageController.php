@@ -14,7 +14,7 @@ class HomePageController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -24,13 +24,13 @@ class HomePageController extends Controller
 
         if ($homePage->isEmpty()) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Home Page Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Home Page Data Fetch Successfully',
             'results' => $homePage,
@@ -42,7 +42,7 @@ class HomePageController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -70,13 +70,13 @@ class HomePageController extends Controller
 
         if ($homePage->save() == true) {
             return response()->json([
-                'status' => 'Success',
+                'status' => true,
                 'code' => '200',
                 'message' => 'Home Page Added Successfully',
             ], 200);
         } else {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Something went wrong'
             ], 404);
@@ -88,7 +88,7 @@ class HomePageController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -97,13 +97,13 @@ class HomePageController extends Controller
 
         if (!$homePage) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Home Page Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Home Page Data Fetch Successfully',
             'results' => $homePage,
@@ -115,7 +115,7 @@ class HomePageController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -125,7 +125,7 @@ class HomePageController extends Controller
 
         if (!$data) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Home Page Data Not Found',
             ], 404);
@@ -134,7 +134,7 @@ class HomePageController extends Controller
         $data->home_section_img_url = url('/images/homePage/' . $data->home_section_img);
 
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Home Page data Fetch Successfully',
             'results' => $data,
@@ -146,7 +146,7 @@ class HomePageController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -156,7 +156,7 @@ class HomePageController extends Controller
 
         if (!$homePage) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Home Page Data Not Found',
 
@@ -177,7 +177,7 @@ class HomePageController extends Controller
 
         $homePage->update();
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Home Page Data Updated Successfully',
         ], 200);
@@ -188,7 +188,7 @@ class HomePageController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -198,7 +198,7 @@ class HomePageController extends Controller
 
         if (!$status) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Record not found',
             ], 404);
@@ -210,8 +210,10 @@ class HomePageController extends Controller
         $message = $status->active ? 'Activated Successfully' : 'Deactivated Successfully';
 
         return response()->json([
-            'status' => $status->active,
+            'status' => true,
+            'code' => '200',
             'message' => $message,
+            'data' => $status->active
         ]);
     }
     public function destroy($id)
@@ -219,7 +221,7 @@ class HomePageController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -231,7 +233,7 @@ class HomePageController extends Controller
             $deletePage->deleted_at = 1;
             if ($deletePage->save()) {
                 return response()->json([
-                    'status' => 'Success',
+                    'status' => true,
                     'code' => '200',
                     'message' => 'Home Page Data Deleted Successfully',
 
@@ -239,7 +241,7 @@ class HomePageController extends Controller
             }
         }
         return response()->json([
-            'status' => 'Error',
+            'status' => false,
             'code' => '404',
             'message' => 'No Matching Home Page Found For Deletion',
         ], 404);

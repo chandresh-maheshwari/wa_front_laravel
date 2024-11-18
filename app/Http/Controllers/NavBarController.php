@@ -14,7 +14,7 @@ class NavBarController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -24,13 +24,13 @@ class NavBarController extends Controller
 
         if ($navbar->isEmpty()) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Nav Bar Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Nav Bar Data Fetch Successfully',
             'results' => $navbar,
@@ -42,7 +42,7 @@ class NavBarController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -66,13 +66,13 @@ class NavBarController extends Controller
 
         if ($navbar->save() == true) {
             return response()->json([
-                'status' => 'Success',
+                'status' => true,
                 'code' => '200',
                 'message' => 'Nav Bar Added Successfully',
             ], 200);
         } else {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Something went wrong'
             ], 404);
@@ -84,7 +84,7 @@ class NavBarController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -93,13 +93,13 @@ class NavBarController extends Controller
         $navbar = NavBar::where('id', $id)->where('deleted_at', 0)->first();
         if (!$navbar) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Nav Bar Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Nav Bar Data Fetch Successfully',
             'results' => $navbar,
@@ -111,7 +111,7 @@ class NavBarController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -120,13 +120,13 @@ class NavBarController extends Controller
         $data = NavBar::where('deleted_at', 0)->find($id);
         if (!$data) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Nav Bar Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Nav Bar Data Fetch Successfully',
             'results' => $data,
@@ -138,7 +138,7 @@ class NavBarController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -148,7 +148,7 @@ class NavBarController extends Controller
 
         if (!$navbar) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Nav Bar Data Not Found',
             ], 404);
@@ -164,7 +164,7 @@ class NavBarController extends Controller
 
         $navbar->update();
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Nav Bar Updated Successfully',
         ], 200);
@@ -177,7 +177,7 @@ class NavBarController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -186,7 +186,7 @@ class NavBarController extends Controller
         $status = NavBar::find($id);
         if (!$status) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Record not found',
             ], 404);
@@ -198,8 +198,10 @@ class NavBarController extends Controller
         $message = $status->active ? 'Activated Successfully' : 'Deactivated Successfully';
 
         return response()->json([
-            'status' => $status->active,
+            'status' => true,
+            'code' => '200',
             'message' => $message,
+            'data' => $status->active
         ]);
     }
 
@@ -208,7 +210,7 @@ class NavBarController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -219,7 +221,7 @@ class NavBarController extends Controller
             $deletenavbar->deleted_at = 1;
             if ($deletenavbar->save()) {
                 return response()->json([
-                    'status' => 'Success',
+                    'status' => true,
                     'code' => '200',
                     'message' => 'Nav Bar Data Deleted Successfully',
 
@@ -227,7 +229,7 @@ class NavBarController extends Controller
             }
         }
         return response()->json([
-            'status' => 'Error',
+            'status' => false,
             'code' => '404',
             'message' => 'No Matching Nav Bar Found For Deletion',
         ], 404);

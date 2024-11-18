@@ -14,7 +14,7 @@ class TopMenuController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -24,13 +24,13 @@ class TopMenuController extends Controller
 
         if ($menu->isEmpty()) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Top Menu Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Top Menu Data Fetch Successfully',
             'results' => $menu,
@@ -42,7 +42,7 @@ class TopMenuController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -90,13 +90,13 @@ class TopMenuController extends Controller
 
         if ($menu->save() == true) {
             return response()->json([
-                'status' => 'Success',
+                'status' => true,
                 'code' => '200',
                 'message' => 'Top Menu Added Successfully',
             ], 200);
         } else {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Something went wrong'
             ], 404);
@@ -108,7 +108,7 @@ class TopMenuController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -118,13 +118,13 @@ class TopMenuController extends Controller
 
         if (!$menu) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Top Menu Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Top Menu Data Fetch Successfully',
             'results' => $menu,
@@ -136,7 +136,7 @@ class TopMenuController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -146,7 +146,7 @@ class TopMenuController extends Controller
 
         if (!$data) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Top Menu Data Not Found',
             ], 404);
@@ -155,7 +155,8 @@ class TopMenuController extends Controller
         $data->mts_logo_img_url = url('/images/topmenu/' . $data->mts_logo_img);
 
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
+            'code' => '200',
             'message' => 'Top Menu Data Fetch Successfully',
             'results' => $data,
         ], 200);
@@ -166,7 +167,7 @@ class TopMenuController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -176,7 +177,7 @@ class TopMenuController extends Controller
 
         if (!$menu) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Top Menu Data Not Found',
             ], 404);
@@ -211,7 +212,7 @@ class TopMenuController extends Controller
 
         if (!$menu) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Top Menu Data Not Found',
             ], 404);
@@ -219,7 +220,7 @@ class TopMenuController extends Controller
 
         $menu->update();
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Top Menu Updated Successfully',
         ], 200);
@@ -230,7 +231,7 @@ class TopMenuController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -240,7 +241,7 @@ class TopMenuController extends Controller
 
         if (!$status) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Record not found'
             ], 404);
@@ -252,8 +253,10 @@ class TopMenuController extends Controller
         $message = $status->active ? 'Activated Successfully' : 'Deactivated Successfully';
 
         return response()->json([
-            'status' => $status->active,
+            'status' => true,
+            'code' => '200',
             'message' => $message,
+            'data' => $status->active
         ]);
     }
 
@@ -263,7 +266,7 @@ class TopMenuController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -275,14 +278,14 @@ class TopMenuController extends Controller
             $deletemenu->deleted_at = 1;
             if ($deletemenu->save()) {
                 return response()->json([
-                    'status' => 'Success',
+                    'status' => true,
                     'code' => '200',
                     'message' => 'Top Menu Data Deleted Successfully',
                 ], 200);
             }
         }
         return response()->json([
-            'status' => 'Error',
+            'status' => false,
             'code' => '404',
             'message' => 'No Matching Top Menu Found For Deletion',
         ], 404);

@@ -14,7 +14,7 @@ class ProducerReceiverController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -23,14 +23,14 @@ class ProducerReceiverController extends Controller
         $producerReceiverData = ProducerReceiver::where('deleted_at', 0)->get();
         if ($producerReceiverData->isNotEmpty()) {
             return response()->json([
-                'status' => 'Success',
+                'status' => true,
                 'code' => '200',
                 'message' => 'Producer & Receiver Data Fetch Successfully',
                 'results' => $producerReceiverData,
             ], 200);
         } else {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Producer & Receiver Data Not Found'
             ], 404);
@@ -42,7 +42,7 @@ class ProducerReceiverController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -72,13 +72,13 @@ class ProducerReceiverController extends Controller
 
         if ($producerReceiver->save() == true) {
             return response()->json([
-                'status' => 'Success',
+                'status' => true,
                 'code' => '200',
                 'message' => 'Producer & Receiver Added Successfully',
             ], 200);
         } else {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Something went wrong'
             ], 404);
@@ -90,7 +90,7 @@ class ProducerReceiverController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -99,13 +99,13 @@ class ProducerReceiverController extends Controller
         $producerReceiver = ProducerReceiver::where('id', $id)->where('deleted_at', 0)->first();
         if (!$producerReceiver) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Producer & Receiver Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Producer & Receiver Data Fetch Successfully',
             'results' => $producerReceiver,
@@ -117,7 +117,7 @@ class ProducerReceiverController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -127,7 +127,7 @@ class ProducerReceiverController extends Controller
         $data = ProducerReceiver::where('deleted_at', 0)->find($id);
         if (!$data) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Producer & Receiver Data Not Found',
             ], 404);
@@ -136,7 +136,7 @@ class ProducerReceiverController extends Controller
         $data->section_img_url = url('/images/sectionProducerReceiver/' . $data->section_image);
 
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Producer & Receiver Data Fetch Successfully',
             'results' => $data,
@@ -148,7 +148,7 @@ class ProducerReceiverController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -158,7 +158,7 @@ class ProducerReceiverController extends Controller
 
         if (!$producerReceiver) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Producer & Receiver Data Not Found',
 
@@ -180,7 +180,7 @@ class ProducerReceiverController extends Controller
 
         $producerReceiver->update();
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Producer & Receiver Data Updated Successfully',
         ], 200);
@@ -191,7 +191,7 @@ class ProducerReceiverController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -199,7 +199,7 @@ class ProducerReceiverController extends Controller
 
         $status = ProducerReceiver::find($id);
         if (!$status) {
-            return response()->json(['error' => 'Record not found'], 404);
+            return response()->json([false => 'Record not found'], 404);
         }
 
         $status->active = $status->active ? 0 : 1;
@@ -208,8 +208,10 @@ class ProducerReceiverController extends Controller
         $message = $status->active ? 'Activated Successfully' : 'Deactivated Successfully';
 
         return response()->json([
-            'status' => $status->active,
+            'status' => true,
+            'code' => '200',
             'message' => $message,
+            'data' => $status->active
         ]);
     }
     public function destroy($id)
@@ -217,7 +219,7 @@ class ProducerReceiverController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -228,7 +230,7 @@ class ProducerReceiverController extends Controller
             $deleteData->deleted_at = 1;
             if ($deleteData->save()) {
                 return response()->json([
-                    'status' => 'Success',
+                    'status' => true,
                     'code' => '200',
                     'message' => 'Producer & Receiver Data Deleted Successfully',
 
@@ -236,7 +238,7 @@ class ProducerReceiverController extends Controller
             }
         }
         return response()->json([
-            'status' => 'Error',
+            'status' => false,
             'code' => '404',
             'message' => 'No Matching Producer & Receiver Found For Deletion',
         ], 404);

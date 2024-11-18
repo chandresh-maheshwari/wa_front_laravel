@@ -13,7 +13,7 @@ class ContactPageController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -23,13 +23,13 @@ class ContactPageController extends Controller
 
         if ($contactPage->isEmpty()) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Contact Page Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Contact Page Data Fetch Successfully',
             'results' => $contactPage,
@@ -41,7 +41,7 @@ class ContactPageController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -70,13 +70,13 @@ class ContactPageController extends Controller
 
         if ($contactPage->save() == true) {
             return response()->json([
-                'status' => 'Success',
+                'status' => true,
                 'code' => '200',
                 'message' => 'Contact Page Added Successfully',
             ], 200);
         } else {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Something went wrong'
             ], 404);
@@ -88,7 +88,7 @@ class ContactPageController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -98,13 +98,13 @@ class ContactPageController extends Controller
 
         if (!$contactPage) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Contact Page Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Contact Page Data Fetch Successfully',
             'results' => $contactPage,
@@ -116,7 +116,7 @@ class ContactPageController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -126,14 +126,15 @@ class ContactPageController extends Controller
 
         if (!$data) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Contact Page Data Not Found',
             ], 404);
         }
 
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
+            'code' => '200',
             'message' => 'Contact Page Data Fetch Successfully',
             'results' => $data,
         ], 200);
@@ -145,7 +146,7 @@ class ContactPageController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -154,7 +155,7 @@ class ContactPageController extends Controller
         $contactPage = ContactPage::find($id);
         if (!$contactPage) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Contact Page Data Not Found',
             ], 404);
@@ -171,7 +172,7 @@ class ContactPageController extends Controller
         $contactPage->update();
 
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Contact Page Updated Successfully',
         ], 200);
@@ -182,7 +183,7 @@ class ContactPageController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -193,7 +194,7 @@ class ContactPageController extends Controller
             $deleteContactPage->deleted_at = 1;
             if ($deleteContactPage->save()) {
                 return response()->json([
-                    'status' => 'Success',
+                    'status' => true,
                     'code' => '200',
                     'message' => 'Contact Page Data Deleted Successfully',
 
@@ -201,7 +202,7 @@ class ContactPageController extends Controller
             }
         }
         return response()->json([
-            'status' => 'Error',
+            'status' => false,
             'code' => '404',
             'message' => 'No Matching Contact Page Found For Deletion',
         ], 404);
@@ -212,7 +213,7 @@ class ContactPageController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -220,7 +221,7 @@ class ContactPageController extends Controller
         $status = ContactPage::find($id);
         if (!$status) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Record not found',
             ], 404);
@@ -232,8 +233,10 @@ class ContactPageController extends Controller
         $message = $status->active ? 'Activated Successfully' : 'Deactivated Successfully';
 
         return response()->json([
-            'status' => $status->active,
+            'status' => true, 
+            'code' => '200',
             'message' => $message,
+            'data' => $status->active
         ]);
     }
 }

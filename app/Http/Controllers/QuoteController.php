@@ -14,7 +14,7 @@ class QuoteController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -24,13 +24,13 @@ class QuoteController extends Controller
 
         if ($quoteSection->isEmpty()) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Home Page Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Home Page Data Fetch Successfully',
             'results' => $quoteSection,
@@ -42,7 +42,7 @@ class QuoteController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -63,13 +63,13 @@ class QuoteController extends Controller
 
         if ($quoteSection->save() == true) {
             return response()->json([
-                'status' => 'Success',
+                'status' => true,
                 'code' => '200',
                 'message' => 'Quote Section Added Successfully',
             ], 200);
         } else {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Something went wrong'
             ], 404);
@@ -81,7 +81,7 @@ class QuoteController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -91,13 +91,13 @@ class QuoteController extends Controller
 
         if (!$quoteSection) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Quote Section Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Quote Section Data Fetch Successfully',
             'results' => $quoteSection,
@@ -109,7 +109,7 @@ class QuoteController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -119,13 +119,13 @@ class QuoteController extends Controller
 
         if (!$data) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Quote Section Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Quote section Data Fetch Successfully',
             'results' => $data,
@@ -137,7 +137,7 @@ class QuoteController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -147,7 +147,7 @@ class QuoteController extends Controller
 
         if (!$quoteSection) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Quote Section Data Not Found',
 
@@ -161,7 +161,7 @@ class QuoteController extends Controller
 
         $quoteSection->update();
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'Quote Section Data Updated Successfully',
         ], 200);
@@ -172,7 +172,7 @@ class QuoteController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -184,7 +184,7 @@ class QuoteController extends Controller
             $deletequote->deleted_at = 1;
             if ($deletequote->save()) {
                 return response()->json([
-                    'status' => 'Success',
+                    'status' => true,
                     'code' => '200',
                     'message' => 'Quote Section Data Deleted Successfully',
 
@@ -192,7 +192,7 @@ class QuoteController extends Controller
             }
         }
         return response()->json([
-            'status' => 'Error',
+            'status' => false,
             'code' => '404',
             'message' => 'No Matching Quote Section Found For Deletion',
         ], 404);

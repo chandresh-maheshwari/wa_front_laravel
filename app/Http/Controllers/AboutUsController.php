@@ -13,7 +13,7 @@ class AboutUsController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -23,13 +23,13 @@ class AboutUsController extends Controller
 
         if ($aboutUs->isEmpty()) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'About Us Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'About Us Data Fetch Successfully',
             'results' => $aboutUs,
@@ -41,7 +41,7 @@ class AboutUsController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -62,13 +62,13 @@ class AboutUsController extends Controller
 
         if ($aboutUs->save() == true) {
             return response()->json([
-                'status' => 'Success',
+                'status' => true,
                 'code' => '200',
                 'message' => 'About Us Added Successfully',
             ], 200);
         } else {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Something went wrong'
             ], 404);
@@ -80,7 +80,7 @@ class AboutUsController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -90,13 +90,13 @@ class AboutUsController extends Controller
 
         if (!$aboutUs) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'About Us Data Not Found',
             ], 404);
         }
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'About Us Data Fetch Successfully',
             'results' => $aboutUs,
@@ -108,7 +108,7 @@ class AboutUsController extends Controller
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -118,14 +118,14 @@ class AboutUsController extends Controller
 
         if (!$data) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'About Us Data Not Found',
             ], 404);
         }
 
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'message' => 'About Us Data Fetch Successfully',
             'results' => $data,
         ], 200);
@@ -137,7 +137,7 @@ class AboutUsController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -146,7 +146,7 @@ class AboutUsController extends Controller
         $aboutUs = AboutUs::find($id);
         if (!$aboutUs) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'About Us Data Not Found',
             ], 404);
@@ -159,7 +159,7 @@ class AboutUsController extends Controller
         $aboutUs->update();
 
         return response()->json([
-            'status' => 'Success',
+            'status' => true,
             'code' => '200',
             'message' => 'About Us Updated Successfully',
         ], 200);
@@ -170,7 +170,7 @@ class AboutUsController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -181,7 +181,7 @@ class AboutUsController extends Controller
             $deleteAboutUs->deleted_at = 1;
             if ($deleteAboutUs->save()) {
                 return response()->json([
-                    'status' => 'Success',
+                    'status' => true,
                     'code' => '200',
                     'message' => 'About Us Data Deleted Successfully',
 
@@ -189,7 +189,7 @@ class AboutUsController extends Controller
             }
         }
         return response()->json([
-            'status' => 'Error',
+            'status' => false,
             'code' => '404',
             'message' => 'No Matching About Us Found For Deletion',
         ], 404);
@@ -200,7 +200,7 @@ class AboutUsController extends Controller
         $user = Auth::user();
         if (!$user) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '401',
                 'message' => 'User not authenticated',
             ], 401);
@@ -208,7 +208,7 @@ class AboutUsController extends Controller
         $status = AboutUs::find($id);
         if (!$status) {
             return response()->json([
-                'status' => 'Error',
+                'status' => false,
                 'code' => '404',
                 'message' => 'Record not found',
             ], 404);
@@ -220,8 +220,10 @@ class AboutUsController extends Controller
         $message = $status->active ? 'Activated Successfully' : 'Deactivated Successfully';
 
         return response()->json([
-            'status' => $status->active,
+            'status' => true,
+            'code' => '200',
             'message' => $message,
+            'data' => $status->active
         ]);
     }
 }
