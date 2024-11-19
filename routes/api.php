@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ContactPageController;
+use App\Http\Controllers\DynamicPostController;
 use App\Http\Controllers\NavBarController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\ImproveEnvirmentalPortectionController;
@@ -136,6 +137,10 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/post-page-update/{id}', [PostsController::class, 'update']);
     Route::delete('/post-page-delete/{id}', [PostsController::class, 'destroy']);
     Route::post('/post-page-active/{id}', [PostsController::class, 'active']);
+
+    /** Dynamic Post api routes create by ns */
+
+    Route::post('/dynamic-post-store', [DynamicPostController::class, 'addPost']);
 });
 
 

@@ -1,0 +1,57 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\DynamicPost;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class DynamicPostController extends Controller
+{
+    protected $request;
+    protected $dynamicPost1;
+    function __construct(Request $request, DynamicPost $dynamicPost)
+    {
+        $this->request = $request;
+        $this->dynamicPost1 = $dynamicPost;
+    }
+    public function addPost(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+        $this->validate($request, [
+            'post_title' => 'required|string|max:255',
+            'post_description' => 'required',
+            'post_description.*.label' => 'required|string',
+            'post_description.*.type' => 'required|string'
+        ]);
+
+        $postData = $request['post_description'];
+
+        $saveData = $this->dynamicPost1->savePost([
+            'post_title' => $request['post_title'],
+            'post_description' => $postData
+        ]);
+
+        if (isset($saveData) && $saveData !== false) {
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'Post Added Successfully',
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Something went wrong'
+            ], 404);
+        }
+    }
+}
