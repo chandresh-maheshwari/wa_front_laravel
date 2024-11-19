@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Posts;
+use App\Models\Page;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class PostsController extends Controller
+class PageController extends Controller
 {
     public function index()
     {
@@ -19,20 +19,20 @@ class PostsController extends Controller
             ], 401);
         }
 
-        $post = Posts::where('deleted_at', 0)->get();
+        $page = Page::where('deleted_at', 0)->get();
 
-        if ($post->isEmpty()) {
+        if ($page->isEmpty()) {
             return response()->json([
                 'status' => false,
                 'code' => '404',
-                'message' => 'Post Data Not Found',
+                'message' => 'Page Data Not Found',
             ], 404);
         }
         return response()->json([
             'status' => true,
             'code' => '200',
-            'message' => 'Post Data Fetch Successfully',
-            'results' => $post,
+            'message' => 'Page Data Fetch Successfully',
+            'results' => $page,
         ], 200);
     }
 
@@ -48,39 +48,33 @@ class PostsController extends Controller
         }
 
         $this->validate($request, [
+            'post_id' => 'required',
             'title' => 'required',
             'description' => 'required',
-            // 'image' => 'required|image|mimes:jpeg,png,jpg',
-            'post_type' => 'required',
             'ordering' => 'required'
         ]);
 
-        // $posts1 = $request->image->getClientOriginalName();
-        // $request->image->move(public_path('/images/posts'), $posts1);
+        $page = new Page();
+        $page->post_id = $request->post_id;
+        $page->title = $request['title'];
+        $page->description = $request['description'];
 
-        $posts = new Posts();
-        $posts->title = $request['title'];
-        $posts->description = $request['description'];
         if ($request->hasFile('image')) {
-            $postImage = $request->image->getClientOriginalName();
-            $request->image->move(public_path('/images/posts'), $postImage);
-            $posts->image = $postImage;
+            $pageImage = $request->image->getClientOriginalName();
+            $request->image->move(public_path('/images/page'), $pageImage);
+            $page->image = $pageImage;
         } else {
-            $posts->image = null;
+            $page->image = null;
         }
-        $posts->post_type = $request['post_type'];
-        if ($request['ordering'] == 0) {
-            $posts->ordering = 1;
-        } else {
-            $posts->ordering = $request['ordering'];
-        }
-        $posts->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
 
-        if ($posts->save() == true) {
+        $page->ordering = $request['ordering'] == 0 ? 1 : $request['ordering'];
+        $page->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
+
+        if ($page->save()) {
             return response()->json([
                 'status' => true,
                 'code' => '200',
-                'message' => 'Post Added Successfully',
+                'message' => 'Page Added Successfully',
             ], 200);
         } else {
             return response()->json([
@@ -102,19 +96,19 @@ class PostsController extends Controller
             ], 401);
         }
 
-        $post = Posts::where('id', $id)->where('deleted_at', 0)->first();
-        if (!$post) {
+        $page = page::where('id', $id)->where('deleted_at', 0)->first();
+        if (!$page) {
             return response()->json([
                 'status' => false,
                 'code' => '404',
-                'message' => 'Post Data Not Found',
+                'message' => 'Page Data Not Found',
             ], 404);
         }
         return response()->json([
             'status' => true,
             'code' => '200',
-            'message' => 'Post Data Fetch Successfully',
-            'results' => $post,
+            'message' => 'Page Data Fetch Successfully',
+            'results' => $page,
         ], 200);
     }
 
@@ -129,27 +123,27 @@ class PostsController extends Controller
             ], 401);
         }
 
-        $data = Posts::where('deleted_at', 0)->find($id);
+        $data = Page::where('deleted_at', 0)->find($id);
         if (!$data) {
             return response()->json([
                 'status' => false,
                 'code' => '404',
-                'message' => 'Post Data Not Found',
+                'message' => 'Page Data Not Found',
             ], 404);
         }
+        $data->image_url = $data->image ? url('/images/page/' . $data->image) : null;
 
-        $data->image_url = $data->image ? url('/images/posts/' . $data->image) : null;
         return response()->json([
             'status' => true,
             'code' => '200',
-            'message' => 'Post Data Fetch Successfully',
+            'message' => 'Page Data Fetch Successfully',
             'results' => $data,
         ], 200);
     }
 
     public function update(Request $request, $id)
     {
-        $user = Auth::user()->id;
+        $user = Auth::user();
         if (!$user) {
             return response()->json([
                 'status' => false,
@@ -158,39 +152,41 @@ class PostsController extends Controller
             ], 401);
         }
 
-        $posts = Posts::find($id);
-
-        if (!$posts) {
+        $page = Page::find($id);
+        if (!$page) {
             return response()->json([
                 'status' => false,
                 'code' => '404',
-                'message' => 'Post Data Not Found',
-
+                'message' => 'Page Not Found',
             ], 404);
         }
 
+        $page->post_id = $request->post_id;
+        $page->title = $request['title'];
+        $page->description = $request['description'];
+
         if ($request->hasFile('image')) {
-            $postImage = $request->image->getClientOriginalName();
-            $request->image->move(public_path('/images/posts'), $postImage);
-            $posts->image = $postImage;
+            $pageImage = $request->image->getClientOriginalName();
+            $request->image->move(public_path('/images/page'), $pageImage);
+            $page->image = $pageImage;
         }
 
-        $posts->title = $request->title;
-        $posts->description = $request->description;
-        $posts->post_type = $request->post_type;
-        if ($request['ordering'] == 0) {
-            $posts->ordering = 1;
+        $page->ordering = $request['ordering'] == 0 ? 1 : $request['ordering'];
+        $page->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
+
+        if ($page->save()) {
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'Page Updated Successfully',
+            ], 200);
         } else {
-            $posts->ordering = $request['ordering'];
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Something went wrong'
+            ], 404);
         }
-        $posts->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
-
-        $posts->update();
-        return response()->json([
-            'status' => true,
-            'code' => '200',
-            'message' => 'Post Data Updated Successfully',
-        ], 200);
     }
 
     public function active($id)
@@ -204,7 +200,7 @@ class PostsController extends Controller
             ], 401);
         }
 
-        $status = Posts::find($id);
+        $status = Page::find($id);
 
         if (!$status) {
             return response()->json([
@@ -238,7 +234,7 @@ class PostsController extends Controller
             ], 401);
         }
 
-        $deletePage = Posts::find($id);
+        $deletePage = Page::find($id);
 
         if ($deletePage) {
             $deletePage->deleted_at = 1;
@@ -246,7 +242,7 @@ class PostsController extends Controller
                 return response()->json([
                     'status' => true,
                     'code' => '200',
-                    'message' => 'Post Data Deleted Successfully',
+                    'message' => 'Page Data Deleted Successfully',
 
                 ], 200);
             }
@@ -254,7 +250,7 @@ class PostsController extends Controller
         return response()->json([
             'status' => false,
             'code' => '404',
-            'message' => 'No Matching Post Found For Deletion',
+            'message' => 'No Matching Page Found For Deletion',
         ], 404);
     }
 }

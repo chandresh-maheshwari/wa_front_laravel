@@ -15,6 +15,7 @@ use App\Http\Controllers\NavBarController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\ImproveEnvirmentalPortectionController;
 use App\Http\Controllers\PackageController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\PostsController;
 use App\Http\Controllers\ProducerReceiverController;
 use App\Http\Controllers\QuoteController;
@@ -136,6 +137,16 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/post-page-update/{id}', [PostsController::class, 'update']);
     Route::delete('/post-page-delete/{id}', [PostsController::class, 'destroy']);
     Route::post('/post-page-active/{id}', [PostsController::class, 'active']);
+
+    /** Pages api routes create by ns */
+
+    Route::get('/page-list', [PageController::class, 'index']);
+    Route::post('/page-store', [PageController::class, 'store']);
+    Route::get('/page-show/{id}', [PageController::class, 'show']);
+    Route::get('/page-edit/{id}', [PageController::class, 'edit']);
+    Route::post('/page-update/{id}', [PageController::class, 'update']);
+    Route::delete('/page-delete/{id}', [PageController::class, 'destroy']);
+    Route::post('/page-active/{id}', [PageController::class, 'active']);
 });
 
 

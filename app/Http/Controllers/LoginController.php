@@ -49,40 +49,6 @@ class LoginController extends Controller
         ], 200);
     }
 
-
-    /** Function used for refresh page then token change by ns */
-    // public function refresh(Request $request)
-    // {
-    //     try {
-    //         $newToken = JWTAuth::parseToken()->refresh();
-    //         $user = JWTAuth::setToken($newToken)->toUser();
-
-    //         $user->save();
-    //         $userArray = $user->toArray();
-    //         unset($userArray['add_token']); 
-
-    //         return response()->json([
-    //             'status' => true,
-    //             'code' => '200',
-    //             'message' => 'Token refreshed successfully',
-    //             'token' => $newToken, 
-    //             'user' => $userArray,
-    //         ], 200);
-    //     } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
-    //         return response()->json([
-    //             'status' => false,
-    //             'code' => '401',
-    //             'message' => 'Token is invalid',
-    //         ], 401);
-    //     } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
-    //         return response()->json([
-    //             'status' => false,
-    //             'code' => '500',
-    //             'message' => 'Could not refresh token',
-    //         ], 500);
-    //     }
-    // }
-
     public function refresh(Request $request)
     {
         try {
