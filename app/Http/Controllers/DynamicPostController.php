@@ -15,6 +15,35 @@ class DynamicPostController extends Controller
         $this->request = $request;
         $this->dynamicPost1 = $dynamicPost;
     }
+
+
+    public function listPosts()
+    {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+        $post = DynamicPost::where('deleted_at', 0)->get();
+
+        if ($post->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Post Data Not Found',
+            ], 404);
+        }
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => 'Post Data Fetch Successfully',
+            'results' => $post,
+        ], 200);
+    }
     public function addPost(Request $request)
     {
         $user = Auth::user();

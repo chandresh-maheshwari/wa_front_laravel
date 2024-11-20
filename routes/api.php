@@ -150,6 +150,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/page-active/{id}', [PageController::class, 'active']);
     /** Dynamic Post api routes create by ns */
 
+    Route::get('/dynamic-post-list', [DynamicPostController::class, 'listPosts']);
     Route::post('/dynamic-post-store', [DynamicPostController::class, 'addPost']);
 });
 
