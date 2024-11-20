@@ -13,6 +13,40 @@ use Illuminate\Support\Facades\Log;
 class PostStoreController extends Controller
 {
 
+    /** 
+     * List all posts that are not deleted.
+     * Ensures the user is authenticated before fetching the posts. create by ns
+     */
+    public function getList()
+    {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+        $postData = PostStore::where('deleted_at', 0)->get();
+
+        if ($postData->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Post Data Not Found',
+            ], 404);
+        }
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => 'Post Data Fetch Successfully',
+            'results' => $postData,
+        ], 200);
+    }
+
+    /** Function used for the post value store in the database create by ns */
+
     public function postStore(Request $request, $postTitle)
     {
         $user = Auth::user()->id;

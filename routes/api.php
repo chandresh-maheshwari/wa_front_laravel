@@ -163,6 +163,7 @@ Route::middleware('auth:api')->group(function () {
 
     /**  post value store api routes create by ns*/
 
+    Route::get('/post-data-list', [PostStoreController::class, 'getList']);
     Route::post('/post-data-store/{postTitle}', [PostStoreController::class, 'postStore']);
 });
 
