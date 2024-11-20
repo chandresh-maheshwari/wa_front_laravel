@@ -16,7 +16,7 @@ class DynamicPostController extends Controller
         $this->dynamicPost1 = $dynamicPost;
     }
 
-/** Function used for the listing create by ns */
+    /** Function used for the listing create by ns */
 
     public function listPosts()
     {
@@ -87,6 +87,7 @@ class DynamicPostController extends Controller
             ], 404);
         }
     }
+    /** Function used for the see particular id data create by ns */
 
     public function show($id)
     {
@@ -115,6 +116,8 @@ class DynamicPostController extends Controller
         ], 200);
     }
 
+    /** Function used for the edit data create by ns */
+
     public function edit($id)
     {
         $user = Auth::user()->id;
@@ -140,5 +143,48 @@ class DynamicPostController extends Controller
             'message' => 'Post Data Fetch Successfully',
             'results' => $data,
         ], 200);
+    }
+
+    /** Function used for the updata data create by ns */
+
+    public function update(Request $request, $id)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+        $post = DynamicPost::where('id', $id)->where('deleted_at', 0)->first();
+        if (!$post) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Post Data Not Found',
+            ], 404);
+        }
+
+        $post->post_title = $request['post_title'];
+
+        if ($request->has('post_description')) {
+            $post->post_description = $request['post_description'];
+        }
+
+        if ($post->save()) {
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'Post Updated Successfully',
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => false,
+                'code' => '500',
+                'message' => 'Failed to update post',
+            ], 500);
+        }
     }
 }
