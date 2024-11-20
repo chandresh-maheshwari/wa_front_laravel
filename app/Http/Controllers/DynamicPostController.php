@@ -158,11 +158,6 @@ class DynamicPostController extends Controller
             ], 401);
         }
 
-        $this->validate($request, [
-            'post_description.*.label' => 'sometimes|required|string',
-            'post_description.*.type' => 'sometimes|required|string'
-        ]);
-
         $post = DynamicPost::where('id', $id)->where('deleted_at', 0)->first();
         if (!$post) {
             return response()->json([
