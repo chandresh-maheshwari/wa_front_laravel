@@ -145,8 +145,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/dynamic-post-show/{id}', [DynamicPostController::class, 'show']);
     Route::get('/dynamic-post-edit/{id}', [DynamicPostController::class, 'edit']);
     Route::post('/dynamic-post-update/{id}', [DynamicPostController::class, 'update']);
-    Route::delete('/dynamic-post-delete/{id}', [DynamicPostController::class, 'destroy']);
-    Route::post('/dynamic-post-active/{id}', [DynamicPostController::class, 'active']);
+    Route::delete('/dynamic-post-delete/{postTitle}', [DynamicPostController::class, 'destroy']);
+    Route::post('/dynamic-post-active/{postTitle}', [DynamicPostController::class, 'active']);
 });
 
 

@@ -16,7 +16,10 @@ class DynamicPostController extends Controller
         $this->dynamicPost1 = $dynamicPost;
     }
 
-    /** Function used for the listing create by ns */
+    /** 
+     * List all posts that are not deleted.
+     * Ensures the user is authenticated before fetching the posts. create by ns
+     */
 
     public function listPosts()
     {
@@ -46,7 +49,10 @@ class DynamicPostController extends Controller
         ], 200);
     }
 
-    /** Function used for the store data in the database create by ns */
+    /** 
+     * Store a new post in the database.
+     * Validates the request data before saving. create by ns
+     */
 
     public function addPost(Request $request)
     {
@@ -87,7 +93,11 @@ class DynamicPostController extends Controller
             ], 404);
         }
     }
-    /** Function used for the see particular id data create by ns */
+
+    /** 
+     * Display a specific post by its ID.
+     * Ensures the post is not deleted before displaying. create by ns
+     */
 
     public function show($id)
     {
@@ -116,7 +126,10 @@ class DynamicPostController extends Controller
         ], 200);
     }
 
-    /** Function used for the edit data create by ns */
+    /** 
+     * Retrieve a post by its ID for editing.
+     * Ensures the post is not deleted before fetching. create by ns
+     */
 
     public function edit($id)
     {
@@ -145,7 +158,10 @@ class DynamicPostController extends Controller
         ], 200);
     }
 
-    /** Function used for the updata data create by ns */
+    /** 
+     * Update a post's title and description by its ID.
+     * Ensures the post is not deleted before updating. create by ns
+     */
 
     public function update(Request $request, $id)
     {
@@ -186,5 +202,87 @@ class DynamicPostController extends Controller
                 'message' => 'Failed to update post',
             ], 500);
         }
+    }
+
+    /** 
+     * Soft delete a post by its title.
+     * If the post is already deleted, it returns a message indicating so. create by ns
+     */
+
+    public function destroy($postTitle)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+        $post = DynamicPost::where('post_title', $postTitle)->first();
+
+        if ($post) {
+            if ($post->deleted_at == 1) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '400',
+                    'message' => 'Record already deleted',
+                ], 400);
+            }
+
+            $post->deleted_at = 1;
+            if ($post->save()) {
+                return response()->json([
+                    'status' => true,
+                    'code' => '200',
+                    'message' => 'Post Data Deleted Successfully',
+                ], 200);
+            }
+        } else {
+            return response()->json([
+                'status' => false,
+                'code' => '500',
+                'message' => 'Failed to delete post',
+            ], 500);
+        }
+    }
+
+    /** 
+     * Toggle the active status of a post by its title.
+     * If the post is active, it will be deactivated. create by ns
+     */
+    public function active($postTitle)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+        $data = DynamicPost::where('post_title', $postTitle)->first();
+
+        if (!$data) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Record not found',
+            ], 404);
+        }
+
+        $data->status = $data->status ? 0 : 1;
+        $data->save();
+
+        $message = $data->status ? 'Activated Successfully' : 'Deactivated Successfully';
+
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => $message,
+            'data' => $data->status
+        ]);
     }
 }
