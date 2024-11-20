@@ -18,6 +18,7 @@ use App\Http\Controllers\ImproveEnvirmentalPortectionController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PostsController;
+use App\Http\Controllers\PostStoreController;
 use App\Http\Controllers\ProducerReceiverController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\TopMenuController;
@@ -148,6 +149,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/page-update/{id}', [PageController::class, 'update']);
     Route::delete('/page-delete/{id}', [PageController::class, 'destroy']);
     Route::post('/page-active/{id}', [PageController::class, 'active']);
+
     /** Dynamic Post api routes create by ns */
 
     Route::get('/dynamic-post-list', [DynamicPostController::class, 'listPosts']);
@@ -157,6 +159,11 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/dynamic-post-update/{id}', [DynamicPostController::class, 'update']);
     Route::delete('/dynamic-post-delete/{postTitle}', [DynamicPostController::class, 'destroy']);
     Route::post('/dynamic-post-active/{postTitle}', [DynamicPostController::class, 'active']);
+
+
+    /**  post value store api routes create by ns*/
+
+    Route::post('/post-data-store/{postTitle}', [PostStoreController::class, 'postStore']);
 });
 
 
