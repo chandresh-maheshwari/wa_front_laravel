@@ -159,7 +159,6 @@ class DynamicPostController extends Controller
         }
 
         $this->validate($request, [
-            'post_title' => 'required|string|max:255',
             'post_description.*.label' => 'sometimes|required|string',
             'post_description.*.type' => 'sometimes|required|string'
         ]);
