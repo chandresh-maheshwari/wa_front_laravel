@@ -217,6 +217,100 @@ class PostStoreController extends Controller
     }
 
     /** 
+     * Update a post's title and description by its postName.
+     * Ensures the post is not deleted before updating. create by ns
+     */
+
+     public function update(Request $request, $postName)
+     {
+         $user = Auth::user();
+         if (!$user) {
+             return response()->json([
+                 'status' => false,
+                 'code' => '401',
+                 'message' => 'User not authenticated',
+             ], 401);
+         }
+     
+         $post = PostStore::where('post_name', $postName)->where('deleted_at', 0)->first();
+         if (!$post) {
+             return response()->json([
+                 'status' => false,
+                 'code' => '404',
+                 'message' => 'Post Data Not Found',
+             ], 404);
+         }
+     
+         $postData = DynamicPost::where('post_title', $postName)->first();
+         if (!$postData) {
+             return response()->json([
+                 'status' => false,
+                 'code' => '404',
+                 'message' => 'Post Data Not Found',
+             ], 404);
+         }
+     
+         $requiredFields = [];
+         $labelMap = [];
+         foreach ($postData->post_description as $field) {
+             $normalizedLabel = str_replace(' ', '_', $field['label']);
+             $labelMap[$normalizedLabel] = $field['label'];
+             if ($field['type'] === 'file') {
+                 $requiredFields[$normalizedLabel] = 'nullable|file|mimes:jpeg,png,gif,svg|max:2048';
+             } else {
+                 $requiredFields[$normalizedLabel] = 'nullable|string';
+             }
+         }
+     
+         $requestData = $request->all();
+         $formattedRequestData = [];
+         foreach ($requestData as $key => $value) {
+             $formattedRequestData[str_replace(' ', '_', $key)] = $value;
+         }
+         $validateRequest = Validator::make($formattedRequestData, $requiredFields);
+     
+         if ($validateRequest->fails()) {
+             Log::error('Validation failed', $validateRequest->errors()->toArray());
+             return response()->json([
+                 'status' => false,
+                 'code' => '404',
+                 'errors' => $validateRequest->errors()
+             ], 404);
+         }
+     
+         $data = [];
+         foreach ($requiredFields as $normalizedLabel => $rules) {
+             $originalLabel = $labelMap[$normalizedLabel];
+             $data[$originalLabel] = $formattedRequestData[$normalizedLabel] ?? $post->data[$originalLabel] ?? null;
+         }
+     
+         foreach ($postData->post_description as $field) {
+             $normalizedLabel = str_replace(' ', '_', $field['label']);
+             if ($field['type'] === 'file' && $request->hasFile($normalizedLabel)) {
+                 $file = $request->file($normalizedLabel);
+                 $originalName = $file->getClientOriginalName();
+                 $uploadFolder = 'uploads/dynamic_post_store';
+                 $file->move(public_path($uploadFolder), $originalName);
+                 $data[$field['label']] = URL::to($uploadFolder . '/' . $originalName);
+             }
+         }
+     
+         $post->data = $data;
+         if ($post->save()) {
+             return response()->json([
+                 'status' => true,
+                 'code' => '200',
+                 'message' => 'Post Updated Successfully',
+             ], 200);
+         } else {
+             return response()->json([
+                 'status' => false,
+                 'code' => '500',
+                 'message' => 'Failed to update post',
+             ], 500);
+         }
+     }
+    /** 
      * Soft delete a post by its title.
      * If the post is already deleted, it returns a message indicating so. create by ns
      */
@@ -258,5 +352,43 @@ class PostStoreController extends Controller
                 'message' => 'Failed to delete post',
             ], 500);
         }
+    }
+
+    /** 
+     * Toggle the active status of a post by its title.
+     * If the post is active, it will be deactivated. create by ns
+     */
+    public function active($postName)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+        $data = postStore::where('post_name', $postName)->first();
+
+        if (!$data) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Record not found',
+            ], 404);
+        }
+
+        $data->status = $data->status ? 0 : 1;
+        $data->save();
+
+        $message = $data->status ? 'Activated Successfully' : 'Deactivated Successfully';
+
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => $message,
+            'data' => $data->status
+        ]);
     }
 }
