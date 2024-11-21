@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ContactPageController;
 use App\Http\Controllers\DynamicPostController;
+use App\Http\Controllers\GetFormDataController;
 use App\Http\Controllers\NavBarController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\ImproveEnvirmentalPortectionController;
@@ -165,6 +166,12 @@ Route::middleware('auth:api')->group(function () {
 
     Route::get('/post-data-list', [PostStoreController::class, 'getList']);
     Route::post('/post-data-store/{postTitle}', [PostStoreController::class, 'postStore']);
+
+
+
+
+    /** Get Form data value api routes create by ns */
+    Route::get('/get-form-data/{postTitle}', [GetFormDataController::class, 'getFormData']);
 });
 
 
