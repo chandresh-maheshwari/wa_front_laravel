@@ -132,4 +132,131 @@ class PostStoreController extends Controller
             ], 404);
         }
     }
+
+    /** 
+     * Display a specific post by its postName.
+     * Ensures the post is not deleted before displaying. create by ns
+     */
+    public function show($postName)
+    {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+        $post = postStore::where('post_name', $postName)->first();
+
+        if (!$post) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Post Data Not Found',
+            ], 404);
+        }
+
+        if ($post->deleted_at != 0) {
+            return response()->json([
+                'status' => false,
+                'code' => '410',
+                'message' => 'This record is deleted',
+            ], 410);
+        }
+
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => 'Post Data Fetch Successfully',
+            'results' => $post,
+        ], 200);
+    }
+
+    /** 
+     * Retrieve a post by its ID for editing.
+     * Ensures the post is not deleted before fetching. create by ns
+     */
+
+    public function edit($postName)
+    {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+        $data = postStore::where('post_name', $postName)->first();
+
+        if (!$data) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Post Data Not Found',
+            ], 404);
+        }
+
+        if ($data->deleted_at != 0) {
+            return response()->json([
+                'status' => false,
+                'code' => '410',
+                'message' => 'This record is deleted',
+            ], 410);
+        }
+
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => 'Post Data Fetch Successfully',
+            'results' => $data,
+        ], 200);
+    }
+
+    /** 
+     * Soft delete a post by its title.
+     * If the post is already deleted, it returns a message indicating so. create by ns
+     */
+
+    public function destroy($postName)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+        $post = postStore::where('post_name', $postName)->first();
+
+        if ($post) {
+            if ($post->deleted_at == 1) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '400',
+                    'message' => 'Record already deleted',
+                ], 400);
+            }
+
+            $post->deleted_at = 1;
+            if ($post->save()) {
+                return response()->json([
+                    'status' => true,
+                    'code' => '200',
+                    'message' => 'Post Data Deleted Successfully',
+                ], 200);
+            }
+        } else {
+            return response()->json([
+                'status' => false,
+                'code' => '500',
+                'message' => 'Failed to delete post',
+            ], 500);
+        }
+    }
 }
