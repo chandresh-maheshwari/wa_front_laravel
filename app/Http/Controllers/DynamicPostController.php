@@ -69,14 +69,24 @@ class DynamicPostController extends Controller
             'post_title' => 'required|string|max:255',
             'post_description' => 'required',
             'post_description.*.label' => 'required|string',
-            'post_description.*.type' => 'required|string'
+            'post_description.*.type' => 'required|string',
+            'post_type' => 'required|string',
+            'ordering' => 'sometimes|integer|min:1',
         ]);
 
         $postData = $request['post_description'];
+        $postData1 = $request['post_type'];
+
+        $ordering = $request['ordering'] ?? 1;
+        if ($ordering == 0) {
+            $ordering = 1;
+        }
 
         $saveData = $this->dynamicPost1->savePost([
             'post_title' => $request['post_title'],
-            'post_description' => $postData
+            'post_description' => $postData,
+            'post_type' => $postData1,
+            'ordering' => $ordering
         ]);
 
         if (isset($saveData) && $saveData !== false) {
@@ -189,6 +199,13 @@ class DynamicPostController extends Controller
             $post->post_description = $request['post_description'];
         }
 
+        if ($request->has('post_type')) {
+            $post->post_type = $request['post_type'];
+        }
+        
+        if ($request->has('ordering')) {
+            $post->ordering = $request['ordering'];
+        }
         if ($post->save()) {
             return response()->json([
                 'status' => true,

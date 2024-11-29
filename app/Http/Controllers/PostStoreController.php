@@ -316,7 +316,7 @@ class PostStoreController extends Controller
      * If the post is already deleted, it returns a message indicating so. create by ns
      */
 
-    public function destroy($postName)
+    public function destroy($id)
     {
         $user = Auth::user();
         if (!$user) {
@@ -327,7 +327,7 @@ class PostStoreController extends Controller
             ], 401);
         }
 
-        $post = postStore::where('post_name', $postName)->first();
+        $post = postStore::where('id', $id)->first();
 
         if ($post) {
             if ($post->deleted_at == 1) {
@@ -359,7 +359,7 @@ class PostStoreController extends Controller
      * Toggle the active status of a post by its title.
      * If the post is active, it will be deactivated. create by ns
      */
-    public function active($postName)
+    public function active($id)
     {
         $user = Auth::user();
         if (!$user) {
@@ -370,7 +370,7 @@ class PostStoreController extends Controller
             ], 401);
         }
 
-        $data = postStore::where('post_name', $postName)->first();
+        $data = postStore::where('id', $id)->first();
 
         if (!$data) {
             return response()->json([

@@ -16,6 +16,8 @@ class DynamicPost extends Model
     protected $fillable = [
         'post_title	',
         'post_description',
+        'post_type',
+        'ordering',
         'status',
         'deleted_at',
         'created_at',
@@ -40,6 +42,8 @@ class DynamicPost extends Model
     {
         $this->post_title = $data['post_title'];
         $this->post_description = $data['post_description'];
+        $this->post_type = $data['post_type']; 
+        $this->ordering = $data['ordering']; 
         return $this->save();
     }
 }
