@@ -180,7 +180,7 @@ class PostStoreController extends Controller
      * Ensures the post is not deleted before fetching. create by ns
      */
 
-    public function edit($postName)
+    public function edit($id)
     {
         $user = Auth::user()->id;
         if (!$user) {
@@ -191,7 +191,7 @@ class PostStoreController extends Controller
             ], 401);
         }
 
-        $data = postStore::where('post_name', $postName)->first();
+        $data = postStore::where('id', $id)->first();
 
         if (!$data) {
             return response()->json([

@@ -168,7 +168,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/post-data-list/{postName}', [PostStoreController::class, 'getList']);
     Route::post('/post-data-store/{postTitle}', [PostStoreController::class, 'postStore']);
     Route::get('/post-data-show/{postName}', [PostStoreController::class, 'show']);
-    Route::get('/post-data-edit/{postName}', [PostStoreController::class, 'edit']);
+    Route::get('/post-data-edit/{id}', [PostStoreController::class, 'edit']);
     Route::post('/post-data-update/{postName}', [PostStoreController::class, 'update']);
     Route::delete('/post-data-delete/{id}', [PostStoreController::class, 'destroy']);
     Route::post('/post-data-active/{id}', [PostStoreController::class, 'active']);
