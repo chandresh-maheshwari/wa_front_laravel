@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ContactPageController;
+use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\DynamicPostController;
 use App\Http\Controllers\GetFormDataController;
 use App\Http\Controllers\NavBarController;
@@ -177,6 +178,17 @@ Route::middleware('auth:api')->group(function () {
 
     /** Get Form data value api routes create by ns */
     Route::get('/get-form-data/{postTitle}', [GetFormDataController::class, 'getFormData']);
+
+
+    /** Dynamic page api routes create by ns */
+    Route::get('/dynamic-page-list', [DynamicPageController::class, 'listPages']);
+    Route::post('/dynamic-page-store', [DynamicPageController::class, 'addPage']);
+    Route::get('/dynamic-page-show/{id}', [DynamicPageController::class, 'show']);
+    Route::get('/dynamic-page-edit/{id}', [DynamicPageController::class, 'edit']);
+    Route::post('/dynamic-page-update/{id}', [DynamicPageController::class, 'update']);
+    Route::delete('/dynamic-page-delete/{pageName}', [DynamicPageController::class, 'destroy']);
+    Route::post('/dynamic-page-active/{pageName}', [DynamicPageController::class, 'active']);
+
 });
 
 
