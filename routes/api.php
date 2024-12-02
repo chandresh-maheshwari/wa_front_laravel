@@ -14,6 +14,8 @@ use App\Http\Controllers\ContactPageController;
 use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\DynamicPostController;
 use App\Http\Controllers\GetFormDataController;
+use App\Http\Controllers\GetPageFormDataController;
+use App\Http\Controllers\GetPostFormDataController;
 use App\Http\Controllers\NavBarController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\ImproveEnvirmentalPortectionController;
@@ -188,6 +190,10 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/dynamic-page-update/{id}', [DynamicPageController::class, 'update']);
     Route::delete('/dynamic-page-delete/{pageName}', [DynamicPageController::class, 'destroy']);
     Route::post('/dynamic-page-active/{pageName}', [DynamicPageController::class, 'active']);
+
+    
+    /** Get Form data value api routes create by ns */
+    Route::get('/get-page-data/{pageName}', [GetPageFormDataController::class, 'getpageData']);
 
 });
 
