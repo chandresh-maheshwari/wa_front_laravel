@@ -246,7 +246,7 @@ class PostStoreController extends Controller
             ], 404);
         }
 
-        $post_name = $request->input('name', null);
+        $post_name = $request->input('post_name', null);
 
         if ($post_name !== null) {
             $post->post_name = $post_name;
@@ -256,7 +256,7 @@ class PostStoreController extends Controller
 
         if ($newData !== null) {
             if (is_string($newData)) {
-                $newData = ['data' => $newData];
+                $newData = [$newData];
             }
 
             $post->data = json_encode($newData);
