@@ -254,14 +254,15 @@ class PostStoreController extends Controller
 
         $newData = $request->input('data', null);
 
-        if ($newData !== null) {
-            if (is_string($newData)) {
-                $newData = [$newData];
-            }
+        // if ($newData !== null) {
+        //     if (is_string($newData)) {
+        //         $newData = [$newData];
+        //     }
 
-            $post->data = json_encode($newData);
-        }
+        //     $post->data = json_encode($newData);
+        // }
 
+        $post->data = $newData;
         if ($post->save()) {
             return response()->json([
                 'status' => true,
