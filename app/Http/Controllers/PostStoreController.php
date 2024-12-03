@@ -19,7 +19,7 @@ class PostStoreController extends Controller
      */
     public function getList($postName)
     {
-        // dd($postName);
+
         $user = Auth::user()->id;
         if (!$user) {
             return response()->json([
@@ -33,11 +33,13 @@ class PostStoreController extends Controller
 
         if ($postData->isEmpty()) {
             return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Post Data Not Found',
-            ], 404);
+                'status' => true,
+                'code' => '200',
+                'message' => 'No Post Data Found',
+                'results' => [],
+            ], 200);
         }
+
         return response()->json([
             'status' => true,
             'code' => '200',
@@ -347,7 +349,7 @@ class PostStoreController extends Controller
         }
 
         $post_name = $request->input('name', null);
-        
+
         if ($post_name !== null) {
             $post->post_name = $post_name;
         }

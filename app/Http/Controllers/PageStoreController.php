@@ -12,7 +12,41 @@ use Illuminate\Support\Facades\Log;
 
 class PageStoreController extends Controller
 {
-    /** Function used for the post value store in the database create by ns */
+
+    /** 
+     * List all page that are not deleted.
+     * Ensures the user is authenticated before fetching the page. create by ns
+     */
+    public function getPageList($id)
+{
+    $user = Auth::user()->id;
+    if (!$user) {
+        return response()->json([
+            'status' => false,
+            'code' => '401',
+            'message' => 'User not authenticated',
+        ], 401);
+    }
+
+    $pageData = PageStore::where('id', $id)->where('deleted_at', 0)->get();
+
+    if ($pageData->isEmpty()) {
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => 'No Page Data Found',
+            'results' => [],  
+        ], 200);
+    }
+
+    return response()->json([
+        'status' => true,
+        'code' => '200',
+        'message' => 'Page Data Fetch Successfully',
+        'results' => $pageData,
+    ], 200);
+}
+    /** Function used for the page value store in the database create by ns */
 
     public function pageStore(Request $request, $pagesName)
     {
@@ -109,4 +143,87 @@ class PageStoreController extends Controller
             ], 404);
         }
     }
+
+     /** 
+     * Display a specific page by its postName.
+     * Ensures the page is not deleted before displaying. create by ns
+     */
+    public function show($id)
+    {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+        $pageData = pageStore::where('id', $id)->first();
+
+        if (!$pageData) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Page Data Not Found',
+            ], 404);
+        }
+
+        if ($pageData->deleted_at != 0) {
+            return response()->json([
+                'status' => false,
+                'code' => '410',
+                'message' => 'This record is deleted',
+            ], 410);
+        }
+
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => 'Page Data Fetch Successfully',
+            'results' => $pageData,
+        ], 200);
+    }
+
+     /** 
+     * Retrieve a post by its ID for editing.
+     * Ensures the post is not deleted before fetching. create by ns
+     */
+
+     public function edit($id)
+     {
+         $user = Auth::user()->id;
+         if (!$user) {
+             return response()->json([
+                 'status' => false,
+                 'code' => '401',
+                 'message' => 'User not authenticated',
+             ], 401);
+         }
+ 
+         $data = pageStore::where('id', $id)->first();
+ 
+         if (!$data) {
+             return response()->json([
+                 'status' => false,
+                 'code' => '404',
+                 'message' => 'Page Data Not Found',
+             ], 404);
+         }
+ 
+         if ($data->deleted_at != 0) {
+             return response()->json([
+                 'status' => false,
+                 'code' => '410',
+                 'message' => 'This record is deleted',
+             ], 410);
+         }
+ 
+         return response()->json([
+             'status' => true,
+             'code' => '200',
+             'message' => 'Page Data Fetch Successfully',
+             'results' => $data,
+         ], 200);
+     }
 }

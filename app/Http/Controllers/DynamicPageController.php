@@ -21,33 +21,35 @@ class DynamicPageController extends Controller
      * Ensures the user is authenticated before fetching the pages. create by ns
      */
 
-    public function listPages()
-    {
-        $user = Auth::user()->id;
-        if (!$user) {
-            return response()->json([
-                'status' => false,
-                'code' => '401',
-                'message' => 'User not authenticated',
-            ], 401);
-        }
-
-        $page = DynamicPage::where('deleted_at', 0)->get();
-
-        if ($page->isEmpty()) {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Page Data Not Found',
-            ], 404);
-        }
-        return response()->json([
-            'status' => true,
-            'code' => '200',
-            'message' => 'Page Data Fetch Successfully',
-            'results' => $page,
-        ], 200);
-    }
+     public function listPages()
+     {
+         $user = Auth::user()->id;
+         if (!$user) {
+             return response()->json([
+                 'status' => false,
+                 'code' => '401',
+                 'message' => 'User not authenticated',
+             ], 401);
+         }
+     
+         $page = DynamicPage::where('deleted_at', 0)->get();
+     
+         if ($page->isEmpty()) {
+             return response()->json([
+                 'status' => true,
+                 'code' => '200',
+                 'message' => 'No Page Data Found',
+                 'results' => [], 
+             ], 200);
+         }
+     
+         return response()->json([
+             'status' => true,
+             'code' => '200',
+             'message' => 'Page Data Fetch Successfully',
+             'results' => $page,
+         ], 200);
+     }
 
     /** 
      * Store a new page in the database.

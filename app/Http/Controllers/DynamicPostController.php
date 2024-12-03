@@ -21,33 +21,35 @@ class DynamicPostController extends Controller
      * Ensures the user is authenticated before fetching the posts. create by ns
      */
 
-    public function listPosts()
-    {
-        $user = Auth::user()->id;
-        if (!$user) {
-            return response()->json([
-                'status' => false,
-                'code' => '401',
-                'message' => 'User not authenticated',
-            ], 401);
-        }
-
-        $post = DynamicPost::where('deleted_at', 0)->get();
-
-        if ($post->isEmpty()) {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Post Data Not Found',
-            ], 404);
-        }
-        return response()->json([
-            'status' => true,
-            'code' => '200',
-            'message' => 'Post Data Fetch Successfully',
-            'results' => $post,
-        ], 200);
-    }
+     public function listPosts()
+     {
+         $user = Auth::user()->id;
+         if (!$user) {
+             return response()->json([
+                 'status' => false,
+                 'code' => '401',
+                 'message' => 'User not authenticated',
+             ], 401);
+         }
+     
+         $post = DynamicPost::where('deleted_at', 0)->get();
+     
+         if ($post->isEmpty()) {
+             return response()->json([
+                 'status' => true,
+                 'code' => '200',
+                 'message' => 'No Post Data Found',
+                 'results' => [],  
+             ], 200);
+         }
+     
+         return response()->json([
+             'status' => true,
+             'code' => '200',
+             'message' => 'Post Data Fetch Successfully',
+             'results' => $post,
+         ], 200);
+     }
 
     /** 
      * Store a new post in the database.
