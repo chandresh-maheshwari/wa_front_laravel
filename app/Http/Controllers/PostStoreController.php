@@ -29,7 +29,7 @@ class PostStoreController extends Controller
             ], 401);
         }
 
-        $postData = PostStore::where('post_name' , $postName)->where('deleted_at', 0)->get();
+        $postData = PostStore::where('post_name', $postName)->where('deleted_at', 0)->get();
 
         if ($postData->isEmpty()) {
             return response()->json([
@@ -222,7 +222,110 @@ class PostStoreController extends Controller
      * Ensures the post is not deleted before updating. create by ns
      */
 
-    public function update(Request $request, $postName)
+    //  public function update(Request $request, $id)
+    //  {
+    //      $user = Auth::user();
+    //      if (!$user) {
+    //          return response()->json([
+    //              'status' => false,
+    //              'code' => '401',
+    //              'message' => 'User not authenticated',
+    //          ], 401);
+    //      }
+
+    //      $post = PostStore::where('id', $id)->where('deleted_at', 0)->first();
+    //      if (!$post) {
+    //          return response()->json([
+    //              'status' => false,
+    //              'code' => '404',
+    //              'message' => 'Post Data Not Found',
+    //          ], 404);
+    //      }
+
+    //      $postData = DynamicPost::where('id', $id)->where('deleted_at', 0)->first();
+
+    //      dd($postData);
+    //      if (!$postData) {
+    //          return response()->json([
+    //              'status' => false,
+    //              'code' => '404',
+    //              'message' => 'Dynamic Post Data Not Found',
+    //          ], 404);
+    //      }
+
+    //      // Decode JSON if post_description is a JSON string
+    //      $postDescription = json_decode($postData->post_description, true);
+    //      if (!is_array($postDescription)) {
+    //          // Handle error: post_description is not a valid JSON array
+    //          return response()->json([
+    //              'status' => false,
+    //              'code' => '400',
+    //              'message' => 'Invalid post description format',
+    //          ], 400);
+    //      }
+
+    //      $requiredFields = [];
+    //      $labelMap = [];
+    //      foreach ($postDescription as $field) {
+    //          $normalizedLabel = str_replace(' ', '_', $field['label']);
+    //          $labelMap[$normalizedLabel] = $field['label'];
+    //          if ($field['type'] === 'file') {
+    //              $requiredFields[$normalizedLabel] = 'nullable|file|mimes:jpeg,png,gif,svg|max:2048';
+    //          } else {
+    //              $requiredFields[$normalizedLabel] = 'nullable|string';
+    //          }
+    //      }
+
+    //      $requestData = $request->all();
+    //      $formattedRequestData = [];
+    //      foreach ($requestData as $key => $value) {
+    //          $formattedRequestData[str_replace(' ', '_', $key)] = $value;
+    //      }
+    //      $validateRequest = Validator::make($formattedRequestData, $requiredFields);
+
+    //      if ($validateRequest->fails()) {
+    //          Log::error('Validation failed', $validateRequest->errors()->toArray());
+    //          return response()->json([
+    //              'status' => false,
+    //              'code' => '404',
+    //              'errors' => $validateRequest->errors()
+    //          ], 404);
+    //      }
+
+    //      $data = [];
+    //      foreach ($requiredFields as $normalizedLabel => $rules) {
+    //          $originalLabel = $labelMap[$normalizedLabel];
+    //          $data[$originalLabel] = $formattedRequestData[$normalizedLabel] ?? $post->data[$originalLabel] ?? null;
+    //      }
+
+    //      foreach ($postDescription as $field) {
+    //          $normalizedLabel = str_replace(' ', '_', $field['label']);
+    //          if ($field['type'] === 'file' && $request->hasFile($normalizedLabel)) {
+    //              $file = $request->file($normalizedLabel);
+    //              $originalName = $file->getClientOriginalName();
+    //              $uploadFolder = 'uploads/dynamic_post_store';
+    //              $file->move(public_path($uploadFolder), $originalName);
+    //              $data[$field['label']] = URL::to($uploadFolder . '/' . $originalName);
+    //          }
+    //      }
+
+    //      $post->data = $data;
+    //      if ($post->save()) {
+    //          return response()->json([
+    //              'status' => true,
+    //              'code' => '200',
+    //              'message' => 'Post Updated Successfully',
+    //          ], 200);
+    //      } else {
+    //          return response()->json([
+    //              'status' => false,
+    //              'code' => '500',
+    //              'message' => 'Failed to update post',
+    //          ], 500);
+    //      }
+    //  }
+
+    public function update(Request $request, $id)
     {
         $user = Auth::user();
         if (!$user) {
@@ -233,7 +336,8 @@ class PostStoreController extends Controller
             ], 401);
         }
 
-        $post = PostStore::where('post_name', $postName)->where('deleted_at', 0)->first();
+        $post = PostStore::where('id', $id)->where('deleted_at', 0)->first();
+
         if (!$post) {
             return response()->json([
                 'status' => false,
@@ -242,61 +346,22 @@ class PostStoreController extends Controller
             ], 404);
         }
 
-        $postData = DynamicPost::where('post_title', $postName)->first();
-        if (!$postData) {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Post Data Not Found',
-            ], 404);
+        $post_name = $request->input('name', null);
+        
+        if ($post_name !== null) {
+            $post->post_name = $post_name;
         }
 
-        $requiredFields = [];
-        $labelMap = [];
-        foreach ($postData->post_description as $field) {
-            $normalizedLabel = str_replace(' ', '_', $field['label']);
-            $labelMap[$normalizedLabel] = $field['label'];
-            if ($field['type'] === 'file') {
-                $requiredFields[$normalizedLabel] = 'nullable|file|mimes:jpeg,png,gif,svg|max:2048';
-            } else {
-                $requiredFields[$normalizedLabel] = 'nullable|string';
+        $newData = $request->input('data', null);
+
+        if ($newData !== null) {
+            if (is_string($newData)) {
+                $newData = ['data' => $newData];
             }
+
+            $post->data = json_encode($newData);
         }
 
-        $requestData = $request->all();
-        $formattedRequestData = [];
-        foreach ($requestData as $key => $value) {
-            $formattedRequestData[str_replace(' ', '_', $key)] = $value;
-        }
-        $validateRequest = Validator::make($formattedRequestData, $requiredFields);
-
-        if ($validateRequest->fails()) {
-            Log::error('Validation failed', $validateRequest->errors()->toArray());
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'errors' => $validateRequest->errors()
-            ], 404);
-        }
-
-        $data = [];
-        foreach ($requiredFields as $normalizedLabel => $rules) {
-            $originalLabel = $labelMap[$normalizedLabel];
-            $data[$originalLabel] = $formattedRequestData[$normalizedLabel] ?? $post->data[$originalLabel] ?? null;
-        }
-
-        foreach ($postData->post_description as $field) {
-            $normalizedLabel = str_replace(' ', '_', $field['label']);
-            if ($field['type'] === 'file' && $request->hasFile($normalizedLabel)) {
-                $file = $request->file($normalizedLabel);
-                $originalName = $file->getClientOriginalName();
-                $uploadFolder = 'uploads/dynamic_post_store';
-                $file->move(public_path($uploadFolder), $originalName);
-                $data[$field['label']] = URL::to($uploadFolder . '/' . $originalName);
-            }
-        }
-
-        $post->data = $data;
         if ($post->save()) {
             return response()->json([
                 'status' => true,
@@ -311,6 +376,8 @@ class PostStoreController extends Controller
             ], 500);
         }
     }
+
+
     /** 
      * Soft delete a post by its title.
      * If the post is already deleted, it returns a message indicating so. create by ns
