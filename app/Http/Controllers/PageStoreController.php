@@ -18,34 +18,34 @@ class PageStoreController extends Controller
      * Ensures the user is authenticated before fetching the page. create by ns
      */
     public function getPageList($id)
-{
-    $user = Auth::user()->id;
-    if (!$user) {
-        return response()->json([
-            'status' => false,
-            'code' => '401',
-            'message' => 'User not authenticated',
-        ], 401);
-    }
+    {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
 
-    $pageData = PageStore::where('id', $id)->where('deleted_at', 0)->get();
+        $pageData = PageStore::where('id', $id)->where('deleted_at', 0)->get();
 
-    if ($pageData->isEmpty()) {
+        if ($pageData->isEmpty()) {
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'No Page Data Found',
+                'results' => [],
+            ], 200);
+        }
+
         return response()->json([
             'status' => true,
             'code' => '200',
-            'message' => 'No Page Data Found',
-            'results' => [],  
+            'message' => 'Page Data Fetch Successfully',
+            'results' => $pageData,
         ], 200);
     }
-
-    return response()->json([
-        'status' => true,
-        'code' => '200',
-        'message' => 'Page Data Fetch Successfully',
-        'results' => $pageData,
-    ], 200);
-}
     /** Function used for the page value store in the database create by ns */
 
     public function pageStore(Request $request, $pagesName)
@@ -144,7 +144,7 @@ class PageStoreController extends Controller
         }
     }
 
-     /** 
+    /** 
      * Display a specific page by its postName.
      * Ensures the page is not deleted before displaying. create by ns
      */
@@ -185,45 +185,128 @@ class PageStoreController extends Controller
         ], 200);
     }
 
-     /** 
+    /** 
      * Retrieve a post by its ID for editing.
      * Ensures the post is not deleted before fetching. create by ns
      */
 
-     public function edit($id)
-     {
-         $user = Auth::user()->id;
-         if (!$user) {
-             return response()->json([
-                 'status' => false,
-                 'code' => '401',
-                 'message' => 'User not authenticated',
-             ], 401);
-         }
- 
-         $data = pageStore::where('id', $id)->first();
- 
-         if (!$data) {
-             return response()->json([
-                 'status' => false,
-                 'code' => '404',
-                 'message' => 'Page Data Not Found',
-             ], 404);
-         }
- 
-         if ($data->deleted_at != 0) {
-             return response()->json([
-                 'status' => false,
-                 'code' => '410',
-                 'message' => 'This record is deleted',
-             ], 410);
-         }
- 
-         return response()->json([
-             'status' => true,
-             'code' => '200',
-             'message' => 'Page Data Fetch Successfully',
-             'results' => $data,
-         ], 200);
-     }
+    public function edit($id)
+    {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+        $data = pageStore::where('id', $id)->first();
+
+        if (!$data) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Page Data Not Found',
+            ], 404);
+        }
+
+        if ($data->deleted_at != 0) {
+            return response()->json([
+                'status' => false,
+                'code' => '410',
+                'message' => 'This record is deleted',
+            ], 410);
+        }
+
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => 'Page Data Fetch Successfully',
+            'results' => $data,
+        ], 200);
+    }
+
+    /** 
+     * Update a page
+     * Ensures the page is not deleted before updating. create by ns
+     */
+
+    public function update(Request $request, $id)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+        $pageData = PageStore::where('id', $id)->where('deleted_at', 0)->first();
+
+        if (!$pageData) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Page Data Not Found',
+            ], 404);
+        }
+
+        $pages_name = $request->input('pages_name', null);
+        $newData = $request->input('data', null);
+
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $originalName = $file->getClientOriginalName();
+            $uploadFolder = 'uploads/dynamic_page_store';
+            $file->move(public_path($uploadFolder), $originalName);
+            $newData['image'] = URL::to($uploadFolder . '/' . $originalName);
+        }
+
+        if ($newData !== null) {
+            if (is_string($newData)) {
+                $newData = json_decode($newData, true);
+            }
+
+            if (!is_array($newData)) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '400',
+                    'message' => 'Invalid data format',
+                ], 400);
+            }
+        }
+        try {
+            $updateData = [];
+            if ($pages_name !== null) {
+                $updateData['pages_name'] = $pages_name;
+            }
+            if ($newData !== null) {
+                $updateData['data'] = json_encode($newData);
+            }
+
+            $updated = PageStore::where('id', $id)->update($updateData);
+
+            if ($updated) {
+                return response()->json([
+                    'status' => true,
+                    'code' => '200',
+                    'message' => 'Page Updated Successfully',
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'code' => '500',
+                    'message' => 'Failed To Update Page',
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'code' => '500',
+                'message' => 'An error occurred while updating the page',
+            ], 500);
+        }
+    }
 }
