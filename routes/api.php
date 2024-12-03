@@ -21,6 +21,7 @@ use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\ImproveEnvirmentalPortectionController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PageStoreController;
 use App\Http\Controllers\PostsController;
 use App\Http\Controllers\PostStoreController;
 use App\Http\Controllers\ProducerReceiverController;
@@ -161,8 +162,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/dynamic-post-show/{id}', [DynamicPostController::class, 'show']);
     Route::get('/dynamic-post-edit/{id}', [DynamicPostController::class, 'edit']);
     Route::post('/dynamic-post-update/{id}', [DynamicPostController::class, 'update']);
-    Route::delete('/dynamic-post-delete/{postTitle}', [DynamicPostController::class, 'destroy']);
-    Route::post('/dynamic-post-active/{postTitle}', [DynamicPostController::class, 'active']);
+    Route::delete('/dynamic-post-delete/{id}', [DynamicPostController::class, 'destroy']);
+    Route::post('/dynamic-post-active/{id}', [DynamicPostController::class, 'active']);
 
 
     /**  post value store api routes create by ns*/
@@ -188,13 +189,23 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/dynamic-page-show/{id}', [DynamicPageController::class, 'show']);
     Route::get('/dynamic-page-edit/{id}', [DynamicPageController::class, 'edit']);
     Route::post('/dynamic-page-update/{id}', [DynamicPageController::class, 'update']);
-    Route::delete('/dynamic-page-delete/{pageName}', [DynamicPageController::class, 'destroy']);
-    Route::post('/dynamic-page-active/{pageName}', [DynamicPageController::class, 'active']);
+    Route::delete('/dynamic-page-delete/{id}', [DynamicPageController::class, 'destroy']);
+    Route::post('/dynamic-page-active/{id}', [DynamicPageController::class, 'active']);
 
-    
+
     /** Get Form data value api routes create by ns */
     Route::get('/get-page-data/{pageName}', [GetPageFormDataController::class, 'getpageData']);
 
+
+    /**  page value store api routes create by ns*/
+
+    Route::get('/page-data-list/{id}', [PageStoreController::class, 'getPageList']);
+    Route::post('/page-data-store/{pagesName}', [PageStoreController::class, 'pageStore']);
+    Route::get('/page-data-show/{id}', [PageStoreController::class, 'show']);
+    Route::get('/page-data-edit/{id}', [PageStoreController::class, 'edit']);
+    Route::post('/page-data-update/{id}', [PageStoreController::class, 'update']);
+    Route::delete('/page-data-delete/{id}', [PageStoreController::class, 'destroy']);
+    Route::post('/page-data-active/{id}', [PageStoreController::class, 'active']);
 });
 
 

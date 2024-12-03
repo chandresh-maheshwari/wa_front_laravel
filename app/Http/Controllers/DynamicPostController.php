@@ -226,7 +226,7 @@ class DynamicPostController extends Controller
      * If the post is already deleted, it returns a message indicating so. create by ns
      */
 
-    public function destroy($postTitle)
+    public function destroy($id)
     {
         $user = Auth::user();
         if (!$user) {
@@ -237,7 +237,7 @@ class DynamicPostController extends Controller
             ], 401);
         }
 
-        $post = DynamicPost::where('post_title', $postTitle)->first();
+        $post = DynamicPost::where('id', $id)->first();
 
         if ($post) {
             if ($post->deleted_at == 1) {
@@ -269,7 +269,7 @@ class DynamicPostController extends Controller
      * Toggle the active status of a post by its title.
      * If the post is active, it will be deactivated. create by ns
      */
-    public function active($postTitle)
+    public function active($id)
     {
         $user = Auth::user();
         if (!$user) {
@@ -281,7 +281,7 @@ class DynamicPostController extends Controller
             ], 401);
         }
 
-        $data = DynamicPost::where('post_title', $postTitle)->first();
+        $data = DynamicPost::where('id', $id)->first();
 
         if (!$data) {
             return response()->json([

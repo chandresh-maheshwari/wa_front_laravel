@@ -217,7 +217,7 @@ class DynamicPageController extends Controller
      * If the page is already deleted, it returns a message indicating so. create by ns
      */
 
-    public function destroy($pageName)
+    public function destroy($id)
     {
         $user = Auth::user();
         if (!$user) {
@@ -228,7 +228,7 @@ class DynamicPageController extends Controller
             ], 401);
         }
 
-        $page = DynamicPage::where('page_name', $pageName)->first();
+        $page = DynamicPage::where('id', $id)->first();
 
         if ($page) {
             if ($page->deleted_at == 1) {
@@ -260,7 +260,7 @@ class DynamicPageController extends Controller
      * Toggle the active status of a page by its title.
      * If the page is active, it will be deactivated. create by ns
      */
-    public function active($pageName)
+    public function active($id)
     {
         $user = Auth::user();
         if (!$user) {
@@ -272,7 +272,7 @@ class DynamicPageController extends Controller
             ], 401);
         }
 
-        $data = DynamicPage::where('page_name', $pageName)->first();
+        $data = DynamicPage::where('id', $id)->first();
 
         if (!$data) {
             return response()->json([

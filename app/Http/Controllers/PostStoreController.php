@@ -360,7 +360,7 @@ class PostStoreController extends Controller
             }
 
             $post->data = json_encode($newData);
-        }
+    
 
         if ($post->save()) {
             return response()->json([
