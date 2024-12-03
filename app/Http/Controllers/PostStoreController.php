@@ -256,10 +256,10 @@ class PostStoreController extends Controller
 
         if ($newData !== null) {
             if (is_string($newData)) {
-                $newData = [$newData];
+                $newData = json_decode($newData, true); 
             }
-
-            $post->data = json_encode($newData);
+        
+            $post->data = json_encode($newData); 
         }
 
         if ($post->save()) {
