@@ -21,35 +21,44 @@ class DynamicPostController extends Controller
      * Ensures the user is authenticated before fetching the posts. create by ns
      */
 
-     public function listPosts()
-     {
-         $user = Auth::user()->id;
-         if (!$user) {
-             return response()->json([
-                 'status' => false,
-                 'code' => '401',
-                 'message' => 'User not authenticated',
-             ], 401);
-         }
-     
-         $post = DynamicPost::where('deleted_at', 0)->get();
-     
-         if ($post->isEmpty()) {
-             return response()->json([
-                 'status' => true,
-                 'code' => '200',
-                 'message' => 'No Post Data Found',
-                 'results' => [],  
-             ], 200);
-         }
-     
-         return response()->json([
-             'status' => true,
-             'code' => '200',
-             'message' => 'Post Data Fetch Successfully',
-             'results' => $post,
-         ], 200);
-     }
+    public function listPosts()
+    {
+        try {
+            $user = Auth::user()->id;
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User not authenticated',
+                ], 401);
+            }
+
+            $post = DynamicPost::where('deleted_at', 0)->get();
+
+            if ($post->isEmpty()) {
+                return response()->json([
+                    'status' => true,
+                    'code' => '200',
+                    'message' => 'No Post Data Found',
+                    'results' => [],
+                ], 200);
+            }
+
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'Post Data Fetch Successfully',
+                'results' => $post,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'code' => '500',
+                'message' => 'An error occurred',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 
     /** 
      * Store a new post in the database.
@@ -58,51 +67,60 @@ class DynamicPostController extends Controller
 
     public function addPost(Request $request)
     {
-        $user = Auth::user();
-        if (!$user) {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User not authenticated',
+                ], 401);
+            }
+
+            $this->validate($request, [
+                'post_title' => 'required|string|max:255',
+                'post_description' => 'required',
+                'post_description.*.label' => 'required|string',
+                'post_description.*.type' => 'required|string',
+                'post_type' => 'required|string',
+                'ordering' => 'sometimes|integer|min:1',
+            ]);
+
+            $postData = $request['post_description'];
+            $postData1 = $request['post_type'];
+
+            $ordering = $request['ordering'] ?? 1;
+            if ($ordering == 0) {
+                $ordering = 1;
+            }
+
+            $saveData = $this->dynamicPost1->savePost([
+                'post_title' => $request['post_title'],
+                'post_description' => $postData,
+                'post_type' => $postData1,
+                'ordering' => $ordering
+            ]);
+
+            if (isset($saveData) && $saveData !== false) {
+                return response()->json([
+                    'status' => true,
+                    'code' => '200',
+                    'message' => 'Post Added Successfully',
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'Something went wrong'
+                ], 404);
+            }
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'code' => '401',
-                'message' => 'User not authenticated',
-            ], 401);
-        }
-
-        $this->validate($request, [
-            'post_title' => 'required|string|max:255',
-            'post_description' => 'required',
-            'post_description.*.label' => 'required|string',
-            'post_description.*.type' => 'required|string',
-            'post_type' => 'required|string',
-            'ordering' => 'sometimes|integer|min:1',
-        ]);
-
-        $postData = $request['post_description'];
-        $postData1 = $request['post_type'];
-
-        $ordering = $request['ordering'] ?? 1;
-        if ($ordering == 0) {
-            $ordering = 1;
-        }
-
-        $saveData = $this->dynamicPost1->savePost([
-            'post_title' => $request['post_title'],
-            'post_description' => $postData,
-            'post_type' => $postData1,
-            'ordering' => $ordering
-        ]);
-
-        if (isset($saveData) && $saveData !== false) {
-            return response()->json([
-                'status' => true,
-                'code' => '200',
-                'message' => 'Post Added Successfully',
-            ], 200);
-        } else {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Something went wrong'
-            ], 404);
+                'code' => '500',
+                'message' => 'An error occurred',
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -113,29 +131,38 @@ class DynamicPostController extends Controller
 
     public function show($id)
     {
-        $user = Auth::user()->id;
-        if (!$user) {
-            return response()->json([
-                'status' => false,
-                'code' => '401',
-                'message' => 'User not authenticated',
-            ], 401);
-        }
+        try {
+            $user = Auth::user()->id;
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User not authenticated',
+                ], 401);
+            }
 
-        $post = DynamicPost::where('id', $id)->where('deleted_at', 0)->first();
-        if (!$post) {
+            $post = DynamicPost::where('id', $id)->where('deleted_at', 0)->first();
+            if (!$post) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'Post Data Not Found',
+                ], 404);
+            }
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'Post Data Fetch Successfully',
+                'results' => $post,
+            ], 200);
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'code' => '404',
-                'message' => 'Post Data Not Found',
-            ], 404);
+                'code' => '500',
+                'message' => 'An error occurred',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-        return response()->json([
-            'status' => true,
-            'code' => '200',
-            'message' => 'Post Data Fetch Successfully',
-            'results' => $post,
-        ], 200);
     }
 
     /** 
@@ -145,29 +172,38 @@ class DynamicPostController extends Controller
 
     public function edit($id)
     {
-        $user = Auth::user()->id;
-        if (!$user) {
-            return response()->json([
-                'status' => false,
-                'code' => '401',
-                'message' => 'User not authenticated',
-            ], 401);
-        }
+        try {
+            $user = Auth::user()->id;
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User not authenticated',
+                ], 401);
+            }
 
-        $data = DynamicPost::where('deleted_at', 0)->find($id);
-        if (!$data) {
+            $data = DynamicPost::where('deleted_at', 0)->find($id);
+            if (!$data) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'Post Data Not Found',
+                ], 404);
+            }
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'Post Data Fetch Successfully',
+                'results' => $data,
+            ], 200);
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'code' => '404',
-                'message' => 'Post Data Not Found',
-            ], 404);
+                'code' => '500',
+                'message' => 'An error occurred',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-        return response()->json([
-            'status' => true,
-            'code' => '200',
-            'message' => 'Post Data Fetch Successfully',
-            'results' => $data,
-        ], 200);
     }
 
     /** 
@@ -177,48 +213,57 @@ class DynamicPostController extends Controller
 
     public function update(Request $request, $id)
     {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json([
-                'status' => false,
-                'code' => '401',
-                'message' => 'User not authenticated',
-            ], 401);
-        }
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User not authenticated',
+                ], 401);
+            }
 
-        $post = DynamicPost::where('id', $id)->where('deleted_at', 0)->first();
-        if (!$post) {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Post Data Not Found',
-            ], 404);
-        }
+            $post = DynamicPost::where('id', $id)->where('deleted_at', 0)->first();
+            if (!$post) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'Post Data Not Found',
+                ], 404);
+            }
 
-        $post->post_title = $request['post_title'];
+            $post->post_title = $request['post_title'];
 
-        if ($request->has('post_description')) {
-            $post->post_description = $request['post_description'];
-        }
+            if ($request->has('post_description')) {
+                $post->post_description = $request['post_description'];
+            }
 
-        if ($request->has('post_type')) {
-            $post->post_type = $request['post_type'];
-        }
-        
-        if ($request->has('ordering')) {
-            $post->ordering = $request['ordering'];
-        }
-        if ($post->save()) {
-            return response()->json([
-                'status' => true,
-                'code' => '200',
-                'message' => 'Post Updated Successfully',
-            ], 200);
-        } else {
+            if ($request->has('post_type')) {
+                $post->post_type = $request['post_type'];
+            }
+
+            if ($request->has('ordering')) {
+                $post->ordering = $request['ordering'];
+            }
+            if ($post->save()) {
+                return response()->json([
+                    'status' => true,
+                    'code' => '200',
+                    'message' => 'Post Updated Successfully',
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'code' => '500',
+                    'message' => 'Failed to update post',
+                ], 500);
+            }
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'Failed to update post',
+                'message' => 'An error occurred',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -230,39 +275,48 @@ class DynamicPostController extends Controller
 
     public function destroy($id)
     {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json([
-                'status' => false,
-                'code' => '401',
-                'message' => 'User not authenticated',
-            ], 401);
-        }
-
-        $post = DynamicPost::where('id', $id)->first();
-
-        if ($post) {
-            if ($post->deleted_at == 1) {
+        try {
+            $user = Auth::user();
+            if (!$user) {
                 return response()->json([
                     'status' => false,
-                    'code' => '400',
-                    'message' => 'Record already deleted',
-                ], 400);
+                    'code' => '401',
+                    'message' => 'User not authenticated',
+                ], 401);
             }
 
-            $post->deleted_at = 1;
-            if ($post->save()) {
+            $post = DynamicPost::where('id', $id)->first();
+
+            if ($post) {
+                if ($post->deleted_at == 1) {
+                    return response()->json([
+                        'status' => false,
+                        'code' => '400',
+                        'message' => 'Record already deleted',
+                    ], 400);
+                }
+
+                $post->deleted_at = 1;
+                if ($post->save()) {
+                    return response()->json([
+                        'status' => true,
+                        'code' => '200',
+                        'message' => 'Post Data Deleted Successfully',
+                    ], 200);
+                }
+            } else {
                 return response()->json([
-                    'status' => true,
-                    'code' => '200',
-                    'message' => 'Post Data Deleted Successfully',
-                ], 200);
+                    'status' => false,
+                    'code' => '500',
+                    'message' => 'Failed to delete post',
+                ], 500);
             }
-        } else {
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'Failed to delete post',
+                'message' => 'An error occurred',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -273,36 +327,44 @@ class DynamicPostController extends Controller
      */
     public function active($id)
     {
-        $user = Auth::user();
-        if (!$user) {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User not authenticated',
+                ], 401);
+            }
+
+            $data = DynamicPost::where('id', $id)->first();
+
+            if (!$data) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'Record not found',
+                ], 404);
+            }
+
+            $data->status = $data->status ? 0 : 1;
+            $data->save();
+
+            $message = $data->status ? 'Activated Successfully' : 'Deactivated Successfully';
+
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => $message,
+                'data' => $data->status
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'code' => '401',
-                'message' => 'User not
-                 authenticated',
-            ], 401);
+                'code' => '500',
+                'message' => 'An error occurred',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        $data = DynamicPost::where('id', $id)->first();
-
-        if (!$data) {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Record not found',
-            ], 404);
-        }
-
-        $data->status = $data->status ? 0 : 1;
-        $data->save();
-
-        $message = $data->status ? 'Activated Successfully' : 'Deactivated Successfully';
-
-        return response()->json([
-            'status' => true,
-            'code' => '200',
-            'message' => $message,
-            'data' => $data->status
-        ]);
     }
 }

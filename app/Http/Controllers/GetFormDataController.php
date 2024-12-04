@@ -20,28 +20,37 @@ class GetFormDataController extends Controller
             ], 401);
         }
 
-        $post = DynamicPost::where('post_title', $postTitle)->first();
+        try {
+            $post = DynamicPost::where('post_title', $postTitle)->first();
 
-        if (!$post) {
+            if (!$post) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'Post not found',
+                ], 404);
+            }
+
+            if ($post->deleted_at != 0) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '410',
+                    'message' => 'This Record is deleted',
+                ], 410);
+            }
+
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'data' => $post,
+            ], 200);
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'code' => '404',
-                'message' => 'Post not found',
-            ], 404);
+                'code' => '500',
+                'message' => 'An error occurred while retrieving the post',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        if ($post->deleted_at != 0) {
-            return response()->json([
-                'status' => false,
-                'code' => '410',
-                'message' => 'This Record is deleted',
-            ], 410);
-        }
-
-        return response()->json([
-            'status' => true,
-            'code' => '200',
-            'data' => $post,
-        ], 200);
     }
 }
