@@ -274,10 +274,9 @@ class PageStoreController extends Controller
 
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
-                $originalName = $file->getClientOriginalName();
-                $uploadFolder = 'uploads/dynamic_page_store';
-                $file->move(public_path($uploadFolder), $originalName);
-                $newData['image'] = URL::to($uploadFolder . '/' . $originalName);
+                $fileContent = file_get_contents($file->getRealPath());
+                $base64File = base64_encode($fileContent);
+                $newData['image'] = $base64File;
             }
 
             if ($newData !== null) {
