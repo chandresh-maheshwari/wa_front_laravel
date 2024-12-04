@@ -120,10 +120,9 @@ class PageStoreController extends Controller
                 $normalizedLabel = str_replace(' ', '_', $field['label']);
                 if ($field['type'] === 'file' && $request->hasFile($normalizedLabel)) {
                     $file = $request->file($normalizedLabel);
-                    $originalName = $file->getClientOriginalName();
-                    $uploadFolder = 'uploads/dynamic_page_store';
-                    $file->move(public_path($uploadFolder), $originalName);
-                    $data[$field['label']] = URL::to($uploadFolder . '/' . $originalName);
+                    $fileContent = file_get_contents($file->getRealPath());
+                    $base64File = base64_encode($fileContent);
+                    $data[$field['label']] = $base64File;
                 }
             }
 
@@ -146,6 +145,10 @@ class PageStoreController extends Controller
                 ], 404);
             }
         } catch (\Exception $e) {
+            Log::error('Error in pageStore method', [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'status' => false,
                 'code' => '500',
