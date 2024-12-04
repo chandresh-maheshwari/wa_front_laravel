@@ -309,4 +309,86 @@ class PageStoreController extends Controller
             ], 500);
         }
     }
+
+    /** 
+     * Soft delete a page by its id.
+     * If the page is already deleted, it returns a message indicating so. create by ns
+     */
+
+    public function destroy($id)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+        $pageData = pageStore::where('id', $id)->first();
+
+        if ($pageData) {
+            if ($pageData->deleted_at == 1) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '400',
+                    'message' => 'Record already deleted',
+                ], 400);
+            }
+
+            $pageData->deleted_at = 1;
+            if ($pageData->save()) {
+                return response()->json([
+                    'status' => true,
+                    'code' => '200',
+                    'message' => 'Page Data Deleted Successfully',
+                ], 200);
+            }
+        } else {
+            return response()->json([
+                'status' => false,
+                'code' => '500',
+                'message' => 'Failed To Delete Page',
+            ], 500);
+        }
+    }
+
+    /** 
+     * Toggle the active status of a page by its id.
+     * If the page is active, it will be deactivated. create by ns
+     */
+    public function active($id)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+        $data = pageStore::where('id', $id)->first();
+
+        if (!$data) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Record not found',
+            ], 404);
+        }
+
+        $data->status = $data->status ? 0 : 1;
+        $data->save();
+
+        $message = $data->status ? 'Activated Successfully' : 'Deactivated Successfully';
+
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => $message,
+            'data' => $data->status
+        ]);
+    }
 }
