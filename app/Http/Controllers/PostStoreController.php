@@ -119,10 +119,8 @@ class PostStoreController extends Controller
                 $normalizedLabel = str_replace(' ', '_', $field['label']);
                 if ($field['type'] === 'file' && $request->hasFile($normalizedLabel)) {
                     $file = $request->file($normalizedLabel);
-                    $originalName = $file->getClientOriginalName();
-                    $uploadFolder = 'uploads/dynamic_post_store';
-                    $file->move(public_path($uploadFolder), $originalName);
-                    $data[$field['label']] = URL::to($uploadFolder . '/' . $originalName);
+                    $base64Image = base64_encode(file_get_contents($file->getRealPath()));
+                    $data[$field['label']] = $base64Image;
                 }
             }
 
@@ -289,7 +287,18 @@ class PostStoreController extends Controller
                 $post->post_name = $post_name;
             }
 
-            $newData = $request->input('data', null);
+            $newData = $post->data; 
+
+            foreach ($post->post_description as $field) {
+                $normalizedLabel = str_replace(' ', '_', $field['label']);
+                if ($field['type'] === 'file' && $request->hasFile($normalizedLabel)) {
+                    $file = $request->file($normalizedLabel);
+                    $base64Image = base64_encode(file_get_contents($file->getRealPath()));
+                    $newData[$field['label']] = $base64Image;
+                } elseif ($request->has($normalizedLabel)) {
+                    $newData[$field['label']] = $request->input($normalizedLabel);
+                }
+            }
 
             $post->data = $newData;
             if ($post->save()) {

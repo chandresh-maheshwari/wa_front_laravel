@@ -269,14 +269,6 @@ class PageStoreController extends Controller
             $pages_name = $request->input('pages_name', null);
             $newData = $request->input('data', null);
 
-            if ($request->hasFile('image')) {
-                $file = $request->file('image');
-                $originalName = $file->getClientOriginalName();
-                $uploadFolder = 'uploads/dynamic_page_store';
-                $file->move(public_path($uploadFolder), $originalName);
-                $newData['image'] = URL::to($uploadFolder . '/' . $originalName);
-            }
-
             if ($newData !== null) {
                 if (is_string($newData)) {
                     $newData = json_decode($newData, true);
@@ -289,13 +281,30 @@ class PageStoreController extends Controller
                         'message' => 'Invalid data format',
                     ], 400);
                 }
+            } else {
+                $newData = [];
+            }
+
+            foreach ($request->files as $key => $file) {
+                if ($file->isValid()) {
+                    $originalName = $file->getClientOriginalName();
+                    $uploadFolder = 'uploads/dynamic_page_store';
+                    $filePath = public_path($uploadFolder);
+
+                    if (!file_exists($filePath)) {
+                        mkdir($filePath, 0777, true);
+                    }
+
+                    $file->move($filePath, $originalName);
+                    $newData[$key] = URL::to($uploadFolder . '/' . $originalName);
+                }
             }
 
             $updateData = [];
             if ($pages_name !== null) {
                 $updateData['pages_name'] = $pages_name;
             }
-            if ($newData !== null) {
+            if (!empty($newData)) {
                 $updateData['data'] = json_encode($newData);
             }
 
