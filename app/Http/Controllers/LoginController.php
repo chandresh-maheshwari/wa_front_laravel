@@ -43,7 +43,7 @@ class LoginController extends Controller
         return response()->json([
             'status' => true,
             'code' => '200',
-            'message' => 'Login Successful',
+            'message' => 'User Login Successfully',
             'user' => $userData,
             'token' => $add_token,
         ], 200);
@@ -59,7 +59,7 @@ class LoginController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => 'Request process successfully',
+                'message' => 'Request Process Successfully',
                 'data' => [
                     'add_token' => $newToken,
                 ],
@@ -68,40 +68,48 @@ class LoginController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '401',
-                'message' => 'Token is invalid',
+                'message' => 'Token Is Invalid',
             ], 401);
         } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'Could not refresh token',
+                'message' => 'Could Not Refresh Token',
             ], 500);
         }
     }
     /** Function used for user logout by ns */
     public function logoutpage(Request $request)
-    {
-        try {
-            JWTAuth::invalidate(JWTAuth::parseToken());
-            return response()->json([
-                'status' => true,
-                'code' => '200',
-                'message' => 'User logged out successfully',
-            ], 200);
-        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+{
+    try {
+        if (!JWTAuth::parseToken()->check()) {
             return response()->json([
                 'status' => false,
-                'code' => '401',
-                'message' => 'Token is invalid',
-            ], 401);
-        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
-            return response()->json([
-                'status' => false,
-                'code' => '500',
-                'message' => 'Could not log out user',
-            ], 500);
+                'code' => '400',
+                'message' => 'User Already Logged Out',
+            ], 400);
         }
+
+        JWTAuth::invalidate(JWTAuth::parseToken());
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => 'User Logged Out Successfully',
+        ], 200);
+    } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+        return response()->json([
+            'status' => false,
+            'code' => '401',
+            'message' => 'Token Is Invalid',
+        ], 401);
+    } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+        return response()->json([
+            'status' => false,
+            'code' => '500',
+            'message' => 'Could Not Logout User',
+        ], 500);
     }
+}
 
     /** Function used for the send otp in mail by ns */
 
@@ -125,7 +133,7 @@ class LoginController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '404',
-                'message' => 'User not found.'
+                'message' => 'User Not Found.'
             ], 404);
         }
 
@@ -142,7 +150,7 @@ class LoginController extends Controller
         return response()->json([
             'status' => true,
             'code' => '200',
-            'message' => 'OTP sent to your email.'
+            'message' => 'OTP Sent To Your Email.'
         ], 200);
     }
 
@@ -169,7 +177,7 @@ class LoginController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '404',
-                'message' => 'User not found.'
+                'message' => 'User Not Found.'
             ], 404);
         }
 
@@ -182,7 +190,7 @@ class LoginController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '400',
-                'message' => 'Invalid or expired OTP.'
+                'message' => 'Invalid Or Expired OTP.'
             ], 400);
         }
 
@@ -209,7 +217,7 @@ class LoginController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '400',
-                    'message' => 'Password confirmation does not match.'
+                    'message' => 'Password Confirmation Does Not Match.'
                 ], 400);
             }
             return response()->json([
@@ -225,7 +233,7 @@ class LoginController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '404',
-                'message' => 'User not found.'
+                'message' => 'User Not Found.'
             ], 404);
         }
 
@@ -238,7 +246,7 @@ class LoginController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '400',
-                'message' => 'Invalid or expired OTP.'
+                'message' => 'Invalid Or Expired OTP.'
             ], 400);
         }
 
