@@ -115,6 +115,7 @@ class PostStoreController extends Controller
                 $data[$originalLabel] = $formattedRequestData[$normalizedLabel] ?? null;
             }
 
+
             foreach ($postData->post_description as $field) {
                 $normalizedLabel = str_replace(' ', '_', $field['label']);
                 if ($field['type'] === 'file' && $request->hasFile($normalizedLabel)) {
@@ -260,7 +261,6 @@ class PostStoreController extends Controller
      * Ensures the post is not deleted before updating. create by ns
      */
 
-   
     public function update(Request $request, $id)
     {
         try {
@@ -277,7 +277,7 @@ class PostStoreController extends Controller
 
             if (!$post) {
                 return response()->json([
-                    'status' => false, 
+                    'status' => false,
                     'code' => '404',
                     'message' => 'Post Data Not Found',
                 ], 404);
@@ -291,16 +291,17 @@ class PostStoreController extends Controller
             $newData = $request->input('data', null);
             $data = $post->data ?? [];
 
-            // Handle file uploads
             foreach ($request->all() as $key => $value) {
+                $normalizedKey = str_replace('_', ' ', $key);
+
                 if ($request->hasFile($key)) {
                     $file = $request->file($key);
                     $originalName = $file->getClientOriginalName();
                     $uploadFolder = 'uploads/dynamic_post_store';
                     $file->move(public_path($uploadFolder), $originalName);
-                    $data[$key] = URL::to($uploadFolder . '/' . $originalName);
+                    $data[$normalizedKey] = URL::to($uploadFolder . '/' . $originalName);
                 } else {
-                    $data[$key] = $value;
+                    $data[$normalizedKey] = $value;
                 }
             }
 

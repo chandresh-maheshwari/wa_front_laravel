@@ -59,7 +59,7 @@ class LoginController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => 'Request Process Successfully',
+                'message' => 'Token Refresh Successfully',
                 'data' => [
                     'add_token' => $newToken,
                 ],
