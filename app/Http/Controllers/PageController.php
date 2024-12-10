@@ -55,6 +55,7 @@ class PageController extends Controller
         ]);
 
         $page = new Page();
+        $page->post_id = $request->post_id;
         $page->page_name = $request->page_name;
         $page->page_description = $request['page_description'];
 
