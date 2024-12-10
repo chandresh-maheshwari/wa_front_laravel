@@ -124,7 +124,7 @@ class PageController extends Controller
                 'message' => 'User not authenticated',
             ], 401);
         }
-    
+
         $page = Page::where('deleted_at', 0)->find($id);
         if (!$page) {
             return response()->json([
@@ -133,17 +133,17 @@ class PageController extends Controller
                 'message' => 'Page Data Not Found',
             ], 404);
         }
-    
+
         $postTitle = DynamicPost::where('id', $page->post_type)->value('post_title');
-    
+
         $page->image_url = $page->image ? url('/images/page/' . $page->image) : null;
-    
+
         return response()->json([
             'status' => true,
             'code' => '200',
             'message' => 'Page Data Fetch Successfully',
             'results' => $page,
-            'post_title' => $postTitle, 
+            'post_title' => $postTitle,
         ], 200);
     }
 
@@ -230,32 +230,49 @@ class PageController extends Controller
 
     public function destroy($id)
     {
-        $user = Auth::user();
-        if (!$user) {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User not authenticated',
+                ], 401);
+            }
+
+            $post = Page::where('id', $id)->first();
+
+            if ($post) {
+                if ($post->deleted_at == 1) {
+                    return response()->json([
+                        'status' => false,
+                        'code' => '400',
+                        'message' => 'Record already deleted',
+                    ], 400);
+                }
+
+                $post->deleted_at = 1;
+                if ($post->save()) {
+                    return response()->json([
+                        'status' => true,
+                        'code' => '200',
+                        'message' => 'Page Data Deleted Successfully',
+                    ], 200);
+                }
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'code' => '500',
+                    'message' => 'Failed To Delete Page',
+                ], 500);
+            }
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'code' => '401',
-                'message' => 'User not authenticated',
-            ], 401);
+                'code' => '500',
+                'message' => 'An Error Occurred',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        $deletePage = Page::find($id);
-
-        if ($deletePage) {
-            $deletePage->deleted_at = 1;
-            if ($deletePage->save()) {
-                return response()->json([
-                    'status' => true,
-                    'code' => '200',
-                    'message' => 'Page Data Deleted Successfully',
-
-                ], 200);
-            }
-        }
-        return response()->json([
-            'status' => false,
-            'code' => '404',
-            'message' => 'No Matching Page Found For Deletion',
-        ], 404);
     }
 }
