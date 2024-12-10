@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DynamicPost;
 use App\Models\Page;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -115,7 +116,7 @@ class PageController extends Controller
 
     public function edit($id)
     {
-        $user = Auth::user()->id;
+        $user = Auth::user();
         if (!$user) {
             return response()->json([
                 'status' => false,
@@ -123,22 +124,26 @@ class PageController extends Controller
                 'message' => 'User not authenticated',
             ], 401);
         }
-
-        $data = Page::where('deleted_at', 0)->find($id);
-        if (!$data) {
+    
+        $page = Page::where('deleted_at', 0)->find($id);
+        if (!$page) {
             return response()->json([
                 'status' => false,
                 'code' => '404',
                 'message' => 'Page Data Not Found',
             ], 404);
         }
-        $data->image_url = $data->image ? url('/images/page/' . $data->image) : null;
-
+    
+        $postTitle = DynamicPost::where('id', $page->post_type)->value('post_title');
+    
+        $page->image_url = $page->image ? url('/images/page/' . $page->image) : null;
+    
         return response()->json([
             'status' => true,
             'code' => '200',
             'message' => 'Page Data Fetch Successfully',
-            'results' => $data,
+            'results' => $page,
+            'post_title' => $postTitle, 
         ], 200);
     }
 
