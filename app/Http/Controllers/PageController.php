@@ -48,16 +48,15 @@ class PageController extends Controller
         }
 
         $this->validate($request, [
-            'post_id' => 'required',
-            'title' => 'required',
-            'description' => 'required',
+            'page_name' => 'required',
+            'page_description' => 'required',
+            'image' => 'required',
             'ordering' => 'required'
         ]);
 
         $page = new Page();
-        $page->post_id = $request->post_id;
-        $page->title = $request['title'];
-        $page->description = $request['description'];
+        $page->page_name = $request->page_name;
+        $page->page_description = $request['page_description'];
 
         if ($request->hasFile('image')) {
             $pageImage = $request->image->getClientOriginalName();
