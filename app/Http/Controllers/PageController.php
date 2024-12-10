@@ -6,12 +6,14 @@ use App\Models\DynamicPost;
 use App\Models\Page;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PageController extends Controller
 {
     public function index()
     {
-        $user = Auth::user()->id;
+
+        $user = Auth::user();
         if (!$user) {
             return response()->json([
                 'status' => false,
@@ -20,24 +22,29 @@ class PageController extends Controller
             ], 401);
         }
 
-        $page = Page::where('deleted_at', 0)->get();
+        $pages = Page::where('deleted_at', 0)->orderBy('id', 'desc')->get();
 
-
-        if ($page->isEmpty()) {
+        if ($pages->isEmpty()) {
             return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Page Data Not Found',
-            ], 404);
+                'status' => true,
+                'code' => '200',
+                'message' => 'No Post Data Found',
+                'results' => [],
+            ], 200);
         }
+
+        $pages->transform(function ($page) {
+            $page->image_url = $page->image ? url('/images/page/' . $page->image) : null;
+            return $page;
+        });
+
         return response()->json([
             'status' => true,
             'code' => '200',
             'message' => 'Page Data Fetch Successfully',
-            'results' => $page,
+            'results' => $pages,
         ], 200);
     }
-
     public function store(Request $request)
     {
         $user = Auth::user();

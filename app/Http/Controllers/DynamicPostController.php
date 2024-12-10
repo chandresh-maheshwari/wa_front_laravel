@@ -33,7 +33,7 @@ class DynamicPostController extends Controller
                 ], 401);
             }
 
-            $post = DynamicPost::where('deleted_at', 0)->get();
+            $post = DynamicPost::where('deleted_at', 0)->orderBy('id', 'desc')->get();
 
             if ($post->isEmpty()) {
                 return response()->json([
