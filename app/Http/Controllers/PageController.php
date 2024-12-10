@@ -22,6 +22,7 @@ class PageController extends Controller
 
         $page = Page::where('deleted_at', 0)->get();
 
+
         if ($page->isEmpty()) {
             return response()->json([
                 'status' => false,
