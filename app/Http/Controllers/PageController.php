@@ -160,9 +160,8 @@ class PageController extends Controller
             ], 404);
         }
 
-        $page->post_id = $request->post_id;
-        $page->title = $request['title'];
-        $page->description = $request['description'];
+        $page->page_name = $request->page_name;
+        $page->page_description = $request['page_description'];
 
         if ($request->hasFile('image')) {
             $pageImage = $request->image->getClientOriginalName();
@@ -199,9 +198,9 @@ class PageController extends Controller
             ], 401);
         }
 
-        $status = Page::find($id);
+        $statusData = Page::find($id);
 
-        if (!$status) {
+        if (!$statusData) {
             return response()->json([
                 'status' => false,
                 'code' => '404',
@@ -209,16 +208,16 @@ class PageController extends Controller
             ], 404);
         }
 
-        $status->active = $status->active ? 0 : 1;
-        $status->save();
+        $statusData->status = $statusData->status ? 0 : 1;
+        $statusData->save();
 
-        $message = $status->active ? 'Activated Successfully' : 'Deactivated Successfully';
+        $message = $statusData->status ? 'Activated Successfully' : 'Deactivated Successfully';
 
         return response()->json([
             'status' => true,
             'code' => '200',
             'message' => $message,
-            'data' => $status->active
+            'data' => $statusData->status
         ]);
     }
 
