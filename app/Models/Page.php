@@ -14,7 +14,7 @@ class Page extends Model
     protected $table = 'dynamic_page';
 
     protected $fillable = [
-        'post_id',
+        'post_type',
         'page_name',
         'page_description',
         'image',

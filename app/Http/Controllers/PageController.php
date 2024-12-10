@@ -48,7 +48,7 @@ class PageController extends Controller
         }
 
         $this->validate($request, [
-            'post_id' => 'required',
+            'post_type' => 'required',
             'page_name' => 'required',
             'page_description' => 'required',
             'image' => 'required',
@@ -56,7 +56,7 @@ class PageController extends Controller
         ]);
 
         $page = new Page();
-        $page->post_id = $request->post_id;
+        $page->post_type = $request->post_type;
         $page->page_name = $request->page_name;
         $page->page_description = $request['page_description'];
 
@@ -161,7 +161,7 @@ class PageController extends Controller
                 'message' => 'Page Not Found',
             ], 404);
         }
-        $page->post_id = $request->post_id;
+        $page->post_type = $request->post_type;
         $page->page_name = $request->page_name;
         $page->page_description = $request['page_description'];
 
