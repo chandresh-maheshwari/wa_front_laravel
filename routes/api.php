@@ -87,3 +87,7 @@ Route::post('/verify-otp', [LoginController::class, 'verifyOtp']);
 Route::post('/reset-password', [LoginController::class, 'resetPassword']);
 
 Route::get('/page/{pageName}', [PageController::class, 'showByPageName']);
+
+/** get page data with his post store with ordering */
+
+Route::get('/pages', [PageController::class, 'showAllPagesWithPostStores']);
