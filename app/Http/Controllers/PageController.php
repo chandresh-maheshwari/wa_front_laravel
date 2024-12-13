@@ -60,8 +60,8 @@ class PageController extends Controller
         $this->validate($request, [
             'post_type' => 'required',
             'page_name' => 'required',
-            'page_description' => 'required',
-            'image' => 'required',
+            // 'page_description' => 'required',
+            // 'image' => 'required',
             'ordering' => 'required'
         ]);
 
