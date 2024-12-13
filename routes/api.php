@@ -81,13 +81,13 @@ Route::middleware('auth:api')->group(function () {
 
     /**  page value store api routes create by ns*/
 
-    Route::get('/page-data-list/{id}', [PageStoreController::class, 'getPageList']);
-    Route::post('/page-data-store/{pagesName}', [PageStoreController::class, 'pageStore']);
-    Route::get('/page-data-show/{id}', [PageStoreController::class, 'show']);
-    Route::get('/page-data-edit/{id}', [PageStoreController::class, 'edit']);
-    Route::post('/page-data-update/{id}', [PageStoreController::class, 'update']);
-    Route::delete('/page-data-delete/{id}', [PageStoreController::class, 'destroy']);
-    Route::post('/page-data-active/{id}', [PageStoreController::class, 'active']);
+    // Route::get('/page-data-list/{id}', [PageStoreController::class, 'getPageList']);
+    // Route::post('/page-data-store/{pagesName}', [PageStoreController::class, 'pageStore']);
+    // Route::get('/page-data-show/{id}', [PageStoreController::class, 'show']);
+    // Route::get('/page-data-edit/{id}', [PageStoreController::class, 'edit']);
+    // Route::post('/page-data-update/{id}', [PageStoreController::class, 'update']);
+    // Route::delete('/page-data-delete/{id}', [PageStoreController::class, 'destroy']);
+    // Route::post('/page-data-active/{id}', [PageStoreController::class, 'active']);
 });
 
 /** Login api routes by ns */

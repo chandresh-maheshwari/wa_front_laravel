@@ -157,51 +157,60 @@ class PageController extends Controller
     }
 
     public function update(Request $request, $id)
-    {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json([
-                'status' => false,
-                'code' => '401',
-                'message' => 'User not authenticated',
-            ], 401);
-        }
-
-        $page = Page::find($id);
-        if (!$page) {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Page Not Found',
-            ], 404);
-        }
-        $page->post_type = $request->post_type;
-        $page->page_name = $request->page_name;
-        $page->page_description = $request['page_description'];
-
-        if ($request->hasFile('image')) {
-            $pageImage = $request->image->getClientOriginalName();
-            $request->image->move(public_path('/images/page'), $pageImage);
-            $page->image = $pageImage;
-        }
-
-        $page->ordering = $request['ordering'] == 0 ? 1 : $request['ordering'];
-        $page->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
-
-        if ($page->save()) {
-            return response()->json([
-                'status' => true,
-                'code' => '200',
-                'message' => 'Page Updated Successfully',
-            ], 200);
-        } else {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Something went wrong'
-            ], 404);
-        }
+{
+    $user = Auth::user();
+    if (!$user) {
+        return response()->json([
+            'status' => false,
+            'code' => '401',
+            'message' => 'User not authenticated',
+        ], 401);
     }
+
+    $page = Page::find($id);
+    if (!$page) {
+        return response()->json([
+            'status' => false,
+            'code' => '404',
+            'message' => 'Page Not Found',
+        ], 404);
+    }
+
+    if ($request->has('post_type')) {
+        $page->post_type = $request->post_type;
+    }
+    if ($request->has('page_name')) {
+        $page->page_name = $request->page_name;
+    }
+    if ($request->has('page_description')) {
+        $page->page_description = $request->page_description;
+    }
+    if ($request->hasFile('image')) {
+        $pageImage = $request->image->getClientOriginalName();
+        $request->image->move(public_path('/images/page'), $pageImage);
+        $page->image = $pageImage;
+    }
+    if ($request->has('ordering')) {
+        $page->ordering = $request->ordering == 0 ? 1 : $request->ordering;
+    }
+    if ($request->has('deleted_at')) {
+        $page->deleted_at = $request->deleted_at;
+    }
+
+    if ($page->save()) {
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => 'Page Updated Successfully',
+        ], 200);
+    } else {
+        return response()->json([
+            'status' => false,
+            'code' => '500',
+            'message' => 'Something went wrong'
+        ], 500);
+    }
+}
 
     public function active($id)
     {
