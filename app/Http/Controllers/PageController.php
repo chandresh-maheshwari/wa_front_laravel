@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DynamicPost;
+use App\Models\PostStore;
 use App\Models\Page;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -283,4 +284,67 @@ class PageController extends Controller
             ], 500);
         }
     }
+
+    public function showByPageName($pageName)
+    {
+        // $user = Auth::user();
+        // if (!$user) {
+        //     return response()->json([
+        //         'status' => false,
+        //         'code' => '401',
+        //         'message' => 'User not authenticated',
+        //     ], 401);
+        // }
+    
+        $page = Page::where('page_name', $pageName)->where('deleted_at', 0)->where('status', 1)->first();
+        if (!$page) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Page Data Not Found',
+            ], 404);
+        }
+    
+        $postStores = PostStore::where('post_id', $page->post_type)
+        ->where('status', 1)
+        ->get();
+    if ($postStores->isEmpty()) {
+        return response()->json([
+            'status' => false,
+            'code' => '404',
+            'message' => 'Related Post Store Data Not Found',
+        ], 404);
+    }
+
+    $allRestructuredData = [];
+    
+    foreach ($postStores as $postStore) {
+        $restructuredData = [];
+        $data = $postStore->data;
+
+        foreach ($data as $key => $value) {
+            if (strpos($key, 'field_slug_') === 0) {
+                continue;
+            }
+
+            $slugKey = 'field_slug_' . str_replace(' ', '', strtolower($key));
+            if (isset($data[$slugKey])) {
+                $slug = $data[$slugKey];
+                $restructuredData[$slug] = $value;
+            }
+        }
+
+        $postStoreResponse = $postStore->toArray();
+        $postStoreResponse['data'] = $restructuredData;
+        $allRestructuredData[] = $postStoreResponse;
+    }
+
+    return response()->json([
+        'status' => true,
+        'code' => '200',
+        'message' => 'Page and Post Store Data Fetch Successfully',
+        'page' => $page,
+        'post_store' => $allRestructuredData,
+    ], 200);
+    }  
 }

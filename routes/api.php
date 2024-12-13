@@ -281,3 +281,5 @@ Route::post('/refresh', [LoginController::class, 'refresh']);
 Route::post('/send-otp', [LoginController::class, 'sendOtp']);
 Route::post('/verify-otp', [LoginController::class, 'verifyOtp']);
 Route::post('/reset-password', [LoginController::class, 'resetPassword']);
+
+Route::get('/page/{pageName}', [PageController::class, 'showByPageName']);

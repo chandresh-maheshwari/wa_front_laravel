@@ -12,6 +12,7 @@ class PostStore extends Model
     protected $table = 'post_store';
 
     protected $fillable = [
+        'post_id',
         'post_name',
         'data',
         'status',

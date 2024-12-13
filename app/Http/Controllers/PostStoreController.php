@@ -58,7 +58,6 @@ class PostStoreController extends Controller
     }
 
     /** Function used for the post value store in the database create by ns */
-
     public function postStore(Request $request, $postTitle)
     {
         try {
@@ -70,9 +69,9 @@ class PostStoreController extends Controller
                     'message' => 'User not authenticated',
                 ], 401);
             }
-
+    
             $postData = DynamicPost::where('post_title', $postTitle)->first();
-
+    
             if (!$postData) {
                 return response()->json([
                     'status' => false,
@@ -80,26 +79,30 @@ class PostStoreController extends Controller
                     'message' => 'Post Data Not Found',
                 ], 404);
             }
-
+    
+            $requestData = $request->all();
+            $transformedRequest = [];
+            foreach ($requestData as $key => $value) {
+                $originalKey = str_replace('_', ' ', $key);
+                $transformedRequest[$originalKey] = $value;
+            }
+    
             $requiredFields = [];
             $labelMap = [];
             foreach ($postData->post_description as $field) {
-                $normalizedLabel = str_replace(' ', '_', $field['label']);
-                $labelMap[$normalizedLabel] = $field['label'];
+                $originalLabel = $field['label'];
+                $slugLabel = $this->convertToSlug($originalLabel);
+                $labelMap[$originalLabel] = $slugLabel;
+                
                 if ($field['type'] === 'file') {
-                    $requiredFields[$normalizedLabel] = 'required|file|mimes:jpeg,png,gif,svg|max:2048';
+                    $requiredFields[$originalLabel] = 'nullable|file|mimes:jpeg,png,gif,svg|max:2048';
                 } else {
-                    $requiredFields[$normalizedLabel] = 'required|string';
+                    $requiredFields[$originalLabel] = 'nullable|string';
                 }
             }
-
-            $requestData = $request->all();
-            $formattedRequestData = [];
-            foreach ($requestData as $key => $value) {
-                $formattedRequestData[str_replace(' ', '_', $key)] = $value;
-            }
-            $validateRequest = Validator::make($formattedRequestData, $requiredFields);
-
+    
+            $validateRequest = Validator::make($transformedRequest, $requiredFields);
+    
             if ($validateRequest->fails()) {
                 Log::error('Validation failed', $validateRequest->errors()->toArray());
                 return response()->json([
@@ -108,30 +111,35 @@ class PostStoreController extends Controller
                     'errors' => $validateRequest->errors()
                 ], 404);
             }
-
+    
             $data = [];
-            foreach ($requiredFields as $normalizedLabel => $rules) {
-                $originalLabel = $labelMap[$normalizedLabel];
-                $data[$originalLabel] = $formattedRequestData[$normalizedLabel] ?? null;
-            }
-
-
+    
             foreach ($postData->post_description as $field) {
-                $normalizedLabel = str_replace(' ', '_', $field['label']);
-                if ($field['type'] === 'file' && $request->hasFile($normalizedLabel)) {
-                    $file = $request->file($normalizedLabel);
+                $originalLabel = $field['label'];
+                $value = $transformedRequest[$originalLabel] ?? $request->input(str_replace(' ', '_', $originalLabel));
+    
+                if ($value === null) {
+                    continue;
+                }
+    
+                if ($field['type'] === 'file' && $request->hasFile(str_replace(' ', '_', $originalLabel))) {
+                    $file = $request->file(str_replace(' ', '_', $originalLabel));
                     $originalName = $file->getClientOriginalName();
                     $uploadFolder = 'uploads/dynamic_post_store';
                     $file->move(public_path($uploadFolder), $originalName);
-                    $data[$field['label']] = URL::to($uploadFolder . '/' . $originalName);
+                    $value = URL::to($uploadFolder . '/' . $originalName);
                 }
+    
+                $data[$originalLabel] = $value;
+                $data['field_slug_' . $this->convertToSlug($originalLabel)] = $labelMap[$originalLabel];
             }
-
+    
             $postData = PostStore::create([
                 'post_name' => $postTitle,
+                'post_id' => $postData->id,
                 'data' => $data,
             ]);
-
+    
             if ($postData) {
                 return response()->json([
                     'status' => true,
@@ -288,11 +296,14 @@ class PostStoreController extends Controller
                 $post->post_name = $post_name;
             }
 
-            $newData = $request->input('data', null);
             $data = $post->data ?? [];
 
             foreach ($request->all() as $key => $value) {
                 $normalizedKey = str_replace('_', ' ', $key);
+                
+                if ($key === 'post_name') {
+                    continue;
+                }
 
                 if ($request->hasFile($key)) {
                     $file = $request->file($key);
@@ -303,6 +314,9 @@ class PostStoreController extends Controller
                 } else {
                     $data[$normalizedKey] = $value;
                 }
+
+                $slugKey = 'field_slug_' . $this->convertToSlug($normalizedKey);
+                $data[$slugKey] = $this->convertToSlug($normalizedKey);
             }
 
             $post->data = $data;
@@ -428,5 +442,10 @@ class PostStoreController extends Controller
                 'message' => 'Internal Server Error',
             ], 500);
         }
+    }
+
+    private function convertToSlug($string)
+    {
+        return str_replace([' ', '_', '/'], '', strtolower($string));
     }
 }
