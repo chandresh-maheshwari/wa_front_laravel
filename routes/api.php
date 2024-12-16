@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ContactPageController;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\DynamicPageController;
@@ -70,6 +71,13 @@ Route::middleware('auth:api')->group(function () {
 
     /** Get Form data value api routes create by ns */
     Route::get('/get-page-data/{pageName}', [GetPageFormDataController::class, 'getpageData']);
+
+
+      /**  Contact Page api routes create by ns*/
+
+      Route::get('/contact-page-list', [ContactPageController::class, 'index']);
+      Route::post('/contact-page-store', [ContactPageController::class, 'store']);
+      Route::delete('/contact-page-delete/{id}', [ContactPageController::class, 'destroy']);
 
    
 });

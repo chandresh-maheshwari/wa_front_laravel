@@ -370,13 +370,13 @@ class PageController extends Controller
         //         'message' => 'User not authenticated',
         //     ], 401);
         // }
-
+    
         $pages = Page::whereNotNull('ordering')
-        ->where('deleted_at', 0)
-        ->where('status', 1)
-        ->orderBy('ordering', 'asc')
-        ->get();
-
+            ->where('deleted_at', 0)
+            ->where('status', 1)
+            ->orderBy('ordering', 'asc')
+            ->get();
+    
         if ($pages->isEmpty()) {
             return response()->json([
                 'status' => false,
@@ -384,43 +384,49 @@ class PageController extends Controller
                 'message' => 'No Page Data Found',
             ], 404);
         }
-
+    
         $allPagesData = [];
-
+    
         foreach ($pages as $page) {
             $postStores = PostStore::where('post_id', $page->post_type)
                 ->where('status', 1)
                 ->get();
-
+    
             $allRestructuredData = [];
-
+    
             foreach ($postStores as $postStore) {
                 $restructuredData = [];
                 $data = $postStore->data;
-
+    
                 foreach ($data as $key => $value) {
                     if (strpos($key, 'field_slug_') === 0) {
                         continue;
                     }
-
+    
                     $slugKey = 'field_slug_' . str_replace(' ', '', strtolower($key));
                     if (isset($data[$slugKey])) {
                         $slug = $data[$slugKey];
                         $restructuredData[$slug] = $value;
                     }
                 }
-
+    
+                $capitalizedData = [];
+                foreach ($restructuredData as $key => $value) {
+                    $capitalizedKey = ucfirst($key);
+                    $capitalizedData[$capitalizedKey] = $value;
+                }
+    
                 $postStoreResponse = $postStore->toArray();
-                $postStoreResponse['data'] = $restructuredData;
+                $postStoreResponse = array_merge($postStoreResponse, $capitalizedData);
+                unset($postStoreResponse['data']); 
                 $allRestructuredData[] = $postStoreResponse;
             }
-
-            $allPagesData[] = [
-                'page' => $page,
-                'post_store' => $allRestructuredData,
-            ];
+            $pageData = $page->toArray();
+            $pageData['post_store'] = $allRestructuredData;
+    
+            $allPagesData[] = $pageData;
         }
-
+    
         return response()->json([
             'status' => true,
             'code' => '200',
