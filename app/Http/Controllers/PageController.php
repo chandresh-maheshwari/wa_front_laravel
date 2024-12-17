@@ -47,54 +47,52 @@ class PageController extends Controller
         ], 200);
     }
     public function store(Request $request)
-    {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json([
-                'status' => false,
-                'code' => '401',
-                'message' => 'User not authenticated',
-            ], 401);
-        }
-
-        $this->validate($request, [
-            // 'post_type' => 'required',
-            'page_name' => 'required',
-            // 'page_description' => 'required',
-            // 'image' => 'required',
-            // 'ordering' => 'required'
-        ]);
-
-        $page = new Page();
-        $page->post_type = $request->post_type;
-        $page->page_name = $request->page_name;
-        $page->page_description = $request['page_description'];
-
-        if ($request->hasFile('image')) {
-            $pageImage = $request->image->getClientOriginalName();
-            $request->image->move(public_path('/images/page'), $pageImage);
-            $page->image = $pageImage;
-        } else {
-            $page->image = null;
-        }
-
-        $page->ordering = $request['ordering'];
-        $page->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
-
-        if ($page->save()) {
-            return response()->json([
-                'status' => true,
-                'code' => '200',
-                'message' => 'Page Added Successfully',
-            ], 200);
-        } else {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Something went wrong'
-            ], 404);
-        }
+{
+    $user = Auth::user();
+    if (!$user) {
+        return response()->json([
+            'status' => false,
+            'code' => '401',
+            'message' => 'User not authenticated',
+        ], 401);
     }
+
+    $this->validate($request, [
+        'page_name' => 'required',
+    ]);
+
+    $page = new Page();
+    $page->post_type = $request->post_type;
+    $page->page_name = $request->page_name;
+    $page->page_description = $request['page_description'];
+
+    if ($request->hasFile('image')) {
+        $pageImage = $request->image->getClientOriginalName();
+        $request->image->move(public_path('/images/page'), $pageImage);
+        $imageUrl = url('images/page/' . $pageImage);
+        $page->image = $imageUrl;
+    } else {
+        $page->image = null;
+    }
+
+    $page->ordering = $request['ordering'];
+    $page->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
+
+    if ($page->save()) {
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => 'Page Added Successfully',
+        ], 200);
+    } else {
+        return response()->json([
+            'status' => false,
+            'code' => '404',
+            'message' => 'Something went wrong'
+        ], 404);
+    }
+}
+
 
     public function show($id)
     {
@@ -433,5 +431,41 @@ class PageController extends Controller
             'message' => 'All Pages and Post Store Data Fetch Successfully',
             'results' => $allPagesData,
         ], 200);
+    }
+
+    /** page status  */
+
+    public function pageStatus($id)
+    {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+        $statusData = Page::find($id);
+
+        if (!$statusData) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Record not found',
+            ], 404);
+        }
+
+        $statusData->page_status = $statusData->page_status ? 0 : 1;
+        $statusData->save();
+
+        $message = $statusData->page_status ? 'Page Activated Successfully' : 'Page Deactivated Successfully';
+
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => $message,
+            'data' => $statusData->page_status
+        ]);
     }
 }

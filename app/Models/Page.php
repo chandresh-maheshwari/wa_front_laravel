@@ -20,6 +20,7 @@ class Page extends Model
         'image',
         'ordering',
         'status',
+        'page_status',
         'deleted_at',
         'created_at',
         'updated_at'

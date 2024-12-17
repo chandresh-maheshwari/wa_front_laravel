@@ -43,6 +43,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/page-update/{id}', [PageController::class, 'update']);
     Route::delete('/page-delete/{id}', [PageController::class, 'destroy']);
     Route::post('/page-active/{id}', [PageController::class, 'active']);
+    Route::post('/page-status/{id}', [PageController::class, 'pageStatus']);
 
     /** Dynamic Post api routes create by ns */
 
