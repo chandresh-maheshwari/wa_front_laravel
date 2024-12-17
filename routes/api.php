@@ -103,3 +103,4 @@ Route::get('/pages', [PageController::class, 'showAllPagesWithPostStores']);
 
 /** contact page store api  */
 Route::post('/contact-page-store', [ContactPageController::class, 'store']);
+Route::get('/page-status-data', [PageController::class, 'getActivePageData']);
