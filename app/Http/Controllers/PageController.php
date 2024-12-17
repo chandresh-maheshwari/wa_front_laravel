@@ -47,51 +47,51 @@ class PageController extends Controller
         ], 200);
     }
     public function store(Request $request)
-{
-    $user = Auth::user();
-    if (!$user) {
-        return response()->json([
-            'status' => false,
-            'code' => '401',
-            'message' => 'User not authenticated',
-        ], 401);
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User not authenticated',
+            ], 401);
+        }
+
+        $this->validate($request, [
+            'page_name' => 'required',
+        ]);
+
+        $page = new Page();
+        $page->post_type = $request->post_type;
+        $page->page_name = $request->page_name;
+        $page->page_description = $request['page_description'];
+
+        if ($request->hasFile('image')) {
+            $pageImage = $request->image->getClientOriginalName();
+            $request->image->move(public_path('/images/page'), $pageImage);
+            $imageUrl = url('images/page/' . $pageImage);
+            $page->image = $imageUrl;
+        } else {
+            $page->image = null;
+        }
+
+        $page->ordering = $request['ordering'];
+        $page->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
+
+        if ($page->save()) {
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'Page Added Successfully',
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Something went wrong'
+            ], 404);
+        }
     }
-
-    $this->validate($request, [
-        'page_name' => 'required',
-    ]);
-
-    $page = new Page();
-    $page->post_type = $request->post_type;
-    $page->page_name = $request->page_name;
-    $page->page_description = $request['page_description'];
-
-    if ($request->hasFile('image')) {
-        $pageImage = $request->image->getClientOriginalName();
-        $request->image->move(public_path('/images/page'), $pageImage);
-        $imageUrl = url('images/page/' . $pageImage);
-        $page->image = $imageUrl;
-    } else {
-        $page->image = null;
-    }
-
-    $page->ordering = $request['ordering'];
-    $page->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
-
-    if ($page->save()) {
-        return response()->json([
-            'status' => true,
-            'code' => '200',
-            'message' => 'Page Added Successfully',
-        ], 200);
-    } else {
-        return response()->json([
-            'status' => false,
-            'code' => '404',
-            'message' => 'Something went wrong'
-        ], 404);
-    }
-}
 
 
     public function show($id)
@@ -164,7 +164,7 @@ class PageController extends Controller
                 'message' => 'User not authenticated',
             ], 401);
         }
-    
+
         $page = Page::find($id);
         if (!$page) {
             return response()->json([
@@ -173,7 +173,7 @@ class PageController extends Controller
                 'message' => 'Page Not Found',
             ], 404);
         }
-    
+
         // Update other fields if provided
         if ($request->has('post_type')) {
             $page->post_type = $request->post_type;
@@ -184,23 +184,23 @@ class PageController extends Controller
         if ($request->has('page_description')) {
             $page->page_description = $request->page_description;
         }
-    
+
         if ($request->hasFile('image')) {
             $pageImage = $request->image->getClientOriginalName();
-    
+
             $imagePath = $request->image->move(public_path('/images/page'), $pageImage);
-    
+
             $imageUrl = url('images/page/' . $pageImage);
-            $page->image = $imageUrl; 
+            $page->image = $imageUrl;
         }
-    
+
         if ($request->has('ordering')) {
             $page->ordering = $request->ordering;
         }
         if ($request->has('deleted_at')) {
             $page->deleted_at = $request->deleted_at;
         }
-    
+
         if ($page->save()) {
             return response()->json([
                 'status' => true,
@@ -215,7 +215,7 @@ class PageController extends Controller
             ], 500);
         }
     }
-    
+
 
     public function active($id)
     {
@@ -375,13 +375,13 @@ class PageController extends Controller
         //         'message' => 'User not authenticated',
         //     ], 401);
         // }
-    
+
         $pages = Page::whereNotNull('ordering')
             ->where('deleted_at', 0)
             ->where('status', 1)
             ->orderBy('ordering', 'asc')
             ->get();
-    
+
         if ($pages->isEmpty()) {
             return response()->json([
                 'status' => false,
@@ -389,49 +389,49 @@ class PageController extends Controller
                 'message' => 'No Page Data Found',
             ], 404);
         }
-    
+
         $allPagesData = [];
-    
+
         foreach ($pages as $page) {
             $postStores = PostStore::where('post_id', $page->post_type)
                 ->where('status', 1)
                 ->get();
-    
+
             $allRestructuredData = [];
-    
+
             foreach ($postStores as $postStore) {
                 $restructuredData = [];
                 $data = $postStore->data;
-    
+
                 foreach ($data as $key => $value) {
                     if (strpos($key, 'field_slug_') === 0) {
                         continue;
                     }
-    
+
                     $slugKey = 'field_slug_' . str_replace(' ', '', strtolower($key));
                     if (isset($data[$slugKey])) {
                         $slug = $data[$slugKey];
                         $restructuredData[$slug] = $value;
                     }
                 }
-    
+
                 $capitalizedData = [];
                 foreach ($restructuredData as $key => $value) {
                     $capitalizedKey = ucfirst($key);
                     $capitalizedData[$capitalizedKey] = $value;
                 }
-    
+
                 $postStoreResponse = $postStore->toArray();
                 $postStoreResponse = array_merge($postStoreResponse, $capitalizedData);
-                unset($postStoreResponse['data']); 
+                unset($postStoreResponse['data']);
                 $allRestructuredData[] = $postStoreResponse;
             }
             $pageData = $page->toArray();
             $pageData['post_store'] = $allRestructuredData;
-    
+
             $allPagesData[] = $pageData;
         }
-    
+
         return response()->json([
             'status' => true,
             'code' => '200',
@@ -473,6 +473,27 @@ class PageController extends Controller
             'code' => '200',
             'message' => $message,
             'data' => $statusData->page_status
+        ]);
+    }
+
+    public function getActivePageData()
+    {
+
+        $page = Page::select('page_name')->where('page_status', 1)->get();
+
+        if (!$page) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Active Page Not Found',
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => 'Active Page Data Retrieved Successfully',
+            'data' => $page
         ]);
     }
 }
