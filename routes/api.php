@@ -77,7 +77,7 @@ Route::middleware('auth:api')->group(function () {
       /**  Contact Page api routes create by ns*/
 
       Route::get('/contact-page-list', [ContactPageController::class, 'index']);
-      Route::post('/contact-page-store', [ContactPageController::class, 'store']);
+      
       Route::delete('/contact-page-delete/{id}', [ContactPageController::class, 'destroy']);
 
    
@@ -100,3 +100,6 @@ Route::get('/page/{pageName}', [PageController::class, 'showByPageName']);
 /** get page data with his post store with ordering */
 
 Route::get('/pages', [PageController::class, 'showAllPagesWithPostStores']);
+
+/** contact page store api  */
+Route::post('/contact-page-store', [ContactPageController::class, 'store']);

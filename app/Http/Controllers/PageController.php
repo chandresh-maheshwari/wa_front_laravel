@@ -164,7 +164,7 @@ class PageController extends Controller
                 'message' => 'User not authenticated',
             ], 401);
         }
-
+    
         $page = Page::find($id);
         if (!$page) {
             return response()->json([
@@ -173,7 +173,8 @@ class PageController extends Controller
                 'message' => 'Page Not Found',
             ], 404);
         }
-
+    
+        // Update other fields if provided
         if ($request->has('post_type')) {
             $page->post_type = $request->post_type;
         }
@@ -183,18 +184,23 @@ class PageController extends Controller
         if ($request->has('page_description')) {
             $page->page_description = $request->page_description;
         }
+    
         if ($request->hasFile('image')) {
             $pageImage = $request->image->getClientOriginalName();
-            $request->image->move(public_path('/images/page'), $pageImage);
-            $page->image = $pageImage;
+    
+            $imagePath = $request->image->move(public_path('/images/page'), $pageImage);
+    
+            $imageUrl = url('images/page/' . $pageImage);
+            $page->image = $imageUrl; 
         }
+    
         if ($request->has('ordering')) {
             $page->ordering = $request->ordering;
         }
         if ($request->has('deleted_at')) {
             $page->deleted_at = $request->deleted_at;
         }
-
+    
         if ($page->save()) {
             return response()->json([
                 'status' => true,
@@ -209,6 +215,7 @@ class PageController extends Controller
             ], 500);
         }
     }
+    
 
     public function active($id)
     {
