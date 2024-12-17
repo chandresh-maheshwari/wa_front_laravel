@@ -378,7 +378,7 @@ class PageController extends Controller
     
         $pages = Page::whereNotNull('ordering')
             ->where('deleted_at', 0)
-            ->where('status', 1)
+            // ->where('status', 1)
             ->orderBy('ordering', 'asc')
             ->get();
     
