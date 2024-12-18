@@ -7,7 +7,6 @@ use App\Models\PostStore;
 use App\Models\Page;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class PageController extends Controller
 {
@@ -174,7 +173,6 @@ class PageController extends Controller
             ], 404);
         }
 
-        // Update other fields if provided
         if ($request->has('post_type')) {
             $page->post_type = $request->post_type;
         }
@@ -299,16 +297,10 @@ class PageController extends Controller
         }
     }
 
+    /** This function used for the post show by page name create by ns */
+
     public function showByPageName($pageName)
     {
-        // $user = Auth::user();
-        // if (!$user) {
-        //     return response()->json([
-        //         'status' => false,
-        //         'code' => '401',
-        //         'message' => 'User not authenticated',
-        //     ], 401);
-        // }
 
         $page = Page::where('page_name', $pageName)->where('deleted_at', 0)->where('status', 1)->first();
         if (!$page) {
@@ -367,15 +359,6 @@ class PageController extends Controller
 
     public function showAllPagesWithPostStores()
     {
-        // $user = Auth::user();
-        // if (!$user) {
-        //     return response()->json([
-        //         'status' => false,
-        //         'code' => '401',
-        //         'message' => 'User not authenticated',
-        //     ], 401);
-        // }
-
         $pages = Page::whereNotNull('ordering')
             ->where('deleted_at', 0)
             // ->where('status', 1)
@@ -440,7 +423,7 @@ class PageController extends Controller
         ], 200);
     }
 
-    /** page status  */
+    /** This function used for the page status active or inactive create by ns  */
 
     public function pageStatus($id)
     {
@@ -476,6 +459,7 @@ class PageController extends Controller
         ]);
     }
 
+    /** This function used for the if status is active that page name get only create by ns */
     public function getActivePageData()
     {
 

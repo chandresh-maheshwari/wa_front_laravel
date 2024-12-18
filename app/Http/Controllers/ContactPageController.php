@@ -41,15 +41,6 @@ class ContactPageController extends Controller
     }
     public function store(Request $request)
     {
-        // $user = Auth::user();
-        // if (!$user) {
-        //     return response()->json([
-        //         'status' => false,
-        //         'code' => '401',
-        //         'message' => 'User not authenticated',
-        //     ], 401);
-        // }
-
         $this->validate($request, [
             'name' => 'required',
             'email' => 'required',

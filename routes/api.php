@@ -1,19 +1,12 @@
 <?php
 
 use App\Http\Controllers\LoginController;
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactPageController;
-use App\Models\User;
 use Illuminate\Http\Request;
-use App\Http\Controllers\DynamicPageController;
 use App\Http\Controllers\DynamicPostController;
 use App\Http\Controllers\GetFormDataController;
 use App\Http\Controllers\GetPageFormDataController;
-use App\Http\Controllers\GetPostFormDataController;
-use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\PageController;
-use App\Http\Controllers\PageStoreController;
-use App\Http\Controllers\PostsController;
 use App\Http\Controllers\PostStoreController;
 use Illuminate\Support\Facades\Route;
 
@@ -103,4 +96,7 @@ Route::get('/pages', [PageController::class, 'showAllPagesWithPostStores']);
 
 /** contact page store api  */
 Route::post('/contact-page-store', [ContactPageController::class, 'store']);
+
+/** this route used for the if status is active that get only page name  */
+
 Route::get('/page-status-data', [PageController::class, 'getActivePageData']);
