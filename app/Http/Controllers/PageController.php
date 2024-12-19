@@ -412,7 +412,7 @@ class PageController extends Controller
             $pageData = $page->toArray();
             $pageData['post_store'] = $allRestructuredData;
 
-            $allPagesData[] = $pageData;
+            $allPagesData[$page->slug] = $pageData;
         }
 
         return response()->json([
