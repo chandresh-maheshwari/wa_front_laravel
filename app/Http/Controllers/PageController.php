@@ -301,7 +301,6 @@ class PageController extends Controller
 
     public function showByPageName($pageName)
     {
-
         $page = Page::where('page_name', $pageName)->where('deleted_at', 0)->where('status', 1)->first();
         if (!$page) {
             return response()->json([
@@ -310,7 +309,10 @@ class PageController extends Controller
                 'message' => 'Page Data Not Found',
             ], 404);
         }
-
+    
+        // Replace hyphens with underscores in the slug
+        $page->slug = str_replace('-', '_', $page->slug);
+    
         $postStores = PostStore::where('post_id', $page->post_type)
             ->where('status', 1)
             ->get();
@@ -321,30 +323,30 @@ class PageController extends Controller
                 'message' => 'Related Post Store Data Not Found',
             ], 404);
         }
-
+    
         $allRestructuredData = [];
-
+    
         foreach ($postStores as $postStore) {
             $restructuredData = [];
             $data = $postStore->data;
-
+    
             foreach ($data as $key => $value) {
                 if (strpos($key, 'field_slug_') === 0) {
                     continue;
                 }
-
+    
                 $slugKey = 'field_slug_' . str_replace(' ', '', strtolower($key));
                 if (isset($data[$slugKey])) {
                     $slug = $data[$slugKey];
                     $restructuredData[$slug] = $value;
                 }
             }
-
+    
             $postStoreResponse = $postStore->toArray();
             $postStoreResponse['data'] = $restructuredData;
             $allRestructuredData[] = $postStoreResponse;
         }
-
+    
         return response()->json([
             'status' => true,
             'code' => '200',
@@ -353,7 +355,6 @@ class PageController extends Controller
             'post_store' => $allRestructuredData,
         ], 200);
     }
-
 
     /** Get data page with him post store by ordering by ns */
 
@@ -412,7 +413,9 @@ class PageController extends Controller
             $pageData = $page->toArray();
             $pageData['post_store'] = $allRestructuredData;
 
-            $allPagesData[$page->slug] = $pageData;
+            $slugKey = str_replace('-', '_', $page->slug);
+            $pageData['slug'] = $slugKey;
+            $allPagesData[$slugKey] = $pageData;
         }
 
         return response()->json([
