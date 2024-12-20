@@ -296,14 +296,14 @@ class DynamicPostController extends Controller
                      return response()->json([
                          'status' => true,
                          'code' => '200',
-                         'message' => 'Posts deleted successfully',
+                         'message' => 'Mutli Posts Deleted Successfully',
                          'deleted_count' => $deletedCount,
                      ], 200);
                  } else {
                      return response()->json([
                          'status' => false,
                          'code' => '404',
-                         'message' => 'No posts found to delete',
+                         'message' => 'No Posts Found To Delete',
                      ], 404);
                  }
              } else {
@@ -315,7 +315,7 @@ class DynamicPostController extends Controller
                          return response()->json([
                              'status' => false,
                              'code' => '400',
-                             'message' => 'Record already deleted',
+                             'message' => 'Record Already Deleted',
                          ], 400);
                      }
      
@@ -331,7 +331,7 @@ class DynamicPostController extends Controller
                      return response()->json([
                          'status' => false,
                          'code' => '500',
-                         'message' => 'Failed to delete post',
+                         'message' => 'Failed To Delete Post',
                      ], 500);
                  }
              }
@@ -339,7 +339,7 @@ class DynamicPostController extends Controller
              return response()->json([
                  'status' => false,
                  'code' => '500',
-                 'message' => 'An error occurred',
+                 'message' => 'An Error Occurred',
                  'error' => $e->getMessage(),
              ], 500);
          }

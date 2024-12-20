@@ -372,14 +372,14 @@ class PostStoreController extends Controller
                     return response()->json([
                         'status' => true,
                         'code' => '200',
-                        'message' => 'Posts deleted successfully',
+                        'message' => 'Multi Posts Store Deleted Successfully',
                         'deleted_count' => $deletedCount,
                     ], 200);
                 } else {
                     return response()->json([
                         'status' => false,
                         'code' => '404',
-                        'message' => 'No posts found to delete',
+                        'message' => 'No Posts Found To Delete',
                     ], 404);
                 }
             } else {
@@ -390,7 +390,7 @@ class PostStoreController extends Controller
                         return response()->json([
                             'status' => false,
                             'code' => '400',
-                            'message' => 'Record already deleted',
+                            'message' => 'Record Already Deleted',
                         ], 400);
                     }
     
@@ -399,14 +399,14 @@ class PostStoreController extends Controller
                         return response()->json([
                             'status' => true,
                             'code' => '200',
-                            'message' => 'Post Data Deleted Successfully',
+                            'message' => 'Post Store Data Deleted Successfully',
                         ], 200);
                     }
                 } else {
                     return response()->json([
                         'status' => false,
                         'code' => '500',
-                        'message' => 'Failed to delete post',
+                        'message' => 'Failed To Delete Post',
                     ], 500);
                 }
             }

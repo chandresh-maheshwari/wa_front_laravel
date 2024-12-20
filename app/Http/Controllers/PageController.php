@@ -271,7 +271,7 @@ class PageController extends Controller
                     return response()->json([
                         'status' => true,
                         'code' => '200',
-                        'message' => 'Page deleted successfully',
+                        'message' => 'Page Deleted Successfully',
                         'deleted_count' => $deletedCount,
                     ], 200);
                 } else {
@@ -289,7 +289,7 @@ class PageController extends Controller
                         return response()->json([
                             'status' => false,
                             'code' => '400',
-                            'message' => 'Record already deleted',
+                            'message' => 'Record Already Deleted',
                         ], 400);
                     }
 
