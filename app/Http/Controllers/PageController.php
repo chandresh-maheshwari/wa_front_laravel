@@ -261,7 +261,6 @@ class PageController extends Controller
                 ], 401);
             }
             $ids = explode(',', $id);
-
             $ids = array_filter($ids);
 
             if (count($ids) > 1) {
@@ -319,7 +318,6 @@ class PageController extends Controller
         }
     }
 
-
     /** This function used for the post show by page name create by ns */
 
     public function showByPageName($pageName)
@@ -333,7 +331,6 @@ class PageController extends Controller
             ], 404);
         }
 
-        // Replace hyphens with underscores in the slug
         $page->slug = str_replace('-', '_', $page->slug);
 
         $postStores = PostStore::where('post_id', $page->post_type)
