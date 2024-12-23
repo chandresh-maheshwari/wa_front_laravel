@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\DynamicPost;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+
 
 class DynamicPostController extends Controller
 {
@@ -336,27 +338,45 @@ class DynamicPostController extends Controller
                     'message' => 'User not authenticated',
                 ], 401);
             }
-
-            $data = DynamicPost::where('id', $id)->first();
-
-            if (!$data) {
+            $idsArray = explode(',', $id);
+    
+            $validatedData = Validator::make(
+                ['ids' => $idsArray],
+                ['ids' => 'required|array|min:1'],
+                ['ids.*' => 'integer|exists:dynamic_posts,id']
+            );
+    
+            if ($validatedData->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '422',
+                    'message' => 'Validation failed',
+                    'errors' => $validatedData->errors(),
+                ], 422);
+            }
+    
+            $posts = DynamicPost::whereIn('id', $idsArray)->get();
+    
+            if ($posts->isEmpty()) {
                 return response()->json([
                     'status' => false,
                     'code' => '404',
-                    'message' => 'Record not found',
+                    'message' => 'No records found',
                 ], 404);
             }
-
-            $data->status = $data->status ? 0 : 1;
-            $data->save();
-
-            $message = $data->status ? 'Activated Successfully' : 'Deactivated Successfully';
-
+    
+            $posts->each(function ($post) {
+                $post->status = $post->status ? 0 : 1;
+                $post->save();
+            });
+    
+            $message = $posts->first()->status ? 'Activated Successfully' : 'Deactivated Successfully';
+    
             return response()->json([
                 'status' => true,
                 'code' => '200',
                 'message' => $message,
-                'data' => $data->status
+                // 'data' => $posts->pluck('id')
             ]);
         } catch (\Exception $e) {
             return response()->json([

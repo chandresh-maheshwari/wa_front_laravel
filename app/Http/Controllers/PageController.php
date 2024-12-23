@@ -6,6 +6,7 @@ use App\Models\DynamicPost;
 use App\Models\PostStore;
 use App\Models\Page;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 
 class PageController extends Controller
@@ -217,38 +218,64 @@ class PageController extends Controller
 
     public function active($id)
     {
-        $user = Auth::user()->id;
-        if (!$user) {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User not authenticated',
+                ], 401);
+            }
+            $idsArray = explode(',', $id);
+    
+            $validatedData = Validator::make(
+                ['ids' => $idsArray],
+                ['ids' => 'required|array|min:1'],
+                ['ids.*' => 'integer|exists:dynamic_posts,id']
+            );
+    
+            if ($validatedData->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '422',
+                    'message' => 'Validation failed',
+                    'errors' => $validatedData->errors(),
+                ], 422);
+            }
+    
+            $posts = Page::whereIn('id', $idsArray)->get();
+    
+            if ($posts->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'No records found',
+                ], 404);
+            }
+    
+            $posts->each(function ($post) {
+                $post->status = $post->status ? 0 : 1;
+                $post->save();
+            });
+    
+            $message = $posts->first()->status ? 'Activated Successfully' : 'Deactivated Successfully';
+    
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => $message,
+                // 'data' => $posts->pluck('id')
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'code' => '401',
-                'message' => 'User not authenticated',
-            ], 401);
+                'code' => '500',
+                'message' => 'An error occurred',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        $statusData = Page::find($id);
-
-        if (!$statusData) {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Record not found',
-            ], 404);
-        }
-
-        $statusData->status = $statusData->status ? 0 : 1;
-        $statusData->save();
-
-        $message = $statusData->status ? 'Activated Successfully' : 'Deactivated Successfully';
-
-        return response()->json([
-            'status' => true,
-            'code' => '200',
-            'message' => $message,
-            'data' => $statusData->status
-        ]);
     }
-
     public function destroy($id)
     {
         try {

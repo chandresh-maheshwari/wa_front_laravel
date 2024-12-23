@@ -401,6 +401,7 @@ class PostStoreController extends Controller
      * Toggle the active status of a post by its title.
      * If the post is active, it will be deactivated. create by ns
      */
+
     public function active($id)
     {
         try {
@@ -412,38 +413,55 @@ class PostStoreController extends Controller
                     'message' => 'User not authenticated',
                 ], 401);
             }
-
-            $data = PostStore::where('id', $id)->first();
-
-            if (!$data) {
+            $idsArray = explode(',', $id);
+    
+            $validatedData = Validator::make(
+                ['ids' => $idsArray],
+                ['ids' => 'required|array|min:1'],
+                ['ids.*' => 'integer|exists:dynamic_posts,id']
+            );
+    
+            if ($validatedData->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '422',
+                    'message' => 'Validation failed',
+                    'errors' => $validatedData->errors(),
+                ], 422);
+            }
+    
+            $posts = PostStore::whereIn('id', $idsArray)->get();
+    
+            if ($posts->isEmpty()) {
                 return response()->json([
                     'status' => false,
                     'code' => '404',
-                    'message' => 'Record not found',
+                    'message' => 'No records found',
                 ], 404);
             }
-
-            $data->status = $data->status ? 0 : 1;
-            $data->save();
-
-            $message = $data->status ? 'Activated Successfully' : 'Deactivated Successfully';
-
+    
+            $posts->each(function ($post) {
+                $post->status = $post->status ? 0 : 1;
+                $post->save();
+            });
+    
+            $message = $posts->first()->status ? 'Activated Successfully' : 'Deactivated Successfully';
+    
             return response()->json([
                 'status' => true,
                 'code' => '200',
                 'message' => $message,
-                'data' => $data->status
+                // 'data' => $posts->pluck('id')
             ]);
-        } catch (Exception $e) {
-            Log::error('Error toggling active status', ['error' => $e->getMessage()]);
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'Internal Server Error',
+                'message' => 'An error occurred',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
-
     private function convertToSlug($string)
     {
         return str_replace([' ', '_', '/'], '', strtolower($string));
