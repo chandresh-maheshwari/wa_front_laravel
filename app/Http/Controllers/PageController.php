@@ -287,42 +287,65 @@ class PageController extends Controller
                     'message' => 'User not authenticated',
                 ], 401);
             }
+            $ids = explode(',', $id);
 
-            $post = Page::where('id', $id)->first();
+            $ids = array_filter($ids);
 
-            if ($post) {
-                if ($post->deleted_at == 1) {
-                    return response()->json([
-                        'status' => false,
-                        'code' => '400',
-                        'message' => 'Record already deleted',
-                    ], 400);
-                }
+            if (count($ids) > 1) {
+                $deletedCount = Page::whereIn('id', $ids)->update(['deleted_at' => 1]);
 
-                $post->deleted_at = 1;
-                if ($post->save()) {
+                if ($deletedCount > 0) {
                     return response()->json([
                         'status' => true,
                         'code' => '200',
-                        'message' => 'Page Data Deleted Successfully',
+                        'message' => 'Page Deleted Successfully',
+                        'deleted_count' => $deletedCount,
                     ], 200);
+                } else {
+                    return response()->json([
+                        'status' => false,
+                        'code' => '404',
+                        'message' => 'No Page Found To Delete',
+                    ], 404);
                 }
             } else {
-                return response()->json([
-                    'status' => false,
-                    'code' => '500',
-                    'message' => 'Failed To Delete Page',
-                ], 500);
+                $post = Page::where('id', $ids[0])->first();
+
+                if ($post) {
+                    if ($post->deleted_at == 1) {
+                        return response()->json([
+                            'status' => false,
+                            'code' => '400',
+                            'message' => 'Record Already Deleted',
+                        ], 400);
+                    }
+
+                    $post->deleted_at = 1;
+                    if ($post->save()) {
+                        return response()->json([
+                            'status' => true,
+                            'code' => '200',
+                            'message' => 'Page Data Deleted Successfully',
+                        ], 200);
+                    }
+                } else {
+                    return response()->json([
+                        'status' => false,
+                        'code' => '500',
+                        'message' => 'Failed to delete Page',
+                    ], 500);
+                }
             }
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'An Error Occurred',
+                'message' => 'An error occurred',
                 'error' => $e->getMessage(),
             ], 500);
         }
     }
+
 
     /** This function used for the post show by page name create by ns */
 
@@ -336,10 +359,10 @@ class PageController extends Controller
                 'message' => 'Page Data Not Found',
             ], 404);
         }
-    
+
         // Replace hyphens with underscores in the slug
         $page->slug = str_replace('-', '_', $page->slug);
-    
+
         $postStores = PostStore::where('post_id', $page->post_type)
             ->where('status', 1)
             ->get();
@@ -350,30 +373,30 @@ class PageController extends Controller
                 'message' => 'Related Post Store Data Not Found',
             ], 404);
         }
-    
+
         $allRestructuredData = [];
-    
+
         foreach ($postStores as $postStore) {
             $restructuredData = [];
             $data = $postStore->data;
-    
+
             foreach ($data as $key => $value) {
                 if (strpos($key, 'field_slug_') === 0) {
                     continue;
                 }
-    
+
                 $slugKey = 'field_slug_' . str_replace(' ', '', strtolower($key));
                 if (isset($data[$slugKey])) {
                     $slug = $data[$slugKey];
                     $restructuredData[$slug] = $value;
                 }
             }
-    
+
             $postStoreResponse = $postStore->toArray();
             $postStoreResponse['data'] = $restructuredData;
             $allRestructuredData[] = $postStoreResponse;
         }
-    
+
         return response()->json([
             'status' => true,
             'code' => '200',

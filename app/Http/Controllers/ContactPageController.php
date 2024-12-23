@@ -88,31 +88,54 @@ class ContactPageController extends Controller
                 ], 401);
             }
 
-            $pageData = ContactPage::where('id', $id)->first();
+            $ids = explode(',', $id);
 
-            if ($pageData) {
-                if ($pageData->deleted_at == 1) {
-                    return response()->json([
-                        'status' => false,
-                        'code' => '400',
-                        'message' => 'Record already deleted',
-                    ], 400);
-                }
-
-                $pageData->deleted_at = 1;
-                if ($pageData->save()) {
+            $ids = array_filter($ids);
+    
+            if (count($ids) > 1) {
+                $deletedCount = ContactPage::whereIn('id', $ids)->update(['deleted_at' => 1]);
+    
+                if ($deletedCount > 0) {
                     return response()->json([
                         'status' => true,
                         'code' => '200',
-                        'message' => 'Contact Page Data Deleted Successfully',
+                        'message' => 'Contact Page Deleted Successfully',
+                        'deleted_count' => $deletedCount,
                     ], 200);
+                } else {
+                    return response()->json([
+                        'status' => false,
+                        'code' => '404',
+                        'message' => 'No Page found To Delete',
+                    ], 404);
                 }
             } else {
-                return response()->json([
-                    'status' => false,
-                    'code' => '500',
-                    'message' => 'Failed To Delete Page',
-                ], 500);
+                $post = ContactPage::where('id', $ids[0])->first();
+    
+                if ($post) {
+                    if ($post->deleted_at == 1) {
+                        return response()->json([
+                            'status' => false,
+                            'code' => '400',
+                            'message' => 'Record Already Deleted',
+                        ], 400);
+                    }
+    
+                    $post->deleted_at = 1;
+                    if ($post->save()) {
+                        return response()->json([
+                            'status' => true,
+                            'code' => '200',
+                            'message' => 'Post Data Deleted Successfully',
+                        ], 200);
+                    }
+                } else {
+                    return response()->json([
+                        'status' => false,
+                        'code' => '500',
+                        'message' => 'Failed To Delete Post',
+                    ], 500);
+                }
             }
         } catch (\Exception $e) {
             return response()->json([

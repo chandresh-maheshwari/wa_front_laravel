@@ -275,53 +275,78 @@ class DynamicPostController extends Controller
      * If the post is already deleted, it returns a message indicating so. create by ns
      */
 
-    public function destroy($id)
-    {
-        try {
-            $user = Auth::user();
-            if (!$user) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '401',
-                    'message' => 'User not authenticated',
-                ], 401);
-            }
+     public function destroy($id)
+     {
+         try {
+             $user = Auth::user();
+             if (!$user) {
+                 return response()->json([
+                     'status' => false,
+                     'code' => '401',
+                     'message' => 'User not authenticated',
+                 ], 401);
+             }
+     
+             $ids = explode(',', $id);
 
-            $post = DynamicPost::where('id', $id)->first();
-
-            if ($post) {
-                if ($post->deleted_at == 1) {
-                    return response()->json([
-                        'status' => false,
-                        'code' => '400',
-                        'message' => 'Record already deleted',
-                    ], 400);
-                }
-
-                $post->deleted_at = 1;
-                if ($post->save()) {
-                    return response()->json([
-                        'status' => true,
-                        'code' => '200',
-                        'message' => 'Post Data Deleted Successfully',
-                    ], 200);
-                }
-            } else {
-                return response()->json([
-                    'status' => false,
-                    'code' => '500',
-                    'message' => 'Failed to delete post',
-                ], 500);
-            }
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'code' => '500',
-                'message' => 'An error occurred',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
+             $ids = array_filter($ids);
+     
+             if (count($ids) > 1) {
+                 $deletedCount = DynamicPost::whereIn('id', $ids)->update(['deleted_at' => 1]);
+     
+                 if ($deletedCount > 0) {
+                     return response()->json([
+                         'status' => true,
+                         'code' => '200',
+                         'message' => 'Mutli Posts Deleted Successfully',
+                         'deleted_count' => $deletedCount,
+                     ], 200);
+                 } else {
+                     return response()->json([
+                         'status' => false,
+                         'code' => '404',
+                         'message' => 'No Posts Found To Delete',
+                     ], 404);
+                 }
+             } else {
+                 // Handle single delete
+                 $post = DynamicPost::where('id', $ids[0])->first();
+     
+                 if ($post) {
+                     if ($post->deleted_at == 1) {
+                         return response()->json([
+                             'status' => false,
+                             'code' => '400',
+                             'message' => 'Record Already Deleted',
+                         ], 400);
+                     }
+     
+                     $post->deleted_at = 1;
+                     if ($post->save()) {
+                         return response()->json([
+                             'status' => true,
+                             'code' => '200',
+                             'message' => 'Post Data Deleted Successfully',
+                         ], 200);
+                     }
+                 } else {
+                     return response()->json([
+                         'status' => false,
+                         'code' => '500',
+                         'message' => 'Failed To Delete Post',
+                     ], 500);
+                 }
+             }
+         } catch (\Exception $e) {
+             return response()->json([
+                 'status' => false,
+                 'code' => '500',
+                 'message' => 'An Error Occurred',
+                 'error' => $e->getMessage(),
+             ], 500);
+         }
+     }
+     
 
     /** 
      * Toggle the active status of a post by its title.
