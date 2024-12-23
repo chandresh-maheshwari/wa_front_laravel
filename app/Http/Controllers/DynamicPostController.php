@@ -288,7 +288,6 @@ class DynamicPostController extends Controller
              }
      
              $ids = explode(',', $id);
-
              $ids = array_filter($ids);
      
              if (count($ids) > 1) {
@@ -309,7 +308,6 @@ class DynamicPostController extends Controller
                      ], 404);
                  }
              } else {
-                 // Handle single delete
                  $post = DynamicPost::where('id', $ids[0])->first();
      
                  if ($post) {

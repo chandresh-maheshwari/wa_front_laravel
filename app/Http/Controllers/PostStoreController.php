@@ -362,7 +362,6 @@ class PostStoreController extends Controller
             }
 
             $ids = explode(',', $id);
-
              $ids = array_filter($ids);
 
              if (count($ids) > 1) {
@@ -419,40 +418,6 @@ class PostStoreController extends Controller
             ], 500);
         }
     }
-
-    //         if ($post) {
-    //             if ($post->deleted_at == 1) {
-    //                 return response()->json([
-    //                     'status' => false,
-    //                     'code' => '400',
-    //                     'message' => 'Record already deleted',
-    //                 ], 400);
-    //             }
-
-    //             $post->deleted_at = 1;
-    //             if ($post->save()) {
-    //                 return response()->json([
-    //                     'status' => true,
-    //                     'code' => '200',
-    //                     'message' => 'Post Data Deleted Successfully',
-    //                 ], 200);
-    //             }
-    //         } else {
-    //             return response()->json([
-    //                 'status' => false,
-    //                 'code' => '500',
-    //                 'message' => 'Failed to delete post',
-    //             ], 500);
-    //         }
-    //     } catch (Exception $e) {
-    //         Log::error('Error deleting post', ['error' => $e->getMessage()]);
-    //         return response()->json([
-    //             'status' => false,
-    //             'code' => '500',
-    //             'message' => 'Internal Server Error',
-    //         ], 500);
-    //     }
-    // }
 
     /** 
      * Toggle the active status of a post by its title.

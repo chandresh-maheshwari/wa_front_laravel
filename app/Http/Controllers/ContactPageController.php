@@ -89,7 +89,6 @@ class ContactPageController extends Controller
             }
 
             $ids = explode(',', $id);
-
             $ids = array_filter($ids);
     
             if (count($ids) > 1) {
