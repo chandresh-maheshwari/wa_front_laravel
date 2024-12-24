@@ -17,7 +17,7 @@ class ContactPageController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '401',
-                'message' => 'User not authenticated',
+                'message' => 'User Not Authenticated',
             ], 401);
         }
 
@@ -35,7 +35,7 @@ class ContactPageController extends Controller
         return response()->json([
             'status' => true,
             'code' => '200',
-            'message' => 'Contact Data Fetch Successfully',
+            'message' => 'Contact Page Data Fetch Successfully',
             'results' => $contactData,
         ], 200);
     }
@@ -64,7 +64,7 @@ class ContactPageController extends Controller
             return response()->json([
                 'status' => true,
                 'code' => '200',
-                'message' => 'Contact Page Added Successfully',
+                'message' => 'Contact Page Data Added Successfully',
             ], 200);
         } else {
             return response()->json([
@@ -84,7 +84,7 @@ class ContactPageController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '401',
-                    'message' => 'User not authenticated',
+                    'message' => 'User Not Authenticated',
                 ], 401);
             }
 
@@ -98,14 +98,14 @@ class ContactPageController extends Controller
                     return response()->json([
                         'status' => true,
                         'code' => '200',
-                        'message' => 'Contact Page Deleted Successfully',
+                        'message' => 'Contact Page Data Deleted Successfully',
                         'deleted_count' => $deletedCount,
                     ], 200);
                 } else {
                     return response()->json([
                         'status' => false,
                         'code' => '404',
-                        'message' => 'No Page found To Delete',
+                        'message' => 'No Contact Page found To Delete',
                     ], 404);
                 }
             } else {
@@ -125,14 +125,14 @@ class ContactPageController extends Controller
                         return response()->json([
                             'status' => true,
                             'code' => '200',
-                            'message' => 'Post Data Deleted Successfully',
+                            'message' => 'Contact Page Data Deleted Successfully',
                         ], 200);
                     }
                 } else {
                     return response()->json([
                         'status' => false,
                         'code' => '500',
-                        'message' => 'Failed To Delete Post',
+                        'message' => 'Failed To Delete Contact Page',
                     ], 500);
                 }
             }

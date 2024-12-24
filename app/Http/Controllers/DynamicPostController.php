@@ -31,7 +31,7 @@ class DynamicPostController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '401',
-                    'message' => 'User not authenticated',
+                    'message' => 'User Not Authenticated',
                 ], 401);
             }
 
@@ -49,14 +49,14 @@ class DynamicPostController extends Controller
             return response()->json([
                 'status' => true,
                 'code' => '200',
-                'message' => 'Post Data Fetch Successfully',
+                'message' => 'Dynamic Post Data Fetch Successfully',
                 'results' => $post,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'An error occurred',
+                'message' => 'An Error Occurred',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -75,7 +75,7 @@ class DynamicPostController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '401',
-                    'message' => 'User not authenticated',
+                    'message' => 'User Not Authenticated',
                 ], 401);
             }
 
@@ -107,20 +107,20 @@ class DynamicPostController extends Controller
                 return response()->json([
                     'status' => true,
                     'code' => '200',
-                    'message' => 'Post Added Successfully',
+                    'message' => 'Dynamic Post Data Added Successfully',
                 ], 200);
             } else {
                 return response()->json([
                     'status' => false,
                     'code' => '404',
-                    'message' => 'Something went wrong'
+                    'message' => 'Something Went Wrong'
                 ], 404);
             }
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'An error occurred',
+                'message' => 'An Error Occurred',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -139,7 +139,7 @@ class DynamicPostController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '401',
-                    'message' => 'User not authenticated',
+                    'message' => 'User Not Authenticated',
                 ], 401);
             }
 
@@ -148,20 +148,20 @@ class DynamicPostController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '404',
-                    'message' => 'Post Data Not Found',
+                    'message' => 'Dynamic Post Data Not Found',
                 ], 404);
             }
             return response()->json([
                 'status' => true,
                 'code' => '200',
-                'message' => 'Post Data Fetch Successfully',
+                'message' => 'Dynamic Post Data Fetch Successfully',
                 'results' => $post,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'An error occurred',
+                'message' => 'An Error Occurred',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -180,7 +180,7 @@ class DynamicPostController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '401',
-                    'message' => 'User not authenticated',
+                    'message' => 'User Not Authenticated',
                 ], 401);
             }
 
@@ -189,20 +189,20 @@ class DynamicPostController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '404',
-                    'message' => 'Post Data Not Found',
+                    'message' => 'Dynamic Post Data Not Found',
                 ], 404);
             }
             return response()->json([
                 'status' => true,
                 'code' => '200',
-                'message' => 'Post Data Fetch Successfully',
+                'message' => 'Dynamic Post Data Fetch Successfully',
                 'results' => $data,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'An error occurred',
+                'message' => 'An Error Occurred',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -221,7 +221,7 @@ class DynamicPostController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '401',
-                    'message' => 'User not authenticated',
+                    'message' => 'User Not Authenticated',
                 ], 401);
             }
 
@@ -230,7 +230,7 @@ class DynamicPostController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '404',
-                    'message' => 'Post Data Not Found',
+                    'message' => 'Dynamic Post Data Not Found',
                 ], 404);
             }
 
@@ -251,20 +251,20 @@ class DynamicPostController extends Controller
                 return response()->json([
                     'status' => true,
                     'code' => '200',
-                    'message' => 'Post Updated Successfully',
+                    'message' => 'Dynamic Post Data Updated Successfully',
                 ], 200);
             } else {
                 return response()->json([
                     'status' => false,
                     'code' => '500',
-                    'message' => 'Failed to update post',
+                    'message' => 'Failed To Update Dynamic Post',
                 ], 500);
             }
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'An error occurred',
+                'message' => 'An Error Occurred',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -283,7 +283,7 @@ class DynamicPostController extends Controller
                  return response()->json([
                      'status' => false,
                      'code' => '401',
-                     'message' => 'User not authenticated',
+                     'message' => 'User Not Authenticated',
                  ], 401);
              }
      
@@ -297,14 +297,14 @@ class DynamicPostController extends Controller
                      return response()->json([
                          'status' => true,
                          'code' => '200',
-                         'message' => 'Mutli Posts Deleted Successfully',
+                         'message' => 'Mutli Dynamic Post Data Deleted Successfully',
                          'deleted_count' => $deletedCount,
                      ], 200);
                  } else {
                      return response()->json([
                          'status' => false,
                          'code' => '404',
-                         'message' => 'No Posts Found To Delete',
+                         'message' => 'No Dynamic Post Found To Delete',
                      ], 404);
                  }
              } else {
@@ -324,14 +324,14 @@ class DynamicPostController extends Controller
                          return response()->json([
                              'status' => true,
                              'code' => '200',
-                             'message' => 'Post Data Deleted Successfully',
+                             'message' => 'Dynamic Post Data Deleted Successfully',
                          ], 200);
                      }
                  } else {
                      return response()->json([
                          'status' => false,
                          'code' => '500',
-                         'message' => 'Failed To Delete Post',
+                         'message' => 'Failed To Delete Dynamic Post',
                      ], 500);
                  }
              }
@@ -358,7 +358,7 @@ class DynamicPostController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '401',
-                    'message' => 'User not authenticated',
+                    'message' => 'User Not Authenticated',
                 ], 401);
             }
             $idsArray = explode(',', $id);
@@ -373,7 +373,7 @@ class DynamicPostController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '422',
-                    'message' => 'Validation failed',
+                    'message' => 'Validation Failed',
                     'errors' => $validatedData->errors(),
                 ], 422);
             }
@@ -384,7 +384,7 @@ class DynamicPostController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '404',
-                    'message' => 'No records found',
+                    'message' => 'No Records Found',
                 ], 404);
             }
     
@@ -393,7 +393,7 @@ class DynamicPostController extends Controller
                 $post->save();
             });
     
-            $message = $posts->first()->status ? 'Activated Successfully' : 'Deactivated Successfully';
+            $message = $posts->first()->status ? 'Dynamic Post Data Active Successfully' : 'Dynamic Post Data Deactive Successfully';
     
             return response()->json([
                 'status' => true,
@@ -405,7 +405,7 @@ class DynamicPostController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'An error occurred',
+                'message' => 'An Error Occurred',
                 'error' => $e->getMessage(),
             ], 500);
         }

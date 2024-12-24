@@ -19,7 +19,7 @@ class PageController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '401',
-                'message' => 'User not authenticated',
+                'message' => 'User Not Authenticated',
             ], 401);
         }
 
@@ -29,7 +29,7 @@ class PageController extends Controller
             return response()->json([
                 'status' => true,
                 'code' => '200',
-                'message' => 'No Post Data Found',
+                'message' => 'No Page Data Found',
                 'results' => [],
             ], 200);
         }
@@ -53,7 +53,7 @@ class PageController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '401',
-                'message' => 'User not authenticated',
+                'message' => 'User Not Authenticated',
             ], 401);
         }
 
@@ -82,13 +82,13 @@ class PageController extends Controller
             return response()->json([
                 'status' => true,
                 'code' => '200',
-                'message' => 'Page Added Successfully',
+                'message' => 'Page Data Added Successfully',
             ], 200);
         } else {
             return response()->json([
                 'status' => false,
                 'code' => '404',
-                'message' => 'Something went wrong'
+                'message' => 'Something Went Wrong'
             ], 404);
         }
     }
@@ -101,7 +101,7 @@ class PageController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '401',
-                'message' => 'User not authenticated',
+                'message' => 'User Not Authenticated',
             ], 401);
         }
 
@@ -128,7 +128,7 @@ class PageController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '401',
-                'message' => 'User not authenticated',
+                'message' => 'User Not Authenticated',
             ], 401);
         }
 
@@ -161,7 +161,7 @@ class PageController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '401',
-                'message' => 'User not authenticated',
+                'message' => 'User Not Authenticated',
             ], 401);
         }
 
@@ -170,7 +170,7 @@ class PageController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '404',
-                'message' => 'Page Not Found',
+                'message' => 'Page Data Not Found',
             ], 404);
         }
 
@@ -204,13 +204,13 @@ class PageController extends Controller
             return response()->json([
                 'status' => true,
                 'code' => '200',
-                'message' => 'Page Updated Successfully',
+                'message' => 'Page Data Updated Successfully',
             ], 200);
         } else {
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'Something went wrong'
+                'message' => 'Something Went Wrong'
             ], 500);
         }
     }
@@ -224,7 +224,7 @@ class PageController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '401',
-                    'message' => 'User not authenticated',
+                    'message' => 'User Not Authenticated',
                 ], 401);
             }
             $idsArray = explode(',', $id);
@@ -239,7 +239,7 @@ class PageController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '422',
-                    'message' => 'Validation failed',
+                    'message' => 'Validation Failed',
                     'errors' => $validatedData->errors(),
                 ], 422);
             }
@@ -250,7 +250,7 @@ class PageController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '404',
-                    'message' => 'No records found',
+                    'message' => 'No Page Records Found',
                 ], 404);
             }
     
@@ -259,7 +259,7 @@ class PageController extends Controller
                 $post->save();
             });
     
-            $message = $posts->first()->status ? 'Activated Successfully' : 'Deactivated Successfully';
+            $message = $posts->first()->status ? 'Page Data Active Successfully' : 'Page Data Deactive Successfully';
     
             return response()->json([
                 'status' => true,
@@ -271,7 +271,7 @@ class PageController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'An error occurred',
+                'message' => 'An Error Occurred',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -284,7 +284,7 @@ class PageController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '401',
-                    'message' => 'User not authenticated',
+                    'message' => 'User Not Authenticated',
                 ], 401);
             }
             $ids = explode(',', $id);
@@ -297,7 +297,7 @@ class PageController extends Controller
                     return response()->json([
                         'status' => true,
                         'code' => '200',
-                        'message' => 'Page Deleted Successfully',
+                        'message' => 'Page Data Deleted Successfully',
                         'deleted_count' => $deletedCount,
                     ], 200);
                 } else {
@@ -331,7 +331,7 @@ class PageController extends Controller
                     return response()->json([
                         'status' => false,
                         'code' => '500',
-                        'message' => 'Failed to delete Page',
+                        'message' => 'Failed To Delete Page Data',
                     ], 500);
                 }
             }
@@ -339,7 +339,7 @@ class PageController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'An error occurred',
+                'message' => 'An Error Occurred',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -397,7 +397,7 @@ class PageController extends Controller
         return response()->json([
             'status' => true,
             'code' => '200',
-            'message' => 'Page and Post Store Data Fetch Successfully',
+            'message' => 'Page And Post Store Data Fetch Successfully',
             'page' => $page,
             'post_store' => $allRestructuredData,
         ], 200);
@@ -468,7 +468,7 @@ class PageController extends Controller
         return response()->json([
             'status' => true,
             'code' => '200',
-            'message' => 'All Pages and Post Store Data Fetch Successfully',
+            'message' => 'All Pages And Post Store Data Fetch Successfully',
             'results' => $allPagesData,
         ], 200);
     }
@@ -482,7 +482,7 @@ class PageController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '401',
-                'message' => 'User not authenticated',
+                'message' => 'User Not Authenticated',
             ], 401);
         }
 
@@ -492,14 +492,14 @@ class PageController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '404',
-                'message' => 'Record not found',
+                'message' => 'Record Not Found',
             ], 404);
         }
 
         $statusData->page_status = $statusData->page_status ? 0 : 1;
         $statusData->save();
 
-        $message = $statusData->page_status ? 'Page Activated Successfully' : 'Page Deactivated Successfully';
+        $message = $statusData->page_status ? 'Page Active Successfully' : 'Page Deactive Successfully';
 
         return response()->json([
             'status' => true,

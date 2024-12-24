@@ -29,7 +29,7 @@ class LoginController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '404',
-                'message' => 'Invalid credentials',
+                'message' => 'Invalid Credentials',
             ], 401);
         }
 
@@ -59,6 +59,7 @@ class LoginController extends Controller
 
             return response()->json([
                 'status' => true,
+                'code' => '200',
                 'message' => 'Token Refresh Successfully',
                 'data' => [
                     'add_token' => $newToken,
@@ -79,37 +80,38 @@ class LoginController extends Controller
         }
     }
     /** Function used for user logout by ns */
+
     public function logoutpage(Request $request)
-{
-    try {
-        if (!JWTAuth::parseToken()->check()) {
+    {
+        try {
+            if (!JWTAuth::parseToken()->check()) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '400',
+                    'message' => 'User Already Logged Out',
+                ], 400);
+            }
+
+            JWTAuth::invalidate(JWTAuth::parseToken());
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'User Log Out Successfully',
+            ], 200);
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
             return response()->json([
                 'status' => false,
-                'code' => '400',
-                'message' => 'User Already Logged Out',
-            ], 400);
+                'code' => '401',
+                'message' => 'Token Is Invalid',
+            ], 401);
+        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+            return response()->json([
+                'status' => false,
+                'code' => '500',
+                'message' => 'Could Not Logout User',
+            ], 500);
         }
-
-        JWTAuth::invalidate(JWTAuth::parseToken());
-        return response()->json([
-            'status' => true,
-            'code' => '200',
-            'message' => 'User Logged Out Successfully',
-        ], 200);
-    } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
-        return response()->json([
-            'status' => false,
-            'code' => '401',
-            'message' => 'Token Is Invalid',
-        ], 401);
-    } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
-        return response()->json([
-            'status' => false,
-            'code' => '500',
-            'message' => 'Could Not Logout User',
-        ], 500);
     }
-}
 
     /** Function used for the send otp in mail by ns */
 

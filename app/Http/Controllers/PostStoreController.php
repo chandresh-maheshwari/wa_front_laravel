@@ -26,7 +26,7 @@ class PostStoreController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '401',
-                    'message' => 'User not authenticated',
+                    'message' => 'User Not Authenticated',
                 ], 401);
             }
 
@@ -36,7 +36,7 @@ class PostStoreController extends Controller
                 return response()->json([
                     'status' => true,
                     'code' => '200',
-                    'message' => 'No Post Data Found',
+                    'message' => 'No Post Store Data Found',
                     'results' => [],
                 ], 200);
             }
@@ -44,7 +44,7 @@ class PostStoreController extends Controller
             return response()->json([
                 'status' => true,
                 'code' => '200',
-                'message' => 'Post Data Fetch Successfully',
+                'message' => 'Post Store Data Fetch Successfully',
                 'results' => $postData,
             ], 200);
         } catch (Exception $e) {
@@ -58,6 +58,7 @@ class PostStoreController extends Controller
     }
 
     /** Function used for the post value store in the database create by ns */
+
     public function postStore(Request $request, $postTitle)
     {
         try {
@@ -66,43 +67,43 @@ class PostStoreController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '401',
-                    'message' => 'User not authenticated',
+                    'message' => 'User Not Authenticated',
                 ], 401);
             }
-    
+
             $postData = DynamicPost::where('post_title', $postTitle)->first();
-    
+
             if (!$postData) {
                 return response()->json([
                     'status' => false,
                     'code' => '404',
-                    'message' => 'Post Data Not Found',
+                    'message' => 'Post Store Data Not Found',
                 ], 404);
             }
-    
+
             $requestData = $request->all();
             $transformedRequest = [];
             foreach ($requestData as $key => $value) {
                 $originalKey = str_replace('_', ' ', $key);
                 $transformedRequest[$originalKey] = $value;
             }
-    
+
             $requiredFields = [];
             $labelMap = [];
             foreach ($postData->post_description as $field) {
                 $originalLabel = $field['label'];
                 $slugLabel = $this->convertToSlug($originalLabel);
                 $labelMap[$originalLabel] = $slugLabel;
-                
+
                 if ($field['type'] === 'file') {
                     $requiredFields[$originalLabel] = 'nullable|file|mimes:jpeg,png,gif,svg|max:2048';
                 } else {
                     $requiredFields[$originalLabel] = 'nullable|string';
                 }
             }
-    
+
             $validateRequest = Validator::make($transformedRequest, $requiredFields);
-    
+
             if ($validateRequest->fails()) {
                 Log::error('Validation failed', $validateRequest->errors()->toArray());
                 return response()->json([
@@ -111,17 +112,17 @@ class PostStoreController extends Controller
                     'errors' => $validateRequest->errors()
                 ], 404);
             }
-    
+
             $data = [];
-    
+
             foreach ($postData->post_description as $field) {
                 $originalLabel = $field['label'];
                 $value = $transformedRequest[$originalLabel] ?? $request->input(str_replace(' ', '_', $originalLabel));
-    
+
                 if ($value === null) {
                     continue;
                 }
-    
+
                 if ($field['type'] === 'file' && $request->hasFile(str_replace(' ', '_', $originalLabel))) {
                     $file = $request->file(str_replace(' ', '_', $originalLabel));
                     $originalName = $file->getClientOriginalName();
@@ -129,28 +130,28 @@ class PostStoreController extends Controller
                     $file->move(public_path($uploadFolder), $originalName);
                     $value = URL::to($uploadFolder . '/' . $originalName);
                 }
-    
+
                 $data[$originalLabel] = $value;
                 $data['field_slug_' . $this->convertToSlug($originalLabel)] = $labelMap[$originalLabel];
             }
-    
+
             $postData = PostStore::create([
                 'post_name' => $postTitle,
                 'post_id' => $postData->id,
                 'data' => $data,
             ]);
-    
+
             if ($postData) {
                 return response()->json([
                     'status' => true,
                     'code' => '200',
-                    'message' => 'Post Added Successfully',
+                    'message' => 'Post Store Data Added Successfully',
                 ], 200);
             } else {
                 return response()->json([
                     'status' => false,
                     'code' => '404',
-                    'message' => 'Something went wrong'
+                    'message' => 'Something Went Wrong'
                 ], 404);
             }
         } catch (Exception $e) {
@@ -175,7 +176,7 @@ class PostStoreController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '401',
-                    'message' => 'User not authenticated',
+                    'message' => 'User Not Authenticated',
                 ], 401);
             }
 
@@ -185,7 +186,7 @@ class PostStoreController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '404',
-                    'message' => 'Post Data Not Found',
+                    'message' => 'Post Store Data Not Found',
                 ], 404);
             }
 
@@ -193,14 +194,14 @@ class PostStoreController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '410',
-                    'message' => 'This record is deleted',
+                    'message' => 'This Record Is Deleted',
                 ], 410);
             }
 
             return response()->json([
                 'status' => true,
                 'code' => '200',
-                'message' => 'Post Data Fetch Successfully',
+                'message' => 'Post Store Data Fetch Successfully',
                 'results' => $post,
             ], 200);
         } catch (Exception $e) {
@@ -226,7 +227,7 @@ class PostStoreController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '401',
-                    'message' => 'User not authenticated',
+                    'message' => 'User Not Authenticated',
                 ], 401);
             }
 
@@ -236,7 +237,7 @@ class PostStoreController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '404',
-                    'message' => 'Post Data Not Found',
+                    'message' => 'Post Store Data Not Found',
                 ], 404);
             }
 
@@ -244,14 +245,14 @@ class PostStoreController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '410',
-                    'message' => 'This record is deleted',
+                    'message' => 'This Record Is Deleted',
                 ], 410);
             }
 
             return response()->json([
                 'status' => true,
                 'code' => '200',
-                'message' => 'Post Data Fetch Successfully',
+                'message' => 'Post Store Data Fetch Successfully',
                 'results' => $data,
             ], 200);
         } catch (Exception $e) {
@@ -277,7 +278,7 @@ class PostStoreController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '401',
-                    'message' => 'User not authenticated',
+                    'message' => 'User Not Authenticated',
                 ], 401);
             }
 
@@ -287,7 +288,7 @@ class PostStoreController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '404',
-                    'message' => 'Post Data Not Found',
+                    'message' => 'Post Store Data Not Found',
                 ], 404);
             }
 
@@ -300,7 +301,7 @@ class PostStoreController extends Controller
 
             foreach ($request->all() as $key => $value) {
                 $normalizedKey = str_replace('_', ' ', $key);
-                
+
                 if ($key === 'post_name') {
                     continue;
                 }
@@ -324,13 +325,13 @@ class PostStoreController extends Controller
                 return response()->json([
                     'status' => true,
                     'code' => '200',
-                    'message' => 'Post Updated Successfully',
+                    'message' => 'Post Store Data Updated Successfully',
                 ], 200);
             } else {
                 return response()->json([
                     'status' => false,
                     'code' => '500',
-                    'message' => 'Failed to update post',
+                    'message' => 'Failed To Update Post Store ',
                 ], 500);
             }
         } catch (Exception $e) {
@@ -357,33 +358,33 @@ class PostStoreController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '401',
-                    'message' => 'User not authenticated',
+                    'message' => 'User Not Authenticated',
                 ], 401);
             }
 
             $ids = explode(',', $id);
-             $ids = array_filter($ids);
+            $ids = array_filter($ids);
 
-             if (count($ids) > 1) {
+            if (count($ids) > 1) {
                 $deletedCount = PostStore::whereIn('id', $ids)->update(['deleted_at' => 1]);
 
                 if ($deletedCount > 0) {
                     return response()->json([
                         'status' => true,
                         'code' => '200',
-                        'message' => 'Multi Posts Store Deleted Successfully',
+                        'message' => 'Multi Post Store Data Deleted Successfully',
                         'deleted_count' => $deletedCount,
                     ], 200);
                 } else {
                     return response()->json([
                         'status' => false,
                         'code' => '404',
-                        'message' => 'No Posts Found To Delete',
+                        'message' => 'No Post Store Found To Delete',
                     ], 404);
                 }
             } else {
                 $post = PostStore::where('id', $ids[0])->first();
-    
+
                 if ($post) {
                     if ($post->deleted_at == 1) {
                         return response()->json([
@@ -392,7 +393,7 @@ class PostStoreController extends Controller
                             'message' => 'Record Already Deleted',
                         ], 400);
                     }
-    
+
                     $post->deleted_at = 1;
                     if ($post->save()) {
                         return response()->json([
@@ -405,7 +406,7 @@ class PostStoreController extends Controller
                     return response()->json([
                         'status' => false,
                         'code' => '500',
-                        'message' => 'Failed To Delete Post',
+                        'message' => 'Failed To Delete Post Store',
                     ], 500);
                 }
             }
@@ -413,7 +414,7 @@ class PostStoreController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'An error occurred',
+                'message' => 'An Error Occurred',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -432,43 +433,43 @@ class PostStoreController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '401',
-                    'message' => 'User not authenticated',
+                    'message' => 'User Not Authenticated',
                 ], 401);
             }
             $idsArray = explode(',', $id);
-    
+
             $validatedData = Validator::make(
                 ['ids' => $idsArray],
                 ['ids' => 'required|array|min:1'],
                 ['ids.*' => 'integer|exists:dynamic_posts,id']
             );
-    
+
             if ($validatedData->fails()) {
                 return response()->json([
                     'status' => false,
                     'code' => '422',
-                    'message' => 'Validation failed',
+                    'message' => 'Validation Failed',
                     'errors' => $validatedData->errors(),
                 ], 422);
             }
-    
+
             $posts = PostStore::whereIn('id', $idsArray)->get();
-    
+
             if ($posts->isEmpty()) {
                 return response()->json([
                     'status' => false,
                     'code' => '404',
-                    'message' => 'No records found',
+                    'message' => 'No Records Found',
                 ], 404);
             }
-    
+
             $posts->each(function ($post) {
                 $post->status = $post->status ? 0 : 1;
                 $post->save();
             });
-    
-            $message = $posts->first()->status ? 'Activated Successfully' : 'Deactivated Successfully';
-    
+
+            $message = $posts->first()->status ? 'Post Store Data Activae Successfully' : 'Post Store Data Deactive Successfully';
+
             return response()->json([
                 'status' => true,
                 'code' => '200',
@@ -479,7 +480,7 @@ class PostStoreController extends Controller
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'An error occurred',
+                'message' => 'An Error Occurred',
                 'error' => $e->getMessage(),
             ], 500);
         }
