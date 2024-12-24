@@ -216,7 +216,7 @@ class PageController extends Controller
     }
 
 
-    public function active($id)
+    public function active(Request $request, $id)
     {
         try {
             $user = Auth::user();
@@ -227,14 +227,16 @@ class PageController extends Controller
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
+
             $idsArray = explode(',', $id);
-    
+
+            // Validation for the input IDs
             $validatedData = Validator::make(
                 ['ids' => $idsArray],
                 ['ids' => 'required|array|min:1'],
                 ['ids.*' => 'integer|exists:dynamic_posts,id']
             );
-    
+
             if ($validatedData->fails()) {
                 return response()->json([
                     'status' => false,
@@ -243,35 +245,44 @@ class PageController extends Controller
                     'errors' => $validatedData->errors(),
                 ], 422);
             }
-    
+
+            // Fetch the posts based on IDs
             $posts = Page::whereIn('id', $idsArray)->get();
-    
+
             if ($posts->isEmpty()) {
                 return response()->json([
                     'status' => false,
                     'code' => '404',
-                    'message' => 'No Page Records Found',
+                    'message' => 'No Records Found',
                 ], 404);
             }
-    
-            $posts->each(function ($post) {
-                $post->status = $post->status ? 0 : 1;
-                $post->save();
-            });
-    
-            $message = $posts->first()->status ? 'Page Data Active Successfully' : 'Page Data Deactive Successfully';
-    
+            $newStatus = $request->input('status');
+
+            if ($newStatus !== null && in_array($newStatus, [0, 1])) {
+                $posts->each(function ($post) use ($newStatus) {
+                    $post->status = $newStatus;
+                    $post->save();
+                });
+
+                // $message = $newStatus === 1 ? 'Dynamic Post Data Activated Successfully' : 'Dynamic Post Data Deactivated Successfully';
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'code' => '422',
+                    'message' => 'Invalid Status Value',
+                ], 422);
+            }
+
             return response()->json([
                 'status' => true,
                 'code' => '200',
-                'message' => $message,
-                // 'data' => $posts->pluck('id')
+                'message' => 'Dynamic Post Data Updated Successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'An Error Occurred',
+                'message' => 'An Error occurred',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -475,9 +486,9 @@ class PageController extends Controller
 
     /** This function used for the page status active or inactive create by ns  */
 
-    public function pageStatus($id)
+    public function pageStatus(Request $request, $id)
     {
-        $user = Auth::user()->id;
+        $user = Auth::user();
         if (!$user) {
             return response()->json([
                 'status' => false,
@@ -485,9 +496,9 @@ class PageController extends Controller
                 'message' => 'User Not Authenticated',
             ], 401);
         }
-
+    
         $statusData = Page::find($id);
-
+    
         if (!$statusData) {
             return response()->json([
                 'status' => false,
@@ -495,20 +506,30 @@ class PageController extends Controller
                 'message' => 'Record Not Found',
             ], 404);
         }
+    
+        $newStatus = $request->input('page_status'); 
 
-        $statusData->page_status = $statusData->page_status ? 0 : 1;
-        $statusData->save();
-
-        $message = $statusData->page_status ? 'Page Active Successfully' : 'Page Deactive Successfully';
-
-        return response()->json([
-            'status' => true,
-            'code' => '200',
-            'message' => $message,
-            'data' => $statusData->page_status
-        ]);
+        if ($newStatus !== null && in_array($newStatus, [0, 1])) {
+         
+            $statusData->page_status = $newStatus;
+            $statusData->save();
+    
+            // $message = $newStatus === 1 ? 'Page Activated Successfully' : 'Page Deactivated Successfully';
+    
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'Inner Page Data Updated Successfully',
+            ]);
+        } else {
+            return response()->json([
+                'status' => false,
+                'code' => '422',
+                'message' => 'Invalid Status Value',
+            ], 422);
+        }
     }
-
+    
     /** This function used for the if status is active that page name get only create by ns */
     public function getActivePageData()
     {

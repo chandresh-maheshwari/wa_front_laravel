@@ -275,82 +275,7 @@ class DynamicPostController extends Controller
      * If the post is already deleted, it returns a message indicating so. create by ns
      */
 
-     public function destroy($id)
-     {
-         try {
-             $user = Auth::user();
-             if (!$user) {
-                 return response()->json([
-                     'status' => false,
-                     'code' => '401',
-                     'message' => 'User Not Authenticated',
-                 ], 401);
-             }
-     
-             $ids = explode(',', $id);
-             $ids = array_filter($ids);
-     
-             if (count($ids) > 1) {
-                 $deletedCount = DynamicPost::whereIn('id', $ids)->update(['deleted_at' => 1]);
-     
-                 if ($deletedCount > 0) {
-                     return response()->json([
-                         'status' => true,
-                         'code' => '200',
-                         'message' => 'Mutli Dynamic Post Data Deleted Successfully',
-                         'deleted_count' => $deletedCount,
-                     ], 200);
-                 } else {
-                     return response()->json([
-                         'status' => false,
-                         'code' => '404',
-                         'message' => 'No Dynamic Post Found To Delete',
-                     ], 404);
-                 }
-             } else {
-                 $post = DynamicPost::where('id', $ids[0])->first();
-     
-                 if ($post) {
-                     if ($post->deleted_at == 1) {
-                         return response()->json([
-                             'status' => false,
-                             'code' => '400',
-                             'message' => 'Record Already Deleted',
-                         ], 400);
-                     }
-     
-                     $post->deleted_at = 1;
-                     if ($post->save()) {
-                         return response()->json([
-                             'status' => true,
-                             'code' => '200',
-                             'message' => 'Dynamic Post Data Deleted Successfully',
-                         ], 200);
-                     }
-                 } else {
-                     return response()->json([
-                         'status' => false,
-                         'code' => '500',
-                         'message' => 'Failed To Delete Dynamic Post',
-                     ], 500);
-                 }
-             }
-         } catch (\Exception $e) {
-             return response()->json([
-                 'status' => false,
-                 'code' => '500',
-                 'message' => 'An Error Occurred',
-                 'error' => $e->getMessage(),
-             ], 500);
-         }
-     }
-     
-
-    /** 
-     * Toggle the active status of a post by its title.
-     * If the post is active, it will be deactivated. create by ns
-     */
-    public function active($id)
+    public function destroy($id)
     {
         try {
             $user = Auth::user();
@@ -361,14 +286,90 @@ class DynamicPostController extends Controller
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
+
+            $ids = explode(',', $id);
+            $ids = array_filter($ids);
+
+            if (count($ids) > 1) {
+                $deletedCount = DynamicPost::whereIn('id', $ids)->update(['deleted_at' => 1]);
+
+                if ($deletedCount > 0) {
+                    return response()->json([
+                        'status' => true,
+                        'code' => '200',
+                        'message' => 'Mutli Dynamic Post Data Deleted Successfully',
+                        'deleted_count' => $deletedCount,
+                    ], 200);
+                } else {
+                    return response()->json([
+                        'status' => false,
+                        'code' => '404',
+                        'message' => 'No Dynamic Post Found To Delete',
+                    ], 404);
+                }
+            } else {
+                $post = DynamicPost::where('id', $ids[0])->first();
+
+                if ($post) {
+                    if ($post->deleted_at == 1) {
+                        return response()->json([
+                            'status' => false,
+                            'code' => '400',
+                            'message' => 'Record Already Deleted',
+                        ], 400);
+                    }
+
+                    $post->deleted_at = 1;
+                    if ($post->save()) {
+                        return response()->json([
+                            'status' => true,
+                            'code' => '200',
+                            'message' => 'Dynamic Post Data Deleted Successfully',
+                        ], 200);
+                    }
+                } else {
+                    return response()->json([
+                        'status' => false,
+                        'code' => '500',
+                        'message' => 'Failed To Delete Dynamic Post',
+                    ], 500);
+                }
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'code' => '500',
+                'message' => 'An Error Occurred',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    /** 
+     * Toggle the active status of a post by its title.
+     * If the post is active, it will be deactivated. create by ns
+     */
+    public function active(Request $request, $id)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User Not Authenticated',
+                ], 401);
+            }
+
             $idsArray = explode(',', $id);
-    
+
             $validatedData = Validator::make(
                 ['ids' => $idsArray],
                 ['ids' => 'required|array|min:1'],
                 ['ids.*' => 'integer|exists:dynamic_posts,id']
             );
-    
+
             if ($validatedData->fails()) {
                 return response()->json([
                     'status' => false,
@@ -377,9 +378,9 @@ class DynamicPostController extends Controller
                     'errors' => $validatedData->errors(),
                 ], 422);
             }
-    
+
             $posts = DynamicPost::whereIn('id', $idsArray)->get();
-    
+
             if ($posts->isEmpty()) {
                 return response()->json([
                     'status' => false,
@@ -387,25 +388,33 @@ class DynamicPostController extends Controller
                     'message' => 'No Records Found',
                 ], 404);
             }
-    
-            $posts->each(function ($post) {
-                $post->status = $post->status ? 0 : 1;
-                $post->save();
-            });
-    
-            $message = $posts->first()->status ? 'Dynamic Post Data Active Successfully' : 'Dynamic Post Data Deactive Successfully';
-    
+            $newStatus = $request->input('status');
+
+            if ($newStatus !== null && in_array($newStatus, [0, 1])) {
+                $posts->each(function ($post) use ($newStatus) {
+                    $post->status = $newStatus;
+                    $post->save();
+                });
+
+                // $message = $newStatus === 1 ? 'Dynamic Post Data Activated Successfully' : 'Dynamic Post Data Deactivated Successfully';
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'code' => '422',
+                    'message' => 'Invalid Status Value',
+                ], 422);
+            }
+
             return response()->json([
                 'status' => true,
                 'code' => '200',
-                'message' => $message,
-                // 'data' => $posts->pluck('id')
+                'message' => 'Dynamic Post Data Updated Successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'An Error Occurred',
+                'message' => 'An Error occurred',
                 'error' => $e->getMessage(),
             ], 500);
         }
