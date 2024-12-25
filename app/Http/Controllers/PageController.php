@@ -276,7 +276,7 @@ class PageController extends Controller
             return response()->json([
                 'status' => true,
                 'code' => '200',
-                'message' => 'Dynamic Post Data Updated Successfully',
+                'message' => 'Page Data Updated Successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
