@@ -57,20 +57,20 @@ Route::get('/signin', function () {
 
 // Route::get('/userlogin', [UserController::class], 'signin')->name('signin');
 
-Route::post('/addaccountinfo', [UserAuthController::class, 'addaccountinformation'])->name('addaccountinformation');
+// Route::post('/addaccountinfo', [UserAuthController::class, 'addaccountinformation'])->name('addaccountinformation');
 
 
 Route::get('/register', function () {
     return view('register');
 })->name('register');
 
-Route::get('/', [UserAuthController::class, 'pricing']);
-Route::post('/pricechange', [UserAuthController::class, 'pricechange'])->name('pricechange');
-Route::post('/promoverify', [UserAuthController::class, 'promoverify'])->name('promoverify');
+// Route::get('/', [UserAuthController::class, 'pricing']);
+// Route::post('/pricechange', [UserAuthController::class, 'pricechange'])->name('pricechange');
+// Route::post('/promoverify', [UserAuthController::class, 'promoverify'])->name('promoverify');
 
-Route::post('address', [UserAuthController::class, 'address'])->name('address');
+// Route::post('address', [UserAuthController::class, 'address'])->name('address');
 
-Route::post('orderconfirm', [UserAuthController::class, 'orderconfirm'])->name('orderconfirm');
+// Route::post('orderconfirm', [UserAuthController::class, 'orderconfirm'])->name('orderconfirm');
 
 Route::group(['middleware' => 'user'], function () {
     // Route::get('/', [UserController::class, 'index']);
