@@ -229,8 +229,6 @@ class PageController extends Controller
             }
 
             $idsArray = explode(',', $id);
-
-            // Validation for the input IDs
             $validatedData = Validator::make(
                 ['ids' => $idsArray],
                 ['ids' => 'required|array|min:1'],
@@ -246,7 +244,6 @@ class PageController extends Controller
                 ], 422);
             }
 
-            // Fetch the posts based on IDs
             $posts = Page::whereIn('id', $idsArray)->get();
 
             if ($posts->isEmpty()) {
@@ -263,8 +260,6 @@ class PageController extends Controller
                     $post->status = $newStatus;
                     $post->save();
                 });
-
-                // $message = $newStatus === 1 ? 'Dynamic Post Data Activated Successfully' : 'Dynamic Post Data Deactivated Successfully';
             } else {
                 return response()->json([
                     'status' => false,
@@ -496,9 +491,9 @@ class PageController extends Controller
                 'message' => 'User Not Authenticated',
             ], 401);
         }
-    
+
         $statusData = Page::find($id);
-    
+
         if (!$statusData) {
             return response()->json([
                 'status' => false,
@@ -506,16 +501,14 @@ class PageController extends Controller
                 'message' => 'Record Not Found',
             ], 404);
         }
-    
-        $newStatus = $request->input('page_status'); 
+
+        $newStatus = $request->input('page_status');
 
         if ($newStatus !== null && in_array($newStatus, [0, 1])) {
-         
+
             $statusData->page_status = $newStatus;
             $statusData->save();
-    
-            // $message = $newStatus === 1 ? 'Page Activated Successfully' : 'Page Deactivated Successfully';
-    
+
             return response()->json([
                 'status' => true,
                 'code' => '200',
@@ -529,7 +522,7 @@ class PageController extends Controller
             ], 422);
         }
     }
-    
+
     /** This function used for the if status is active that page name get only create by ns */
     public function getActivePageData()
     {

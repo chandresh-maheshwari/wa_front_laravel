@@ -395,8 +395,6 @@ class DynamicPostController extends Controller
                     $post->status = $newStatus;
                     $post->save();
                 });
-
-                // $message = $newStatus === 1 ? 'Dynamic Post Data Activated Successfully' : 'Dynamic Post Data Deactivated Successfully';
             } else {
                 return response()->json([
                     'status' => false,

@@ -425,75 +425,74 @@ class PostStoreController extends Controller
      * If the post is active, it will be deactivated. create by ns
      */
 
-     public function active(Request $request, $id)
-     {
-         try {
-             $user = Auth::user();
-             if (!$user) {
-                 return response()->json([
-                     'status' => false,
-                     'code' => '401',
-                     'message' => 'User Not Authenticated',
-                 ], 401);
-             }
- 
-             $idsArray = explode(',', $id);
- 
-             $validatedData = Validator::make(
-                 ['ids' => $idsArray],
-                 ['ids' => 'required|array|min:1'],
-                 ['ids.*' => 'integer|exists:dynamic_posts,id']
-             );
- 
-             if ($validatedData->fails()) {
-                 return response()->json([
-                     'status' => false,
-                     'code' => '422',
-                     'message' => 'Validation Failed',
-                     'errors' => $validatedData->errors(),
-                 ], 422);
-             }
- 
-             $posts = postStore::whereIn('id', $idsArray)->get();
- 
-             if ($posts->isEmpty()) {
-                 return response()->json([
-                     'status' => false,
-                     'code' => '404',
-                     'message' => 'No Records Found',
-                 ], 404);
-             }
-             $newStatus = $request->input('status');
- 
-             if ($newStatus !== null && in_array($newStatus, [0, 1])) {
-                 $posts->each(function ($post) use ($newStatus) {
-                     $post->status = $newStatus;
-                     $post->save();
-                 });
- 
-                 // $message = $newStatus === 1 ? 'Dynamic Post Data Activated Successfully' : 'Dynamic Post Data Deactivated Successfully';
-             } else {
-                 return response()->json([
-                     'status' => false,
-                     'code' => '422',
-                     'message' => 'Invalid Status Value',
-                 ], 422);
-             }
- 
-             return response()->json([
-                 'status' => true,
-                 'code' => '200',
-                 'message' => 'Dynamic Post Data Updated Successfully',
-             ]);
-         } catch (\Exception $e) {
-             return response()->json([
-                 'status' => false,
-                 'code' => '500',
-                 'message' => 'An Error occurred',
-                 'error' => $e->getMessage(),
-             ], 500);
-         }
-     }    private function convertToSlug($string)
+    public function active(Request $request, $id)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User Not Authenticated',
+                ], 401);
+            }
+
+            $idsArray = explode(',', $id);
+
+            $validatedData = Validator::make(
+                ['ids' => $idsArray],
+                ['ids' => 'required|array|min:1'],
+                ['ids.*' => 'integer|exists:dynamic_posts,id']
+            );
+
+            if ($validatedData->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '422',
+                    'message' => 'Validation Failed',
+                    'errors' => $validatedData->errors(),
+                ], 422);
+            }
+
+            $posts = postStore::whereIn('id', $idsArray)->get();
+
+            if ($posts->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'No Records Found',
+                ], 404);
+            }
+            $newStatus = $request->input('status');
+
+            if ($newStatus !== null && in_array($newStatus, [0, 1])) {
+                $posts->each(function ($post) use ($newStatus) {
+                    $post->status = $newStatus;
+                    $post->save();
+                });
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'code' => '422',
+                    'message' => 'Invalid Status Value',
+                ], 422);
+            }
+
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'Post Store Data Updated Successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'code' => '500',
+                'message' => 'An Error occurred',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+    private function convertToSlug($string)
     {
         return str_replace([' ', '_', '/'], '', strtolower($string));
     }
