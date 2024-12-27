@@ -35,7 +35,7 @@ class PageController extends Controller
         }
 
         $pages->transform(function ($page) {
-            $page->image_url = $page->image ? url('/images/page/' . $page->image) : null;
+            $page->image_url = $page->image ? url('/uploads/page/' . $page->image) : null;
             return $page;
         });
 
@@ -60,7 +60,6 @@ class PageController extends Controller
         $this->validate($request, [
             'page_name' => 'required',
         ]);
-
         $page = new Page();
         $page->post_type = $request->post_type;
         $page->page_name = $request->page_name;
@@ -68,8 +67,8 @@ class PageController extends Controller
 
         if ($request->hasFile('image')) {
             $pageImage = $request->image->getClientOriginalName();
-            $request->image->move(public_path('/images/page'), $pageImage);
-            $imageUrl = url('images/page/' . $pageImage);
+            $request->image->move(public_path('/uploads/page'), $pageImage);
+            $imageUrl = url('uploads/page/' . $pageImage);
             $page->image = $imageUrl;
         } else {
             $page->image = null;
@@ -143,7 +142,7 @@ class PageController extends Controller
 
         $postTitle = DynamicPost::where('id', $page->post_type)->value('post_title');
 
-        $page->image_url = $page->image ? url('/images/page/' . $page->image) : null;
+        $page->image_url = $page->image ? url('/uploads/page/' . $page->image) : null;
 
         return response()->json([
             'status' => true,
@@ -187,9 +186,9 @@ class PageController extends Controller
         if ($request->hasFile('image')) {
             $pageImage = $request->image->getClientOriginalName();
 
-            $imagePath = $request->image->move(public_path('/images/page'), $pageImage);
+            $imagePath = $request->image->move(public_path('/uploads/page'), $pageImage);
 
-            $imageUrl = url('images/page/' . $pageImage);
+            $imageUrl = url('uploads/page/' . $pageImage);
             $page->image = $imageUrl;
         }
 
