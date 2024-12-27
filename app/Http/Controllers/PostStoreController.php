@@ -41,6 +41,24 @@ class PostStoreController extends Controller
                 ], 200);
             }
 
+            foreach ($postData as $post) {
+                if (is_array($post->data)) {
+                    $data = $post->data;
+                    if (isset($data['Image'])) {
+                        $imageName = basename($data['Image']);
+
+                        $imageFolderPath = 'uploads/dynamic_post_store/image/';
+                        $imageUrl = url($imageFolderPath . $imageName);
+
+                        $post->image_url = $imageUrl;
+                    } else {
+                        $post->image_url = null;
+                    }
+                } else {
+                    $post->image_url = null;
+                }
+            }
+
             return response()->json([
                 'status' => true,
                 'code' => '200',
@@ -56,6 +74,8 @@ class PostStoreController extends Controller
             ], 500);
         }
     }
+
+
 
     /** Function used for the post value store in the database create by ns */
 
@@ -126,11 +146,9 @@ class PostStoreController extends Controller
                 if ($field['type'] === 'file' && $request->hasFile(str_replace(' ', '_', $originalLabel))) {
                     $file = $request->file(str_replace(' ', '_', $originalLabel));
                     $originalName = $file->getClientOriginalName();
-                    $uploadFolder = 'uploads/dynamic_post_store';
-                    $file->move(public_path($uploadFolder), $originalName);
-                    $value = URL::to($uploadFolder . '/' . $originalName);
+                    // Remove the file move operation
+                    $value = $originalName; // Save only the original file name
                 }
-
                 $data[$originalLabel] = $value;
                 $data['field_slug_' . $this->convertToSlug($originalLabel)] = $labelMap[$originalLabel];
             }
