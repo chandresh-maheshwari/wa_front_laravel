@@ -47,50 +47,50 @@ class PageController extends Controller
         ], 200);
     }
     public function store(Request $request)
-    {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json([
-                'status' => false,
-                'code' => '401',
-                'message' => 'User Not Authenticated',
-            ], 401);
-        }
-
-        $this->validate($request, [
-            'page_name' => 'required',
-        ]);
-        $page = new Page();
-        $page->post_type = $request->post_type;
-        $page->page_name = $request->page_name;
-        $page->page_description = $request['page_description'];
-
-        if ($request->hasFile('image')) {
-            $pageImage = $request->image->getClientOriginalName();
-            $request->image->move(public_path('/uploads/page'), $pageImage);
-            $imageUrl = url('uploads/page/' . $pageImage);
-            $page->image = $imageUrl;
-        } else {
-            $page->image = null;
-        }
-
-        $page->ordering = $request['ordering'];
-        $page->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
-
-        if ($page->save()) {
-            return response()->json([
-                'status' => true,
-                'code' => '200',
-                'message' => 'Page Data Added Successfully',
-            ], 200);
-        } else {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Something Went Wrong'
-            ], 404);
-        }
+{
+    $user = Auth::user();
+    if (!$user) {
+        return response()->json([
+            'status' => false,
+            'code' => '401',
+            'message' => 'User Not Authenticated',
+        ], 401);
     }
+
+    $this->validate($request, [
+        'page_name' => 'required',
+    ]);
+    $page = new Page();
+    $page->post_type = $request->post_type;
+    $page->page_name = $request->page_name;
+    $page->page_description = $request['page_description'];
+
+    if ($request->hasFile('image')) {
+        $pageImage = $request->image->getClientOriginalName();
+        $request->image->move(public_path('/uploads/page'), $pageImage);
+        $page->image = $pageImage;
+    } else {
+        $page->image = null;
+    }
+
+    $page->ordering = $request['ordering'];
+    $page->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
+
+    if ($page->save()) {
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => 'Page Data Added Successfully',
+        ], 200);
+    } else {
+        return response()->json([
+            'status' => false,
+            'code' => '404',
+            'message' => 'Something Went Wrong'
+        ], 404);
+    }
+}
+
 
 
     public function show($id)
