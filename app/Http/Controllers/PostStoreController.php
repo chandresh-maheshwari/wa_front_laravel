@@ -82,6 +82,7 @@ class PostStoreController extends Controller
     public function postStore(Request $request, $postTitle)
     {
         try {
+            // Ensure user is authenticated
             $user = Auth::user()->id;
             if (!$user) {
                 return response()->json([
@@ -91,6 +92,7 @@ class PostStoreController extends Controller
                 ], 401);
             }
 
+            // Retrieve post data
             $postData = DynamicPost::where('post_title', $postTitle)->first();
 
             if (!$postData) {
@@ -101,6 +103,7 @@ class PostStoreController extends Controller
                 ], 404);
             }
 
+            // Transform request keys and prepare validation rules
             $requestData = $request->all();
             $transformedRequest = [];
             foreach ($requestData as $key => $value) {
@@ -122,6 +125,7 @@ class PostStoreController extends Controller
                 }
             }
 
+            // Validate the transformed request data
             $validateRequest = Validator::make($transformedRequest, $requiredFields);
 
             if ($validateRequest->fails()) {
@@ -135,6 +139,7 @@ class PostStoreController extends Controller
 
             $data = [];
 
+            // Process each field from the post description
             foreach ($postData->post_description as $field) {
                 $originalLabel = $field['label'];
                 $value = $transformedRequest[$originalLabel] ?? $request->input(str_replace(' ', '_', $originalLabel));
@@ -145,21 +150,43 @@ class PostStoreController extends Controller
 
                 if ($field['type'] === 'file' && $request->hasFile(str_replace(' ', '_', $originalLabel))) {
                     $file = $request->file(str_replace(' ', '_', $originalLabel));
-                    $originalName = $file->getClientOriginalName();
-                    // Remove the file move operation
-                    $value = $originalName; // Save only the original file name
+
+
+                    if ($file->isValid()) {
+                        $originalName = $file->getClientOriginalName();
+
+                        $folderPath = public_path('uploads/dynamic_post_store');
+                        if (!file_exists($folderPath)) {
+                            mkdir($folderPath, 0777, true);
+                        }
+
+                        $file->move($folderPath, $originalName);
+
+                        $value = 'uploads/dynamic_post_store/' . $originalName;
+                    } else {
+                        Log::error('Invalid file upload', ['file' => $file]);
+                        return response()->json([
+                            'status' => false,
+                            'code' => '400',
+                            'message' => 'Invalid file upload'
+                        ], 400);
+                    }
                 }
+
+                // Save the field value and the slug label to the data array
                 $data[$originalLabel] = $value;
                 $data['field_slug_' . $this->convertToSlug($originalLabel)] = $labelMap[$originalLabel];
             }
 
-            $postData = PostStore::create([
+            // Create the PostStore entry in the database with the data
+            $postStore = PostStore::create([
                 'post_name' => $postTitle,
                 'post_id' => $postData->id,
                 'data' => $data,
             ]);
 
-            if ($postData) {
+            // Return success message
+            if ($postStore) {
                 return response()->json([
                     'status' => true,
                     'code' => '200',
