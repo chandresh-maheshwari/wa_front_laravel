@@ -41,24 +41,6 @@ class PostStoreController extends Controller
                 ], 200);
             }
 
-            foreach ($postData as $post) {
-                if (is_array($post->data)) {
-                    $data = $post->data;
-                    if (isset($data['Image'])) {
-                        $imageName = basename($data['Image']);
-
-                        $imageFolderPath = 'uploads/dynamic_post_store/image/';
-                        $imageUrl = url($imageFolderPath . $imageName);
-
-                        $post->image_url = $imageUrl;
-                    } else {
-                        $post->image_url = null;
-                    }
-                } else {
-                    $post->image_url = null;
-                }
-            }
-
             return response()->json([
                 'status' => true,
                 'code' => '200',
@@ -75,14 +57,11 @@ class PostStoreController extends Controller
         }
     }
 
-
-
     /** Function used for the post value store in the database create by ns */
 
     public function postStore(Request $request, $postTitle)
     {
         try {
-            // Ensure user is authenticated
             $user = Auth::user()->id;
             if (!$user) {
                 return response()->json([
@@ -92,7 +71,6 @@ class PostStoreController extends Controller
                 ], 401);
             }
 
-            // Retrieve post data
             $postData = DynamicPost::where('post_title', $postTitle)->first();
 
             if (!$postData) {
@@ -103,7 +81,6 @@ class PostStoreController extends Controller
                 ], 404);
             }
 
-            // Transform request keys and prepare validation rules
             $requestData = $request->all();
             $transformedRequest = [];
             foreach ($requestData as $key => $value) {
@@ -125,7 +102,6 @@ class PostStoreController extends Controller
                 }
             }
 
-            // Validate the transformed request data
             $validateRequest = Validator::make($transformedRequest, $requiredFields);
 
             if ($validateRequest->fails()) {
@@ -139,7 +115,6 @@ class PostStoreController extends Controller
 
             $data = [];
 
-            // Process each field from the post description
             foreach ($postData->post_description as $field) {
                 $originalLabel = $field['label'];
                 $value = $transformedRequest[$originalLabel] ?? $request->input(str_replace(' ', '_', $originalLabel));
@@ -150,43 +125,23 @@ class PostStoreController extends Controller
 
                 if ($field['type'] === 'file' && $request->hasFile(str_replace(' ', '_', $originalLabel))) {
                     $file = $request->file(str_replace(' ', '_', $originalLabel));
-
-
-                    if ($file->isValid()) {
-                        $originalName = $file->getClientOriginalName();
-
-                        $folderPath = public_path('uploads/dynamic_post_store');
-                        if (!file_exists($folderPath)) {
-                            mkdir($folderPath, 0777, true);
-                        }
-
-                        $file->move($folderPath, $originalName);
-
-                        $value = 'uploads/dynamic_post_store/' . $originalName;
-                    } else {
-                        Log::error('Invalid file upload', ['file' => $file]);
-                        return response()->json([
-                            'status' => false,
-                            'code' => '400',
-                            'message' => 'Invalid file upload'
-                        ], 400);
-                    }
+                    $originalName = $file->getClientOriginalName();
+                    $uploadFolder = 'uploads/dynamic_post_store';
+                    $file->move(public_path($uploadFolder), $originalName);
+                    $value = URL::to($uploadFolder . '/' . $originalName);
                 }
 
-                // Save the field value and the slug label to the data array
                 $data[$originalLabel] = $value;
                 $data['field_slug_' . $this->convertToSlug($originalLabel)] = $labelMap[$originalLabel];
             }
 
-            // Create the PostStore entry in the database with the data
-            $postStore = PostStore::create([
+            $postData = PostStore::create([
                 'post_name' => $postTitle,
                 'post_id' => $postData->id,
                 'data' => $data,
             ]);
 
-            // Return success message
-            if ($postStore) {
+            if ($postData) {
                 return response()->json([
                     'status' => true,
                     'code' => '200',
