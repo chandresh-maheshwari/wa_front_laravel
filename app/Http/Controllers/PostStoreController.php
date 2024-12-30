@@ -30,8 +30,13 @@ class PostStoreController extends Controller
                 ], 401);
             }
 
-            $postData = PostStore::where('post_name', $postName)->where('deleted_at', 0)->get();
+            // Retrieve post data based on post name and ensure it's not soft-deleted
+            $postData = PostStore::where('post_name', $postName)
+                ->where('deleted_at', 0)
+                ->orderBy('id', 'desc')
+                ->get();
 
+            // If no post data found, return a response
             if ($postData->isEmpty()) {
                 return response()->json([
                     'status' => true,
@@ -40,6 +45,19 @@ class PostStoreController extends Controller
                     'results' => [],
                 ], 200);
             }
+
+            // Transform the post data to add dynamic image URL
+            $postData->transform(function ($post) {
+                $image = $post->data['Image'] ?? null;
+
+                // If there is an image, generate the URL
+                if ($image) {
+                    $post->image_url = url('/uploads/dynamic_post_store/' . $image);
+                } else {
+                    $post->image_url = null; // No image, set to null
+                }
+                return $post;
+            });
 
             return response()->json([
                 'status' => true,
@@ -125,10 +143,11 @@ class PostStoreController extends Controller
 
                 if ($field['type'] === 'file' && $request->hasFile(str_replace(' ', '_', $originalLabel))) {
                     $file = $request->file(str_replace(' ', '_', $originalLabel));
-                    $originalName = $file->getClientOriginalName();
-                    $uploadFolder = 'uploads/dynamic_post_store';
-                    $file->move(public_path($uploadFolder), $originalName);
-                    $value = URL::to($uploadFolder . '/' . $originalName);
+                    $originalName = $file->getClientOriginalName(); 
+
+                    $file->move(public_path('uploads/dynamic_post_store'), $originalName);
+
+                    $value = $originalName;
                 }
 
                 $data[$originalLabel] = $value;
@@ -163,6 +182,7 @@ class PostStoreController extends Controller
             ], 500);
         }
     }
+
 
     /** 
      * Display a specific post by its postName.
@@ -270,79 +290,81 @@ class PostStoreController extends Controller
      * Ensures the post is not deleted before updating. create by ns
      */
 
-    public function update(Request $request, $id)
-    {
-        try {
-            $user = Auth::user();
-            if (!$user) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '401',
-                    'message' => 'User Not Authenticated',
-                ], 401);
-            }
-
-            $post = PostStore::where('id', $id)->where('deleted_at', 0)->first();
-
-            if (!$post) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '404',
-                    'message' => 'Post Store Data Not Found',
-                ], 404);
-            }
-
-            $post_name = $request->input('post_name', null);
-            if ($post_name !== null) {
-                $post->post_name = $post_name;
-            }
-
-            $data = $post->data ?? [];
-
-            foreach ($request->all() as $key => $value) {
-                $normalizedKey = str_replace('_', ' ', $key);
-
-                if ($key === 'post_name') {
-                    continue;
-                }
-
-                if ($request->hasFile($key)) {
-                    $file = $request->file($key);
-                    $originalName = $file->getClientOriginalName();
-                    $uploadFolder = 'uploads/dynamic_post_store';
-                    $file->move(public_path($uploadFolder), $originalName);
-                    $data[$normalizedKey] = URL::to($uploadFolder . '/' . $originalName);
-                } else {
-                    $data[$normalizedKey] = $value;
-                }
-
-                $slugKey = 'field_slug_' . $this->convertToSlug($normalizedKey);
-                $data[$slugKey] = $this->convertToSlug($normalizedKey);
-            }
-
-            $post->data = $data;
-            if ($post->save()) {
-                return response()->json([
-                    'status' => true,
-                    'code' => '200',
-                    'message' => 'Post Store Data Updated Successfully',
-                ], 200);
-            } else {
-                return response()->json([
-                    'status' => false,
-                    'code' => '500',
-                    'message' => 'Failed To Update Post Store ',
-                ], 500);
-            }
-        } catch (Exception $e) {
-            Log::error('Error updating post', ['error' => $e->getMessage()]);
-            return response()->json([
-                'status' => false,
-                'code' => '500',
-                'message' => 'Internal Server Error',
-            ], 500);
-        }
-    }
+     public function update(Request $request, $id)
+     {
+         try {
+             $user = Auth::user();
+             if (!$user) {
+                 return response()->json([
+                     'status' => false,
+                     'code' => '401',
+                     'message' => 'User Not Authenticated',
+                 ], 401);
+             }
+     
+             $post = PostStore::where('id', $id)->where('deleted_at', 0)->first();
+     
+             if (!$post) {
+                 return response()->json([
+                     'status' => false,
+                     'code' => '404',
+                     'message' => 'Post Store Data Not Found',
+                 ], 404);
+             }
+     
+             $post_name = $request->input('post_name', null);
+             if ($post_name !== null) {
+                 $post->post_name = $post_name;
+             }
+     
+             $data = $post->data ?? [];
+     
+             foreach ($request->all() as $key => $value) {
+                 $normalizedKey = str_replace('_', ' ', $key);
+     
+                 if ($key === 'post_name') {
+                     continue;
+                 }
+     
+                 if ($request->hasFile($key)) {
+                     $file = $request->file($key);
+                     $originalName = $file->getClientOriginalName();
+                     $uploadFolder = 'uploads/dynamic_post_store';
+                     $file->move(public_path($uploadFolder), $originalName);
+     
+                     $data[$normalizedKey] = $originalName;
+                 } else {
+                     $data[$normalizedKey] = $value;
+                 }
+     
+                 $slugKey = 'field_slug_' . $this->convertToSlug($normalizedKey);
+                 $data[$slugKey] = $this->convertToSlug($normalizedKey);
+             }
+     
+             $post->data = $data;
+             if ($post->save()) {
+                 return response()->json([
+                     'status' => true,
+                     'code' => '200',
+                     'message' => 'Post Store Data Updated Successfully',
+                 ], 200);
+             } else {
+                 return response()->json([
+                     'status' => false,
+                     'code' => '500',
+                     'message' => 'Failed To Update Post Store',
+                 ], 500);
+             }
+         } catch (Exception $e) {
+             Log::error('Error updating post', ['error' => $e->getMessage()]);
+             return response()->json([
+                 'status' => false,
+                 'code' => '500',
+                 'message' => 'Internal Server Error',
+             ], 500);
+         }
+     }
+     
 
 
     /** 
