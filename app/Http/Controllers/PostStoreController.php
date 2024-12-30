@@ -29,12 +29,12 @@ class PostStoreController extends Controller
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
-    
+
             $postData = PostStore::where('post_name', $postName)
                 ->where('deleted_at', 0)
                 ->orderBy('id', 'desc')
                 ->get();
-    
+
             if ($postData->isEmpty()) {
                 return response()->json([
                     'status' => true,
@@ -43,22 +43,28 @@ class PostStoreController extends Controller
                     'results' => [],
                 ], 200);
             }
-    
+
+            // Transform the post data
             $postData->transform(function ($post) {
                 $data = $post->data;
-                $image = $data['Image'] ?? null;
-
+                $image = null;
+                $imageLabel = null;
+                foreach ($data as $key => $value) {
+                    if (stripos($key, 'image') !== false) {
+                        $image = $value;
+                        $imageLabel = $key;
+                        break;
+                    }
+                }
                 if ($image) {
-                    $data['image_url'] = url('/uploads/dynamic_post_store/' . $image);
+                    $data[$imageLabel] = url('/uploads/dynamic_post_store/' . $image);
                 } else {
-       
-                    $data['image_url'] = null;
+                    $data[$imageLabel] = null;
                 }
                 $post->data = $data;
-    
                 return $post;
             });
-    
+
             return response()->json([
                 'status' => true,
                 'code' => '200',
@@ -73,6 +79,7 @@ class PostStoreController extends Controller
             ], 500);
         }
     }
+
     
 
     /** Function used for the post value store in the database create by ns */
@@ -241,7 +248,6 @@ class PostStoreController extends Controller
     public function edit($id)
     {
         try {
-
             $user = Auth::user()->id;
             if (!$user) {
                 return response()->json([
@@ -250,9 +256,9 @@ class PostStoreController extends Controller
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
-
+    
             $data = PostStore::where('id', $id)->first();
-
+    
             if (!$data) {
                 return response()->json([
                     'status' => false,
@@ -260,7 +266,7 @@ class PostStoreController extends Controller
                     'message' => 'Post Store Data Not Found',
                 ], 404);
             }
-
+    
             if ($data->deleted_at != 0) {
                 return response()->json([
                     'status' => false,
@@ -268,22 +274,22 @@ class PostStoreController extends Controller
                     'message' => 'This Record Is Deleted',
                 ], 410);
             }
+    
+    
             $imageUrl = null;
-
-            if (isset($data->data['Image']) && $data->data['Image']) {
-                $imageUrl = asset('uploads/dynamic_post_store/' . $data->data['Image']);
-            } else {
-                foreach ($data->data as $key => $value) {
-                    if (strpos(strtolower($key), 'image') !== false && $value) {
-                        $imageUrl = asset('uploads/dynamic_post_store/' . $value);
-                        break;
-                    }
+            $dataArray = $data->data;  
+    
+            foreach ($dataArray as $key => $value) {
+                if (strpos(strtolower($key), 'image') !== false && $value) {
+                    
+                    $dataArray[$key] = asset('uploads/dynamic_post_store/' . $value);
+                    break;  
                 }
             }
-            if ($imageUrl) {
-                $data->setAttribute('data', array_merge($data->data, ['image_url' => $imageUrl]));
-            }
-
+    
+            $data->data = $dataArray;
+            Log::info('Updated data with image URL', ['data' => $data]);
+    
             return response()->json([
                 'status' => true,
                 'code' => '200',
@@ -292,7 +298,10 @@ class PostStoreController extends Controller
                     'data' => $data,
                 ],
             ], 200);
+    
         } catch (Exception $e) {
+            Log::error('Error in edit method', ['error' => $e->getMessage(), 'exception' => $e]);
+    
             return response()->json([
                 'status' => false,
                 'code' => '500',
@@ -300,6 +309,9 @@ class PostStoreController extends Controller
             ], 500);
         }
     }
+    
+    
+
 
 
 
