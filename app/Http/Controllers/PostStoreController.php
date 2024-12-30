@@ -30,13 +30,11 @@ class PostStoreController extends Controller
                 ], 401);
             }
 
-            // Retrieve post data based on post name and ensure it's not soft-deleted
             $postData = PostStore::where('post_name', $postName)
                 ->where('deleted_at', 0)
                 ->orderBy('id', 'desc')
                 ->get();
 
-            // If no post data found, return a response
             if ($postData->isEmpty()) {
                 return response()->json([
                     'status' => true,
@@ -46,16 +44,24 @@ class PostStoreController extends Controller
                 ], 200);
             }
 
-            // Transform the post data to add dynamic image URL
+            // Transform the data to modify the image field
             $postData->transform(function ($post) {
-                $image = $post->data['Image'] ?? null;
+                $data = $post->data;
+                $image = $data['Image'] ?? null;
 
-                // If there is an image, generate the URL
+                // If there is an image, generate the full URL and set it in the 'Image' field
                 if ($image) {
-                    $post->image_url = url('/uploads/dynamic_post_store/' . $image);
+                    // Generate the full URL with the folder path
+                    $data['Image'] = url('/uploads/dynamic_post_store/' . $image);
                 } else {
-                    $post->image_url = null; // No image, set to null
+                    $data['Image'] = null; // If no image, set to null
                 }
+
+                // Optionally, you can remove the image_url field if it exists
+                unset($data['image_url']);
+
+                $post->data = $data;
+
                 return $post;
             });
 
@@ -66,7 +72,6 @@ class PostStoreController extends Controller
                 'results' => $postData,
             ], 200);
         } catch (Exception $e) {
-            Log::error('Error fetching post list', ['error' => $e->getMessage()]);
             return response()->json([
                 'status' => false,
                 'code' => '500',
@@ -74,6 +79,8 @@ class PostStoreController extends Controller
             ], 500);
         }
     }
+
+
 
     /** Function used for the post value store in the database create by ns */
 
@@ -241,6 +248,7 @@ class PostStoreController extends Controller
     public function edit($id)
     {
         try {
+
             $user = Auth::user()->id;
             if (!$user) {
                 return response()->json([
@@ -267,27 +275,31 @@ class PostStoreController extends Controller
                     'message' => 'This Record Is Deleted',
                 ], 410);
             }
-
             $imageUrl = null;
-            $imageFieldNames = ['Image', 'image', 'field_slug_image'];
 
-            foreach ($imageFieldNames as $fieldName) {
-                if (isset($data->data[$fieldName])) {
-                    $imageUrl = asset('uploads/dynamic_post_store/' . $data->data[$fieldName]);
-                    break;
+            if (isset($data->data['Image']) && $data->data['Image']) {
+                $imageUrl = asset('uploads/dynamic_post_store/' . $data->data['Image']);
+            } else {
+                foreach ($data->data as $key => $value) {
+                    if (strpos(strtolower($key), 'image') !== false && $value) {
+                        $imageUrl = asset('uploads/dynamic_post_store/' . $value);
+                        break;
+                    }
                 }
             }
+            if ($imageUrl) {
+                $data->setAttribute('data', array_merge($data->data, ['image_url' => $imageUrl]));
+            }
+
             return response()->json([
                 'status' => true,
                 'code' => '200',
                 'message' => 'Post Store Data Fetch Successfully',
                 'results' => [
                     'data' => $data,
-                    'image_url' => $imageUrl,
                 ],
             ], 200);
         } catch (Exception $e) {
-            Log::error('Error editing post', ['error' => $e->getMessage()]);
             return response()->json([
                 'status' => false,
                 'code' => '500',
