@@ -29,12 +29,12 @@ class PostStoreController extends Controller
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
-
+    
             $postData = PostStore::where('post_name', $postName)
                 ->where('deleted_at', 0)
                 ->orderBy('id', 'desc')
                 ->get();
-
+    
             if ($postData->isEmpty()) {
                 return response()->json([
                     'status' => true,
@@ -43,28 +43,22 @@ class PostStoreController extends Controller
                     'results' => [],
                 ], 200);
             }
-
-            // Transform the data to modify the image field
+    
             $postData->transform(function ($post) {
                 $data = $post->data;
                 $image = $data['Image'] ?? null;
 
-                // If there is an image, generate the full URL and set it in the 'Image' field
                 if ($image) {
-                    // Generate the full URL with the folder path
-                    $data['Image'] = url('/uploads/dynamic_post_store/' . $image);
+                    $data['image_url'] = url('/uploads/dynamic_post_store/' . $image);
                 } else {
-                    $data['Image'] = null; // If no image, set to null
+       
+                    $data['image_url'] = null;
                 }
-
-                // Optionally, you can remove the image_url field if it exists
-                unset($data['image_url']);
-
                 $post->data = $data;
-
+    
                 return $post;
             });
-
+    
             return response()->json([
                 'status' => true,
                 'code' => '200',
@@ -79,8 +73,7 @@ class PostStoreController extends Controller
             ], 500);
         }
     }
-
-
+    
 
     /** Function used for the post value store in the database create by ns */
 
@@ -307,6 +300,7 @@ class PostStoreController extends Controller
             ], 500);
         }
     }
+
 
 
     /** 
