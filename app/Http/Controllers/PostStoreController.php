@@ -29,12 +29,12 @@ class PostStoreController extends Controller
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
-
+    
             $postData = PostStore::where('post_name', $postName)
                 ->where('deleted_at', 0)
                 ->orderBy('id', 'desc')
                 ->get();
-
+    
             if ($postData->isEmpty()) {
                 return response()->json([
                     'status' => true,
@@ -43,28 +43,20 @@ class PostStoreController extends Controller
                     'results' => [],
                 ], 200);
             }
-
+    
             // Transform the post data
             $postData->transform(function ($post) {
                 $data = $post->data;
-                $image = null;
-                $imageLabel = null;
                 foreach ($data as $key => $value) {
-                    if (stripos($key, 'image') !== false) {
-                        $image = $value;
-                        $imageLabel = $key;
-                        break;
+                    if (stripos($key, 'image') !== false) { 
+                        $data[$key] = $value ? url('/uploads/dynamic_post_store/' . $value) : null;
                     }
                 }
-                if ($image) {
-                    $data[$imageLabel] = url('/uploads/dynamic_post_store/' . $image);
-                } else {
-                    $data[$imageLabel] = null;
-                }
-                $post->data = $data;
+    
+                $post->data = $data;  // Update post data
                 return $post;
             });
-
+    
             return response()->json([
                 'status' => true,
                 'code' => '200',
@@ -79,7 +71,8 @@ class PostStoreController extends Controller
             ], 500);
         }
     }
-
+    
+    
     
 
     /** Function used for the post value store in the database create by ns */
@@ -246,69 +239,72 @@ class PostStoreController extends Controller
      * Ensures the post is not deleted before fetching. create by ns
      */
     public function edit($id)
-    {
-        try {
-            $user = Auth::user()->id;
-            if (!$user) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '401',
-                    'message' => 'User Not Authenticated',
-                ], 401);
-            }
-    
-            $data = PostStore::where('id', $id)->first();
-    
-            if (!$data) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '404',
-                    'message' => 'Post Store Data Not Found',
-                ], 404);
-            }
-    
-            if ($data->deleted_at != 0) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '410',
-                    'message' => 'This Record Is Deleted',
-                ], 410);
-            }
-    
-    
-            $imageUrl = null;
-            $dataArray = $data->data;  
-    
-            foreach ($dataArray as $key => $value) {
-                if (strpos(strtolower($key), 'image') !== false && $value) {
-                    
-                    $dataArray[$key] = asset('uploads/dynamic_post_store/' . $value);
-                    break;  
-                }
-            }
-    
-            $data->data = $dataArray;
-            Log::info('Updated data with image URL', ['data' => $data]);
-    
-            return response()->json([
-                'status' => true,
-                'code' => '200',
-                'message' => 'Post Store Data Fetch Successfully',
-                'results' => [
-                    'data' => $data,
-                ],
-            ], 200);
-    
-        } catch (Exception $e) {
-            Log::error('Error in edit method', ['error' => $e->getMessage(), 'exception' => $e]);
-    
+{
+    try {
+        $user = Auth::user()->id;
+        if (!$user) {
             return response()->json([
                 'status' => false,
-                'code' => '500',
-                'message' => 'Internal Server Error',
-            ], 500);
+                'code' => '401',
+                'message' => 'User Not Authenticated',
+            ], 401);
         }
+
+        $data = PostStore::where('id', $id)->first();
+
+        if (!$data) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Post Store Data Not Found',
+            ], 404);
+        }
+
+        if ($data->deleted_at != 0) {
+            return response()->json([
+                'status' => false,
+                'code' => '410',
+                'message' => 'This Record Is Deleted',
+            ], 410);
+        }
+
+        // Get the post data
+        $dataArray = $data->data;
+
+        // Loop through the data and check for image keys
+        foreach ($dataArray as $key => $value) {
+            if (strpos(strtolower($key), 'image') !== false && $value) {
+                // Replace the image field with the URL
+                $dataArray[$key] = asset('uploads/dynamic_post_store/' . $value);
+            }
+        }
+
+        // Update the data with the image URLs
+        $data->data = $dataArray;
+
+        // Log the updated data
+        Log::info('Updated data with image URLs', ['data' => $data]);
+
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => 'Post Store Data Fetch Successfully',
+            'results' => [
+                'data' => $data,
+            ],
+        ], 200);
+
+    } catch (Exception $e) {
+        Log::error('Error in edit method', ['error' => $e->getMessage(), 'exception' => $e]);
+
+        return response()->json([
+            'status' => false,
+            'code' => '500',
+            'message' => 'Internal Server Error',
+        ], 500);
     }
+}
+
     
     
 
