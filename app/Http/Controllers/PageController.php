@@ -480,7 +480,7 @@ class PageController extends Controller
                         $data = $postStoreData['data'];
     
                         foreach ($data as $key => $value) {
-                            $normalizedKey = preg_replace('/\s+/', '', $key);
+                            $normalizedKey = ucfirst(strtolower(preg_replace('/\s+/', '', $key)));
     
                             if (stripos($key, 'image') !== false && !empty($value) && !str_starts_with($key, 'field_slug_')) {
                                 $flattenedData[$normalizedKey] = url('/uploads/dynamic_post_store/' . $value);
@@ -498,12 +498,13 @@ class PageController extends Controller
     
                 $pageData = $page->toArray();
                 $pageData['post_store'] = $allRestructuredData;
+    
                 $slugKey = str_replace('-', '_', $page->slug);
                 $pageData['slug'] = $slugKey;
     
                 $allPagesData[$slugKey] = $pageData;
             }
-    
+
             return response()->json([
                 'status' => true,
                 'code' => '200',
@@ -518,6 +519,7 @@ class PageController extends Controller
             ], 500);
         }
     }
+    
     
     
 
