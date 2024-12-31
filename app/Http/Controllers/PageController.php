@@ -61,6 +61,7 @@ class PageController extends Controller
 
         $this->validate($request, [
             'page_name' => 'required',
+            'image' => 'nullable|file|mimes:jpeg,png,gif,svg|max:10240|min:100',
         ]);
         $page = new Page();
         $page->post_type = $request->post_type;
@@ -175,7 +176,11 @@ class PageController extends Controller
             ], 404);
         }
 
-        // Update page details if present in the request
+        $this->validate($request, [
+            'page_name' => 'nullable|string', 
+            'image' => 'nullable|file|mimes:jpeg,png,gif,svg|max:10240|min:100',
+        ]);
+
         if ($request->has('post_type')) {
             $page->post_type = $request->post_type;
         }
@@ -444,7 +449,7 @@ class PageController extends Controller
                 ->where('deleted_at', 0)
                 ->orderBy('ordering', 'asc')
                 ->get();
-
+    
             if ($pages->isEmpty()) {
                 return response()->json([
                     'status' => false,
@@ -452,51 +457,53 @@ class PageController extends Controller
                     'message' => 'No Page Data Found',
                 ], 404);
             }
-
+    
             $allPagesData = [];
-
+    
             foreach ($pages as $page) {
                 if (!empty($page->image)) {
                     $page->image = url('uploads/page/' . $page->image);
                 }
+    
                 $postStores = PostStore::where('post_id', $page->post_type)
                     ->where('status', 1)
                     ->get();
-
+    
                 $allRestructuredData = [];
-
+    
                 foreach ($postStores as $postStore) {
                     $postStoreData = $postStore->toArray();
-
+    
                     $flattenedData = [];
-
+    
                     if (isset($postStoreData['data'])) {
                         $data = $postStoreData['data'];
-
+    
                         foreach ($data as $key => $value) {
+                            $normalizedKey = preg_replace('/\s+/', '', $key);
+    
                             if (stripos($key, 'image') !== false && !empty($value) && !str_starts_with($key, 'field_slug_')) {
-                                $flattenedData[$key] = url('/uploads/dynamic_post_store/' . $value);
+                                $flattenedData[$normalizedKey] = url('/uploads/dynamic_post_store/' . $value);
                             } else {
-                                $flattenedData[$key] = $value;
+                                $flattenedData[$normalizedKey] = $value;
                             }
                         }
-
-
+    
                         $postStoreData = array_merge($postStoreData, $flattenedData);
                         unset($postStoreData['data']);
                     }
-
+    
                     $allRestructuredData[] = $postStoreData;
                 }
-
+    
                 $pageData = $page->toArray();
                 $pageData['post_store'] = $allRestructuredData;
-
                 $slugKey = str_replace('-', '_', $page->slug);
                 $pageData['slug'] = $slugKey;
-
+    
                 $allPagesData[$slugKey] = $pageData;
             }
+    
             return response()->json([
                 'status' => true,
                 'code' => '200',
@@ -511,7 +518,8 @@ class PageController extends Controller
             ], 500);
         }
     }
-
+    
+    
 
 
 

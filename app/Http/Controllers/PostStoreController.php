@@ -114,7 +114,7 @@ class PostStoreController extends Controller
                 $labelMap[$originalLabel] = $slugLabel;
 
                 if ($field['type'] === 'file') {
-                    $requiredFields[$originalLabel] = 'nullable|file|mimes:jpeg,png,gif,svg|max:2048';
+                    $requiredFields[$originalLabel] = 'nullable|file|mimes:jpeg,png,gif,svg|max:10240|min:100';
                 } else {
                     $requiredFields[$originalLabel] = 'nullable|string';
                 }
@@ -337,6 +337,10 @@ class PostStoreController extends Controller
                     'message' => 'Post Store Data Not Found',
                 ], 404);
             }
+
+            $this->validate($request, [
+                'image' => 'nullable|file|mimes:jpeg,png,gif,svg|max:10240|min:100',
+            ]);
 
             $post_name = $request->input('post_name', null);
             if ($post_name !== null) {
