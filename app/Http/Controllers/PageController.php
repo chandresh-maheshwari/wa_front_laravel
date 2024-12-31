@@ -8,6 +8,8 @@ use App\Models\Page;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Exception;
+
 
 class PageController extends Controller
 {
@@ -355,7 +357,12 @@ class PageController extends Controller
 
     public function showByPageName($pageName)
     {
-        $page = Page::where('page_name', $pageName)->where('deleted_at', 0)->where('status', 1)->first();
+
+        $page = Page::where('page_name', $pageName)
+            ->where('deleted_at', 0)
+            ->where('status', 1)
+            ->first();
+
         if (!$page) {
             return response()->json([
                 'status' => false,
@@ -366,9 +373,22 @@ class PageController extends Controller
 
         $page->slug = str_replace('-', '_', $page->slug);
 
+        $imageUrls = [];
+
+        if (!empty($page->image)) {
+            if (is_array($page->image)) {
+                foreach ($page->image as $image) {
+                    $imageUrls[] = asset('uploads/page/' . $image);
+                }
+                $page->image = implode(',', $imageUrls);
+            } else {
+                $page->image = asset('uploads/page/' . $page->image);
+            }
+        }
         $postStores = PostStore::where('post_id', $page->post_type)
             ->where('status', 1)
             ->get();
+
         if ($postStores->isEmpty()) {
             return response()->json([
                 'status' => false,
@@ -388,10 +408,15 @@ class PageController extends Controller
                     continue;
                 }
 
-                $slugKey = 'field_slug_' . str_replace(' ', '', strtolower($key));
-                if (isset($data[$slugKey])) {
-                    $slug = $data[$slugKey];
-                    $restructuredData[$slug] = $value;
+                if (strpos($key, 'image_field_') === 0 && !empty($value)) {
+                    $imageUrl = asset('uploads/page/' . $value);
+                    $restructuredData[$key] = $imageUrl;
+                } else {
+                    $slugKey = 'field_slug_' . str_replace(' ', '', strtolower($key));
+                    if (isset($data[$slugKey])) {
+                        $slug = $data[$slugKey];
+                        $restructuredData[$slug] = $value;
+                    }
                 }
             }
 
@@ -409,75 +434,86 @@ class PageController extends Controller
         ], 200);
     }
 
+
     /** Get data page with him post store by ordering by ns */
 
     public function showAllPagesWithPostStores()
     {
-        $pages = Page::whereNotNull('ordering')
-            ->where('deleted_at', 0)
-            // ->where('status', 1)
-            ->orderBy('ordering', 'asc')
-            ->get();
-
-        if ($pages->isEmpty()) {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'No Page Data Found',
-            ], 404);
-        }
-
-        $allPagesData = [];
-
-        foreach ($pages as $page) {
-            $postStores = PostStore::where('post_id', $page->post_type)
-                ->where('status', 1)
+        try {
+            $pages = Page::whereNotNull('ordering')
+                ->where('deleted_at', 0)
+                ->orderBy('ordering', 'asc')
                 ->get();
 
-            $allRestructuredData = [];
-
-            foreach ($postStores as $postStore) {
-                $restructuredData = [];
-                $data = $postStore->data;
-
-                foreach ($data as $key => $value) {
-                    if (strpos($key, 'field_slug_') === 0) {
-                        continue;
-                    }
-
-                    $slugKey = 'field_slug_' . str_replace(' ', '', strtolower($key));
-                    if (isset($data[$slugKey])) {
-                        $slug = $data[$slugKey];
-                        $restructuredData[$slug] = $value;
-                    }
-                }
-
-                $capitalizedData = [];
-                foreach ($restructuredData as $key => $value) {
-                    $capitalizedKey = ucfirst($key);
-                    $capitalizedData[$capitalizedKey] = $value;
-                }
-
-                $postStoreResponse = $postStore->toArray();
-                $postStoreResponse = array_merge($postStoreResponse, $capitalizedData);
-                unset($postStoreResponse['data']);
-                $allRestructuredData[] = $postStoreResponse;
+            if ($pages->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'No Page Data Found',
+                ], 404);
             }
-            $pageData = $page->toArray();
-            $pageData['post_store'] = $allRestructuredData;
 
-            $slugKey = str_replace('-', '_', $page->slug);
-            $pageData['slug'] = $slugKey;
-            $allPagesData[$slugKey] = $pageData;
+            $allPagesData = [];
+
+            foreach ($pages as $page) {
+                if (!empty($page->image)) {
+                    $page->image = url('uploads/page/' . $page->image);
+                }
+                $postStores = PostStore::where('post_id', $page->post_type)
+                    ->where('status', 1)
+                    ->get();
+
+                $allRestructuredData = [];
+
+                foreach ($postStores as $postStore) {
+                    $postStoreData = $postStore->toArray();
+
+                    $flattenedData = [];
+
+                    if (isset($postStoreData['data'])) {
+                        $data = $postStoreData['data'];
+
+                        foreach ($data as $key => $value) {
+                            if (stripos($key, 'image') !== false && !empty($value) && !str_starts_with($key, 'field_slug_')) {
+                                $flattenedData[$key] = url('/uploads/dynamic_post_store/' . $value);
+                            } else {
+                                $flattenedData[$key] = $value;
+                            }
+                        }
+
+
+                        $postStoreData = array_merge($postStoreData, $flattenedData);
+                        unset($postStoreData['data']);
+                    }
+
+                    $allRestructuredData[] = $postStoreData;
+                }
+
+                $pageData = $page->toArray();
+                $pageData['post_store'] = $allRestructuredData;
+
+                $slugKey = str_replace('-', '_', $page->slug);
+                $pageData['slug'] = $slugKey;
+
+                $allPagesData[$slugKey] = $pageData;
+            }
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'All Pages And Post Store Data Fetch Successfully',
+                'results' => $allPagesData,
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'code' => '500',
+                'message' => 'Internal Server Error',
+            ], 500);
         }
-
-        return response()->json([
-            'status' => true,
-            'code' => '200',
-            'message' => 'All Pages And Post Store Data Fetch Successfully',
-            'results' => $allPagesData,
-        ], 200);
     }
+
+
+
 
     /** This function used for the page status active or inactive create by ns  */
 
