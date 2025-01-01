@@ -362,83 +362,85 @@ class PageController extends Controller
 
     public function showByPageName($pageName)
     {
-
-        $page = Page::where('page_name', $pageName)
-            ->where('deleted_at', 0)
-            ->where('status', 1)
-            ->first();
-
-        if (!$page) {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Page Data Not Found',
-            ], 404);
-        }
-
-        $page->slug = str_replace('-', '_', $page->slug);
-
-        $imageUrls = [];
-
-        if (!empty($page->image)) {
-            if (is_array($page->image)) {
-                foreach ($page->image as $image) {
-                    $imageUrls[] = asset('uploads/page/' . $image);
-                }
-                $page->image = implode(',', $imageUrls);
-            } else {
-                $page->image = asset('uploads/page/' . $page->image);
+        try {
+            $page = Page::where('page_name', $pageName)
+                ->where('deleted_at', 0)
+                ->where('status', 1)
+                ->first();
+    
+            if (!$page) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'Page Data Not Found',
+                ], 404);
             }
-        }
-        $postStores = PostStore::where('post_id', $page->post_type)
-            ->where('status', 1)
-            ->get();
-
-        if ($postStores->isEmpty()) {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Related Post Store Data Not Found',
-            ], 404);
-        }
-
-        $allRestructuredData = [];
-
-        foreach ($postStores as $postStore) {
-            $restructuredData = [];
-            $data = $postStore->data;
-
-            foreach ($data as $key => $value) {
-                if (strpos($key, 'field_slug_') === 0) {
-                    continue;
-                }
-
-                if (strpos($key, 'image_field_') === 0 && !empty($value)) {
-                    $imageUrl = asset('uploads/page/' . $value);
-                    $restructuredData[$key] = $imageUrl;
-                } else {
-                    $slugKey = 'field_slug_' . str_replace(' ', '', strtolower($key));
-                    if (isset($data[$slugKey])) {
-                        $slug = $data[$slugKey];
-                        $restructuredData[$slug] = $value;
+    
+            if (!empty($page->image)) {
+                $page->image = url('uploads/page/' . $page->image);
+            }
+    
+            $postStores = PostStore::where('post_id', $page->post_type)
+                ->where('status', 1)
+                ->get();
+    
+            if ($postStores->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'Related Post Store Data Not Found',
+                ], 404);
+            }
+    
+            $allRestructuredData = [];
+    
+            foreach ($postStores as $postStore) {
+                $postStoreData = $postStore->toArray();
+    
+                if (isset($postStoreData['data'])) {
+                    $data = $postStoreData['data'];
+    
+                    foreach ($data as $key => $value) {
+                        $formattedKey = ucfirst(strtolower(preg_replace('/\s+/', '', $key)));
+    
+                        if (stripos($key, 'image') !== false && !empty($value)) {
+                            $data[$formattedKey] = url('uploads/dynamic_post_store/' . $value);
+                        } else {
+                            $data[$formattedKey] = $value;
+                        }
+    
+                        unset($data[$key]);
                     }
+    
+                    $postStoreData['data'] = $data;
                 }
+    
+                $allRestructuredData[] = $postStoreData;
             }
-
-            $postStoreResponse = $postStore->toArray();
-            $postStoreResponse['data'] = $restructuredData;
-            $allRestructuredData[] = $postStoreResponse;
+    
+            $pageData = $page->toArray();
+            $pageData['post_store'] = $allRestructuredData;
+    
+            $slugKey = str_replace('-', '_', $page->slug);
+            $pageData['slug'] = $slugKey;
+    
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'Page And Post Store Data Fetch Successfully',
+                'page' => $pageData,
+            ], 200);
+    
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'code' => '500',
+                'message' => 'Internal Server Error',
+            ], 500);
         }
-
-        return response()->json([
-            'status' => true,
-            'code' => '200',
-            'message' => 'Page And Post Store Data Fetch Successfully',
-            'page' => $page,
-            'post_store' => $allRestructuredData,
-        ], 200);
     }
-
+    
+    
 
     /** Get data page with him post store by ordering by ns */
 
