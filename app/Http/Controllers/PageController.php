@@ -382,6 +382,7 @@ class PageController extends Controller
     
             $postStores = PostStore::where('post_id', $page->post_type)
                 ->where('status', 1)
+                ->where('deleted_at', 0)
                 ->get();
     
             if ($postStores->isEmpty()) {
@@ -396,31 +397,32 @@ class PageController extends Controller
     
             foreach ($postStores as $postStore) {
                 $postStoreData = $postStore->toArray();
-    
+                
                 if (isset($postStoreData['data'])) {
                     $data = $postStoreData['data'];
-    
+                    $transformedData = [];
+            
                     foreach ($data as $key => $value) {
                         $formattedKey = ucfirst(strtolower(preg_replace('/\s+/', '', $key)));
-    
-                        if (stripos($key, 'image') !== false && !empty($value)) {
-                            $data[$formattedKey] = url('uploads/dynamic_post_store/' . $value);
+            
+                        if (stripos($key, 'field_slug_') !== false) {
+                            $transformedData[$formattedKey] = $value;
+                        } elseif (stripos($key, 'image') !== false && !empty($value)) {
+                            $transformedData[$formattedKey] = url('uploads/dynamic_post_store/' . $value);
                         } else {
-                            $data[$formattedKey] = $value;
+                            $transformedData[$formattedKey] = $value;
                         }
-    
-                        unset($data[$key]);
                     }
-    
-                    $postStoreData['data'] = $data;
+            
+                    $postStoreData['data'] = $transformedData; 
                 }
-    
+            
                 $allRestructuredData[] = $postStoreData;
             }
-    
+            
             $pageData = $page->toArray();
             $pageData['post_store'] = $allRestructuredData;
-    
+            
             $slugKey = str_replace('-', '_', $page->slug);
             $pageData['slug'] = $slugKey;
     
@@ -469,6 +471,7 @@ class PageController extends Controller
     
                 $postStores = PostStore::where('post_id', $page->post_type)
                     ->where('status', 1)
+                    ->where('deleted_at', 0)
                     ->get();
     
                 $allRestructuredData = [];
