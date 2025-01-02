@@ -61,7 +61,7 @@ class PageController extends Controller
 
         $this->validate($request, [
             'page_name' => 'required',
-            'image' => 'nullable|file|mimes:jpeg,png,gif,svg|max:10240|min:100',
+            'image' => 'nullable|file|mimes:jpeg,png,gif,svg|dimensions:max_width=1600,max_height=1600|dimensions:min_width=40,min_height=40',
         ]);
         $page = new Page();
         $page->post_type = $request->post_type;
@@ -178,7 +178,7 @@ class PageController extends Controller
 
         $this->validate($request, [
             'page_name' => 'nullable|string', 
-            'image' => 'nullable|file|mimes:jpeg,png,gif,svg|max:10240|min:100',
+            'image' => 'nullable|file|mimes:jpeg,png,gif,svg|dimensions:max_width=1600,max_height=1600|dimensions:min_width=40,min_height=40',
         ]);
 
         if ($request->has('post_type')) {

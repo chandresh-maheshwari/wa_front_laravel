@@ -114,7 +114,7 @@ class PostStoreController extends Controller
                 $labelMap[$originalLabel] = $slugLabel;
 
                 if ($field['type'] === 'file') {
-                    $requiredFields[$originalLabel] = 'nullable|file|mimes:jpeg,png,gif,svg|max:10240|min:100';
+                    $requiredFields[$originalLabel] = 'nullable|file|mimes:jpeg,png,gif,svg|dimensions:max_width=1600,max_height=1600|dimensions:min_width=40,min_height=40';
                 } else {
                     $requiredFields[$originalLabel] = 'nullable|string';
                 }
@@ -268,22 +268,15 @@ class PostStoreController extends Controller
             ], 410);
         }
 
-        // Get the post data
         $dataArray = $data->data;
 
-        // Loop through the data and check for image keys
         foreach ($dataArray as $key => $value) {
             if (strpos(strtolower($key), 'image') !== false && $value) {
-                // Replace the image field with the URL
                 $dataArray[$key] = asset('uploads/dynamic_post_store/' . $value);
             }
         }
 
-        // Update the data with the image URLs
         $data->data = $dataArray;
-
-        // Log the updated data
-        Log::info('Updated data with image URLs', ['data' => $data]);
 
         return response()->json([
             'status' => true,
@@ -304,12 +297,6 @@ class PostStoreController extends Controller
         ], 500);
     }
 }
-
-    
-    
-
-
-
 
     /** 
      * Update a post's title and description by its postName.
@@ -339,7 +326,7 @@ class PostStoreController extends Controller
             }
 
             $this->validate($request, [
-                'image' => 'nullable|file|mimes:jpeg,png,gif,svg|max:10240|min:100',
+                'image' => 'nullable|file|mimes:jpeg,png,gif,svg|dimensions:max_width=1600,max_height=1600|dimensions:min_width=40,min_height=40',
             ]);
 
             $post_name = $request->input('post_name', null);
