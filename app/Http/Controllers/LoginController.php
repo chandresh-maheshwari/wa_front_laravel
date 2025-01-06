@@ -36,7 +36,8 @@ class LoginController extends Controller
         // Set the token expiration to 10 minutes
         $customClaims = ['exp' => now()->addMinutes(10)->timestamp];
         $add_token = JWTAuth::claims($customClaims)->fromUser($user);
-
+        $user->add_token = $add_token;
+        $user->save();
         $userData = $user->toArray();
         unset($userData['add_token']);
 
@@ -54,13 +55,16 @@ class LoginController extends Controller
         try {
             $userId = $request->input('user_id');
             $user = User::findOrFail($userId);
-
+    
             $newToken = JWTAuth::fromUser($user);
-
+    
+            $user->add_token = $newToken;
+            $user->save();
+    
             return response()->json([
                 'status' => true,
                 'code' => '200',
-                'message' => 'Token Refresh Successfully',
+                'message' => 'Token Refreshed Successfully',
                 'data' => [
                     'add_token' => $newToken,
                 ],
@@ -79,6 +83,7 @@ class LoginController extends Controller
             ], 500);
         }
     }
+    
     /** Function used for user logout by ns */
 
     public function logoutpage(Request $request)
