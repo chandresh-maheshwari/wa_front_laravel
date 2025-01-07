@@ -19,59 +19,59 @@ class PostStoreController extends Controller
      * Ensures the user is authenticated before fetching the posts. create by ns
      */
     public function getList($postName)
-    {
-        try {
-            $user = Auth::user()->id;
-            if (!$user) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '401',
-                    'message' => 'User Not Authenticated',
-                ], 401);
-            }
-    
-            $postData = PostStore::where('post_name', $postName)
-                ->where('deleted_at', 0)
-                ->orderBy('id', 'desc')
-                ->get();
-    
-            if ($postData->isEmpty()) {
-                return response()->json([
-                    'status' => true,
-                    'code' => '200',
-                    'message' => 'No Post Store Data Found',
-                    'results' => [],
-                ], 200);
-            }
-    
-            // Transform the post data
-            $postData->transform(function ($post) {
-                $data = $post->data;
-                foreach ($data as $key => $value) {
-                    if (stripos($key, 'image') !== false) { 
-                        $data[$key] = $value ? url('/uploads/dynamic_post_store/' . $value) : null;
-                        
-                    }
-                }
-    
-                $post->data = $data;  // Update post data
-                return $post;
-            });
-    
+{
+    try {
+        $user = Auth::user()->id;
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User Not Authenticated',
+            ], 401);
+        }
+
+        $postData = PostStore::where('post_name', $postName)
+            ->where('deleted_at', 0)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        if ($postData->isEmpty()) {
             return response()->json([
                 'status' => true,
                 'code' => '200',
-                'message' => 'Post Store Data Fetch Successfully',
-                'results' => $postData,
+                'message' => 'No Post Store Data Found',
+                'results' => [],
             ], 200);
-        } catch (Exception $e) {
-            return response()->json([
-                'status' => false,
-                'code' => '500',
-                'message' => 'Internal Server Error',
-            ], 500);
         }
+
+        // Transform the post data
+        $postData->transform(function ($post) {
+            $data = $post->data;
+            foreach ($data as $key => $value) {
+                if (stripos($key, 'image') !== false && $key !== 'field_slug_image') {
+                    $data[$key] = $value ? url('/uploads/dynamic_post_store/' . $value) : null;
+                }
+            }
+
+            $post->data = $data;
+            return $post;
+        });
+
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => 'Post Store Data Fetch Successfully',
+            'results' => $postData,
+        ], 200);
+    } catch (Exception $e) {
+        return response()->json([
+            'status' => false,
+            'code' => '500',
+            'message' => 'Internal Server Error',
+        ], 500);
     }
+}
+
     
     
     
@@ -354,8 +354,8 @@ class PostStoreController extends Controller
                     $data[$normalizedKey] = $value;
                 }
 
-                $slugKey = 'field_slug_' . $this->convertToSlug($normalizedKey);
-                $data[$slugKey] = $this->convertToSlug($normalizedKey);
+                // $slugKey = 'field_slug_' . $this->convertToSlug($normalizedKey);
+                // $data[$slugKey] = $this->convertToSlug($normalizedKey);
             }
 
             $post->data = $data;
