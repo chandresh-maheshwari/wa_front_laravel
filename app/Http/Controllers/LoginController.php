@@ -34,8 +34,8 @@ class LoginController extends Controller
         }
 
         // Set the token expiration to 10 minutes
-        $customClaims = ['exp' => now()->addMinutes(10)->timestamp];
-        $add_token = JWTAuth::claims($customClaims)->fromUser($user);
+        $expireToken = ['exp' => now()->addMinutes(10)->timestamp];
+        $add_token = JWTAuth::claims($expireToken)->fromUser($user);
         $user->add_token = $add_token;
         $user->save();
         $userData = $user->toArray();
@@ -55,12 +55,35 @@ class LoginController extends Controller
         try {
             $userId = $request->input('user_id');
             $user = User::findOrFail($userId);
-    
+
+            $currentToken = $request->bearerToken();
+
+            if (!$currentToken) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'No token provided',
+                ], 401);
+            }
+
+            try {
+                JWTAuth::setToken($currentToken);
+                $checkToken = JWTAuth::getPayload($currentToken);
+
+            } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'Token Is Invalid',
+                ], 401);
+            }
+
+            JWTAuth::invalidate($currentToken);
             $newToken = JWTAuth::fromUser($user);
-    
+
             $user->add_token = $newToken;
             $user->save();
-    
+
             return response()->json([
                 'status' => true,
                 'code' => '200',
@@ -69,12 +92,6 @@ class LoginController extends Controller
                     'add_token' => $newToken,
                 ],
             ], 200);
-        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
-            return response()->json([
-                'status' => false,
-                'code' => '401',
-                'message' => 'Token Is Invalid',
-            ], 401);
         } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
             return response()->json([
                 'status' => false,
@@ -83,7 +100,8 @@ class LoginController extends Controller
             ], 500);
         }
     }
-    
+
+
     /** Function used for user logout by ns */
 
     public function logoutpage(Request $request)
