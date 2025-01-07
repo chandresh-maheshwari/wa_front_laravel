@@ -37,6 +37,7 @@ class PageController extends Controller
         }
 
         $pages->transform(function ($page) {
+            dd($page);
             $page->image_url = $page->image ? url('/uploads/page/' . $page->image) : null;
             return $page;
         });
@@ -138,7 +139,7 @@ class PageController extends Controller
                 'message' => 'User Not Authenticated',
             ], 401);
         }
-
+    
         $page = Page::where('deleted_at', 0)->find($id);
         if (!$page) {
             return response()->json([
@@ -147,11 +148,12 @@ class PageController extends Controller
                 'message' => 'Page Data Not Found',
             ], 404);
         }
-
+    
         $postTitle = DynamicPost::where('id', $page->post_type)->value('post_title');
-
-        $page->image_url = $page->image ? url('/uploads/page/' . $page->image) : null;
-
+        if ($page->image) {
+            $page->image = url('/uploads/page/' . $page->image);
+        }
+    
         return response()->json([
             'status' => true,
             'code' => '200',
@@ -160,6 +162,7 @@ class PageController extends Controller
             'post_title' => $postTitle,
         ], 200);
     }
+    
 
     public function update(Request $request, $id)
     {
@@ -181,14 +184,10 @@ class PageController extends Controller
             ], 404);
         }
 
-        $this->validate($request, [
-            'page_name' => 'nullable|string', 
-            'image' => 'nullable|file|mimes:jpg,jpeg,png,gif,svg|dimensions:max_width=1600,max_height=1600|dimensions:min_width=40,min_height=40',
-        ], [
-            'image.file' => 'The image must be a valid file.',
-            'image.mimes' => 'The image must be a file of type: jpg, jpeg, png, gif, svg.',
-            'image.dimensions' => 'The image has invalid image dimensions.',
-        ]);
+        // $this->validate($request, [
+        //     'page_name' => 'nullable|string', 
+        //     'image' => 'nullable|file|mimes:jpg,jpeg,png,gif,svg|dimensions:max_width=1600,max_height=1600|dimensions:min_width=40,min_height=40',
+        // ]);
 
         if ($request->has('post_type')) {
             $page->post_type = $request->post_type;

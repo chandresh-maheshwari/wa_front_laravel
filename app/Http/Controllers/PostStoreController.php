@@ -50,6 +50,7 @@ class PostStoreController extends Controller
                 foreach ($data as $key => $value) {
                     if (stripos($key, 'image') !== false) { 
                         $data[$key] = $value ? url('/uploads/dynamic_post_store/' . $value) : null;
+                        
                     }
                 }
     
@@ -288,7 +289,6 @@ class PostStoreController extends Controller
         ], 200);
 
     } catch (Exception $e) {
-        Log::error('Error in edit method', ['error' => $e->getMessage(), 'exception' => $e]);
 
         return response()->json([
             'status' => false,
@@ -325,9 +325,9 @@ class PostStoreController extends Controller
                 ], 404);
             }
 
-            $this->validate($request, [
-                'image' => 'nullable|file|mimes:jpeg,png,gif,svg|dimensions:max_width=1600,max_height=1600|dimensions:min_width=40,min_height=40',
-            ]);
+            // $this->validate($request, [
+            //     'image' => 'nullable|file|mimes:jpeg,png,gif,svg|dimensions:max_width=1600,max_height=1600|dimensions:min_width=40,min_height=40',
+            // ]);
 
             $post_name = $request->input('post_name', null);
             if ($post_name !== null) {
