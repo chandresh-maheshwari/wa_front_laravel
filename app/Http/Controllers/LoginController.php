@@ -51,56 +51,44 @@ class LoginController extends Controller
     }
 
     public function refresh(Request $request)
-    {
-        try {
-            $userId = $request->input('user_id');
-            $user = User::findOrFail($userId);
+{
+    try {
+        $userId = $request->input('user_id');
+        $user = User::findOrFail($userId);
 
-            $currentToken = $request->bearerToken();
+        $newToken = JWTAuth::fromUser($user);
 
-            if (!$currentToken) {
-                return response()->json([
+        $user->add_token = $newToken;
+        $user->save();
+
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => 'Token Refreshed Successfully',
+            'data' => [
+                'add_token' => $newToken,
+            ],
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'code' => '500',
+            'message' => 'Could Not Refresh Token',
+            'data' => [
+                'headers' => [],
+                'original' => [
                     'status' => false,
-                    'code' => '401',
-                    'message' => 'No token provided',
-                ], 401);
-            }
-
-            try {
-                JWTAuth::setToken($currentToken);
-                $checkToken = JWTAuth::getPayload($currentToken);
-
-            } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '401',
-                    'message' => 'Token Is Invalid',
-                ], 401);
-            }
-
-            JWTAuth::invalidate($currentToken);
-            $newToken = JWTAuth::fromUser($user);
-
-            $user->add_token = $newToken;
-            $user->save();
-
-            return response()->json([
-                'status' => true,
-                'code' => '200',
-                'message' => 'Token Refreshed Successfully',
-                'data' => [
-                    'add_token' => $newToken,
+                    'message' => 'Could Not Refresh Token',
+                    'data' => null,
                 ],
-            ], 200);
-        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
-            return response()->json([
-                'status' => false,
-                'code' => '500',
-                'message' => 'Could Not Refresh Token',
-            ], 500);
-        }
+                'exception' => $e->getMessage(),
+            ],
+        ], 500);
     }
+}
 
+    
 
     /** Function used for user logout by ns */
 
