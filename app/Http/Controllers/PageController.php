@@ -37,7 +37,6 @@ class PageController extends Controller
         }
 
         $pages->transform(function ($page) {
-            dd($page);
             $page->image_url = $page->image ? url('/uploads/page/' . $page->image) : null;
             return $page;
         });
