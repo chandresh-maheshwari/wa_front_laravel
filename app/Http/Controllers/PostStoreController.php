@@ -240,63 +240,62 @@ class PostStoreController extends Controller
      * Ensures the post is not deleted before fetching. create by ns
      */
     public function edit($id)
-{
-    try {
-        $user = Auth::user()->id;
-        if (!$user) {
-            return response()->json([
-                'status' => false,
-                'code' => '401',
-                'message' => 'User Not Authenticated',
-            ], 401);
-        }
-
-        $data = PostStore::where('id', $id)->first();
-
-        if (!$data) {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Post Store Data Not Found',
-            ], 404);
-        }
-
-        if ($data->deleted_at != 0) {
-            return response()->json([
-                'status' => false,
-                'code' => '410',
-                'message' => 'This Record Is Deleted',
-            ], 410);
-        }
-
-        $dataArray = $data->data;
-
-        foreach ($dataArray as $key => $value) {
-            if (strpos(strtolower($key), 'image') !== false && $value) {
-                $dataArray[$key] = asset('uploads/dynamic_post_store/' . $value);
+    {
+        try {
+            $user = Auth::user()->id;
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User Not Authenticated',
+                ], 401);
             }
+    
+            $data = PostStore::where('id', $id)->first();
+    
+            if (!$data) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'Post Store Data Not Found',
+                ], 404);
+            }
+    
+            if ($data->deleted_at != 0) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '410',
+                    'message' => 'This Record Is Deleted',
+                ], 410);
+            }
+    
+            $dataArray = $data->data;
+    
+            foreach ($dataArray as $key => $value) {
+                if (strpos(strtolower($key), 'image') !== false && $value && strpos($key, 'field_slug_') === false) {
+                    $dataArray[$key] = asset('uploads/dynamic_post_store/' . $value);
+                }
+            }
+    
+            $data->data = $dataArray;
+    
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'Post Store Data Fetch Successfully',
+                'results' => [
+                    'data' => $data,
+                ],
+            ], 200);
+    
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'code' => '500',
+                'message' => 'Internal Server Error',
+            ], 500);
         }
-
-        $data->data = $dataArray;
-
-        return response()->json([
-            'status' => true,
-            'code' => '200',
-            'message' => 'Post Store Data Fetch Successfully',
-            'results' => [
-                'data' => $data,
-            ],
-        ], 200);
-
-    } catch (Exception $e) {
-
-        return response()->json([
-            'status' => false,
-            'code' => '500',
-            'message' => 'Internal Server Error',
-        ], 500);
     }
-}
 
     /** 
      * Update a post's title and description by its postName.
