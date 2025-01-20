@@ -535,69 +535,74 @@ class PostStoreController extends Controller
      * Delete the  image found in a post by its ID.
      * Ensures the user is authenticated before deleting the image. create by ns
      */
-    public function deleteImage($id)
-    {
-        try {
-            $user = Auth::user();
-            if (!$user) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '401',
-                    'message' => 'User Not Authenticated',
-                ], 401);
-            }
-    
-            $post = PostStore::where('id', $id)->first();
-    
-            if (!$post) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '404',
-                    'message' => 'Post Store Data Not Found',
-                ], 404);
-            }
-    
-            $data = $post->data; 
-            $imageDeleted = false;
-    
-            foreach ($data as $key => $value) {
-                if (stripos($key, 'image') !== false && $value) {
-                    $imagePath = public_path('uploads/dynamic_post_store/' . $value);
-                    if (file_exists($imagePath)) {
-                        unlink($imagePath); 
-                    }
-    
-                    unset($data[$key]);
-                    $imageDeleted = true;
-                    break;
-                }
-            }
-    
-            if (!$imageDeleted) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '404',
-                    'message' => 'No Image Found',
-                ], 404);
-            }
-    
-            $post->data = $data; 
-            $post->save();
-    
-            return response()->json([
-                'status' => true,
-                'code' => '200',
-                'message' => 'Image Deleted Successfully',
-            ], 200);
-        } catch (Exception $e) {
-            Log::error('Error deleting image', ['error' => $e->getMessage()]);
+    public function deleteImage($id, $imageName)
+{
+    try {
+        $user = Auth::user();
+        if (!$user) {
             return response()->json([
                 'status' => false,
-                'code' => '500',
-                'message' => 'Internal Server Error',
-            ], 500);
+                'code' => '401',
+                'message' => 'User Not Authenticated',
+            ], 401);
         }
+
+        $post = PostStore::where('id', $id)->first();
+
+        if (!$post) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Post Store Data Not Found',
+            ], 404);
+        }
+
+        $data = $post->data;
+        $imageDeleted = false;
+
+        $normalizedImageName = trim($imageName); 
+        $normalizedImageNameLower = strtolower($normalizedImageName); 
+
+        foreach ($data as $key => $value) {
+            $normalizedValue = strtolower(trim($value));
+
+            if ($normalizedValue === $normalizedImageNameLower) {
+                $imagePath = public_path('uploads/dynamic_post_store/' . $normalizedImageName);
+
+                if (file_exists($imagePath)) {
+                    unlink($imagePath); 
+                }
+                $data[$key] = ""; 
+                $imageDeleted = true;
+                break; 
+            }
+        }
+
+        if (!$imageDeleted) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'No Image Found',
+            ], 404);
+        }
+
+        $post->data = $data; 
+        $post->save(); 
+
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => 'Image Deleted Successfully',
+        ], 200);
+    } catch (Exception $e) {
+        Log::error('Error deleting image', ['error' => $e->getMessage()]);
+        return response()->json([
+            'status' => false,
+            'code' => '500',
+            'message' => 'Internal Server Error',
+        ], 500);
     }
+}
 
     private function convertToSlug($string)
     {
