@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\DynamicPost;
+use App\Models\PostStore;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-
+use PhpParser\Node\Expr\PostDec;
 
 class DynamicPostController extends Controller
 {
@@ -213,62 +214,70 @@ class DynamicPostController extends Controller
      * Ensures the post is not deleted before updating. create by ns
      */
 
-    public function update(Request $request, $id)
-    {
-        try {
-            $user = Auth::user();
-            if (!$user) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '401',
-                    'message' => 'User Not Authenticated',
-                ], 401);
-            }
+     public function update(Request $request, $id)
+     {
+         try {
+             $user = Auth::user();
+             if (!$user) {
+                 return response()->json([
+                     'status' => false,
+                     'code' => '401',
+                     'message' => 'User Not Authenticated',
+                 ], 401);
+             }
+     
+             $post = DynamicPost::where('id', $id)->where('deleted_at', 0)->first();
+             if (!$post) {
+                 return response()->json([
+                     'status' => false,
+                     'code' => '404',
+                     'message' => 'Dynamic Post Data Not Found',
+                 ], 404);
+             }
+     
+             $oldPostTitle = $post->post_title; // Store the old post title
+             $post->post_title = $request['post_title'];
+     
+             if ($request->has('post_description')) {
+                 $post->post_description = $request['post_description'];
+             }
+     
+             if ($request->has('post_type')) {
+                 $post->post_type = $request['post_type'];
+             }
+     
+             if ($request->has('ordering')) {
+                 $post->ordering = $request['ordering'];
+             }
+     
+             if ($post->save()) {
+                 // Update the post_name in the post_store table where it matches the old post title
+                 if ($oldPostTitle !== $post->post_title) {
+                     PostStore::where('post_name', $oldPostTitle)->update(['post_name' => $post->post_title]);
+                 }
+     
+                 return response()->json([
+                     'status' => true,
+                     'code' => '200',
+                     'message' => 'Dynamic Post Data Updated Successfully',
+                 ], 200);
+             } else {
+                 return response()->json([
+                     'status' => false,
+                     'code' => '500',
+                     'message' => 'Failed To Update Dynamic Post',
+                 ], 500);
+             }
+         } catch (\Exception $e) {
+             return response()->json([
+                 'status' => false,
+                 'code' => '500',
+                 'message' => 'An Error Occurred',
+                 'error' => $e->getMessage(),
+             ], 500);
+         }
+     }
 
-            $post = DynamicPost::where('id', $id)->where('deleted_at', 0)->first();
-            if (!$post) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '404',
-                    'message' => 'Dynamic Post Data Not Found',
-                ], 404);
-            }
-
-            $post->post_title = $request['post_title'];
-
-            if ($request->has('post_description')) {
-                $post->post_description = $request['post_description'];
-            }
-
-            if ($request->has('post_type')) {
-                $post->post_type = $request['post_type'];
-            }
-
-            if ($request->has('ordering')) {
-                $post->ordering = $request['ordering'];
-            }
-            if ($post->save()) {
-                return response()->json([
-                    'status' => true,
-                    'code' => '200',
-                    'message' => 'Dynamic Post Data Updated Successfully',
-                ], 200);
-            } else {
-                return response()->json([
-                    'status' => false,
-                    'code' => '500',
-                    'message' => 'Failed To Update Dynamic Post',
-                ], 500);
-            }
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'code' => '500',
-                'message' => 'An Error Occurred',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
 
     /** 
      * Soft delete a post by its title.
