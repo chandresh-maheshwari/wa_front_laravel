@@ -53,7 +53,6 @@ class PostStoreController extends Controller
                 }
             }
 
-            $post->data = $data;
             return $post;
         });
 
@@ -277,7 +276,6 @@ class PostStoreController extends Controller
                 }
             }
     
-            $data->data = $dataArray;
     
             return response()->json([
                 'status' => true,
