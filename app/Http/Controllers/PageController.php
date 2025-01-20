@@ -602,4 +602,46 @@ class PageController extends Controller
             'data' => $page
         ]);
     }
+
+    public function deletePageImage($id)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User Not Authenticated',
+            ], 401);
+        }
+
+        $page = Page::find($id);
+        if (!$page) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Page Not Found',
+            ], 404);
+        }
+
+        if ($page->image) {
+            $imagePath = public_path('/uploads/page/' . $page->image);
+            if (file_exists($imagePath)) {
+                unlink($imagePath);
+            }
+            $page->image = null;
+            $page->save();
+
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'Image Deleted Successfully',
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'No Image Found',
+            ], 404);
+        }
+    }
 }

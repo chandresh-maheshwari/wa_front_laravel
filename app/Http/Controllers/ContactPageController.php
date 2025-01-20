@@ -145,4 +145,36 @@ class ContactPageController extends Controller
             ], 500);
         }
     }
+
+
+    public function show($id)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User Not Authenticated',
+            ], 401);
+        }
+
+        $contactPage = ContactPage::where('id', $id)
+            ->where('deleted_at', 0)
+            ->first(['name', 'email', 'contact_number', 'description']);
+
+        if (!$contactPage) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'Contact Page Not Found',
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => true,
+            'code' => '200',
+            'message' => 'Contact Page Data Retrieved Successfully',
+            'result' => $contactPage,
+        ], 200);
+    }
 }

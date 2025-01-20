@@ -38,6 +38,7 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/page-delete/{id}', [PageController::class, 'destroy']);
     Route::post('/page-active/{id}', [PageController::class, 'active']);
     Route::post('/page-status/{id}', [PageController::class, 'pageStatus']);
+    Route::delete('page-image-delete/{id}', [PageController::class, 'deletePageImage']);
 
     /** Dynamic Post api routes create by ns */
 
@@ -73,6 +74,7 @@ Route::middleware('auth:api')->group(function () {
       Route::get('/contact-page-list', [ContactPageController::class, 'index']);
       
       Route::delete('/contact-page-delete/{id}', [ContactPageController::class, 'destroy']);
+      Route::get('/contact-page/{id}', [ContactPageController::class, 'show']);
 
    
 });
