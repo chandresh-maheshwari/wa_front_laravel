@@ -19,61 +19,64 @@ class PostStoreController extends Controller
      * Ensures the user is authenticated before fetching the posts. create by ns
      */
     public function getList($postName)
-{
-    try {
-        $user = Auth::user()->id;
-        if (!$user) {
-            return response()->json([
-                'status' => false,
-                'code' => '401',
-                'message' => 'User Not Authenticated',
-            ], 401);
-        }
+    {
+        try {
+            $user = Auth::user()->id;
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User Not Authenticated',
+                ], 401);
+            }
 
-        $postData = PostStore::where('post_name', $postName)
-            ->where('deleted_at', 0)
-            ->orderBy('id', 'desc')
-            ->get();
+            $postData = PostStore::where('post_name', $postName)
+                ->where('deleted_at', 0)
+                ->orderBy('id', 'desc')
+                ->get();
 
-        if ($postData->isEmpty()) {
+            if ($postData->isEmpty()) {
+                return response()->json([
+                    'status' => true,
+                    'code' => '200',
+                    'message' => 'No Post Store Data Found',
+                    'results' => [],
+                ], 200);
+            }
+            $postData->transform(function ($post) {
+                $data = $post->data;
+                foreach ($data as $key => $value) {
+                    if (stripos($key, 'field_slug_') !== false) {
+                        continue;
+                    }
+
+                    if (stripos($key, 'image') !== false && !empty($value)) {
+                        $data[$key] = url('/uploads/dynamic_post_store/' . $value);
+                    }
+                }
+                $post->data = $data;
+                return $post;
+            });
+
             return response()->json([
                 'status' => true,
                 'code' => '200',
-                'message' => 'No Post Store Data Found',
-                'results' => [],
+                'message' => 'Post Store Data Fetch Successfully',
+                'results' => $postData,
             ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'code' => '500',
+                'message' => 'Internal Server Error',
+            ], 500);
         }
-
-        // Transform the post data
-        $postData->transform(function ($post) {
-            $data = $post->data;
-            foreach ($data as $key => $value) {
-                if (stripos($key, 'image') !== false && $key !== 'field_slug_image') {
-                    $data[$key] = $value ? url('/uploads/dynamic_post_store/' . $value) : null;
-                }
-            }
-
-            return $post;
-        });
-
-        return response()->json([
-            'status' => true,
-            'code' => '200',
-            'message' => 'Post Store Data Fetch Successfully',
-            'results' => $postData,
-        ], 200);
-    } catch (Exception $e) {
-        return response()->json([
-            'status' => false,
-            'code' => '500',
-            'message' => 'Internal Server Error',
-        ], 500);
     }
-}
 
-    
-    
-    
+
+
+
+
 
     /** Function used for the post value store in the database create by ns */
 
@@ -249,43 +252,44 @@ class PostStoreController extends Controller
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
-    
-            $data = PostStore::where('id', $id)->first();
-    
-            if (!$data) {
+
+            $post = PostStore::where('id', $id)->first();
+
+            if (!$post) {
                 return response()->json([
                     'status' => false,
                     'code' => '404',
                     'message' => 'Post Store Data Not Found',
                 ], 404);
             }
-    
-            if ($data->deleted_at != 0) {
+
+            if ($post->deleted_at != 0) {
                 return response()->json([
                     'status' => false,
                     'code' => '410',
                     'message' => 'This Record Is Deleted',
                 ], 410);
             }
-    
-            $dataArray = $data->data;
-    
+
+            $postArray = $post->toArray();
+            $dataArray = $postArray['data'];
+
             foreach ($dataArray as $key => $value) {
                 if (strpos(strtolower($key), 'image') !== false && $value && strpos($key, 'field_slug_') === false) {
                     $dataArray[$key] = asset('uploads/dynamic_post_store/' . $value);
                 }
             }
-    
-    
+
+            $postArray['data'] = $dataArray;
+
             return response()->json([
                 'status' => true,
                 'code' => '200',
                 'message' => 'Post Store Data Fetch Successfully',
                 'results' => [
-                    'data' => $data,
+                    'data' => $postArray,
                 ],
             ], 200);
-    
         } catch (Exception $e) {
             return response()->json([
                 'status' => false,
@@ -322,10 +326,6 @@ class PostStoreController extends Controller
                 ], 404);
             }
 
-            // $this->validate($request, [
-            //     'image' => 'nullable|file|mimes:jpeg,png,gif,svg|dimensions:max_width=1600,max_height=1600|dimensions:min_width=40,min_height=40',
-            // ]);
-
             $post_name = $request->input('post_name', null);
             if ($post_name !== null) {
                 $post->post_name = $post_name;
@@ -348,11 +348,10 @@ class PostStoreController extends Controller
 
                     $data[$normalizedKey] = $originalName;
                 } else {
-                    $data[$normalizedKey] = $value;
+                    if (strpos(strtolower($normalizedKey), 'image') === false) {
+                        $data[$normalizedKey] = $value;
+                    }
                 }
-
-                // $slugKey = 'field_slug_' . $this->convertToSlug($normalizedKey);
-                // $data[$slugKey] = $this->convertToSlug($normalizedKey);
             }
 
             $post->data = $data;
@@ -378,7 +377,6 @@ class PostStoreController extends Controller
             ], 500);
         }
     }
-
 
 
     /** 
@@ -534,73 +532,73 @@ class PostStoreController extends Controller
      * Ensures the user is authenticated before deleting the image. create by ns
      */
     public function deleteImage($id, $imageName)
-{
-    try {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json([
-                'status' => false,
-                'code' => '401',
-                'message' => 'User Not Authenticated',
-            ], 401);
-        }
-
-        $post = PostStore::where('id', $id)->first();
-
-        if (!$post) {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Post Store Data Not Found',
-            ], 404);
-        }
-
-        $data = $post->data;
-        $imageDeleted = false;
-
-        $normalizedImageName = trim($imageName); 
-        $normalizedImageNameLower = strtolower($normalizedImageName); 
-
-        foreach ($data as $key => $value) {
-            $normalizedValue = strtolower(trim($value));
-
-            if ($normalizedValue === $normalizedImageNameLower) {
-                $imagePath = public_path('uploads/dynamic_post_store/' . $normalizedImageName);
-
-                if (file_exists($imagePath)) {
-                    unlink($imagePath); 
-                }
-                $data[$key] = ""; 
-                $imageDeleted = true;
-                break; 
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User Not Authenticated',
+                ], 401);
             }
-        }
 
-        if (!$imageDeleted) {
+            $post = PostStore::where('id', $id)->first();
+
+            if (!$post) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'Post Store Data Not Found',
+                ], 404);
+            }
+
+            $data = $post->data;
+            $imageDeleted = false;
+
+            $normalizedImageName = trim($imageName);
+            $normalizedImageNameLower = strtolower($normalizedImageName);
+
+            foreach ($data as $key => $value) {
+                $normalizedValue = strtolower(trim($value));
+
+                if ($normalizedValue === $normalizedImageNameLower) {
+                    $imagePath = public_path('uploads/dynamic_post_store/' . $normalizedImageName);
+
+                    if (file_exists($imagePath)) {
+                        unlink($imagePath);
+                    }
+                    $data[$key] = "";
+                    $imageDeleted = true;
+                    break;
+                }
+            }
+
+            if (!$imageDeleted) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'No Image Found',
+                ], 404);
+            }
+
+            $post->data = $data;
+            $post->save();
+
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'Image Deleted Successfully',
+            ], 200);
+        } catch (Exception $e) {
+            Log::error('Error deleting image', ['error' => $e->getMessage()]);
             return response()->json([
                 'status' => false,
-                'code' => '404',
-                'message' => 'No Image Found',
-            ], 404);
+                'code' => '500',
+                'message' => 'Internal Server Error',
+            ], 500);
         }
-
-        $post->data = $data; 
-        $post->save(); 
-
-        return response()->json([
-            'status' => true,
-            'code' => '200',
-            'message' => 'Image Deleted Successfully',
-        ], 200);
-    } catch (Exception $e) {
-        Log::error('Error deleting image', ['error' => $e->getMessage()]);
-        return response()->json([
-            'status' => false,
-            'code' => '500',
-            'message' => 'Internal Server Error',
-        ], 500);
     }
-}
 
     private function convertToSlug($string)
     {
