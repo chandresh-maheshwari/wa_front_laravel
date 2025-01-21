@@ -18,7 +18,6 @@ class LoginController extends Controller
     /** Function used for user login by ns */
     public function login(Request $request)
     {
-
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
@@ -33,7 +32,12 @@ class LoginController extends Controller
             ], 401);
         }
 
-        // Set the token expiration to 10 minutes
+        $remember = $request->has('remember') && $request->remember;
+
+        $user->remember_me = $remember;
+        $user->save();
+        
+        // $expireMinutes = $remember; 
         $expireToken = ['exp' => now()->addMinutes(10)->timestamp];
         $add_token = JWTAuth::claims($expireToken)->fromUser($user);
         $user->add_token = $add_token;
@@ -49,46 +53,44 @@ class LoginController extends Controller
             'token' => $add_token,
         ], 200);
     }
-
     public function refresh(Request $request)
-{
-    try {
-        $userId = $request->input('user_id');
-        $user = User::findOrFail($userId);
+    {
+        try {
+            $userId = $request->input('user_id');
+            $user = User::findOrFail($userId);
 
-        $newToken = JWTAuth::fromUser($user);
+            $newToken = JWTAuth::fromUser($user);
 
-        $user->add_token = $newToken;
-        $user->save();
+            $user->add_token = $newToken;
+            $user->save();
 
-        return response()->json([
-            'status' => true,
-            'code' => '200',
-            'message' => 'Token Refreshed Successfully',
-            'data' => [
-                'add_token' => $newToken,
-            ],
-        ], 200);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => false,
-            'code' => '500',
-            'message' => 'Could Not Refresh Token',
-            'data' => [
-                'headers' => [],
-                'original' => [
-                    'status' => false,
-                    'message' => 'Could Not Refresh Token',
-                    'data' => null,
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'Token Refreshed Successfully',
+                'data' => [
+                    'add_token' => $newToken,
                 ],
-                'exception' => $e->getMessage(),
-            ],
-        ], 500);
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'code' => '500',
+                'message' => 'Could Not Refresh Token',
+                'data' => [
+                    'headers' => [],
+                    'original' => [
+                        'status' => false,
+                        'message' => 'Could Not Refresh Token',
+                        'data' => null,
+                    ],
+                    'exception' => $e->getMessage(),
+                ],
+            ], 500);
+        }
     }
-}
 
-    
+
 
     /** Function used for user logout by ns */
 
