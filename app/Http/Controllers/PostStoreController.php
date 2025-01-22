@@ -542,9 +542,9 @@ class PostStoreController extends Controller
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
-
+    
             $post = PostStore::where('id', $id)->first();
-
+    
             if (!$post) {
                 return response()->json([
                     'status' => false,
@@ -552,28 +552,24 @@ class PostStoreController extends Controller
                     'message' => 'Post Store Data Not Found',
                 ], 404);
             }
-
+    
             $data = $post->data;
             $imageDeleted = false;
-
+    
             $normalizedImageName = trim($imageName);
             $normalizedImageNameLower = strtolower($normalizedImageName);
-
+    
             foreach ($data as $key => $value) {
                 $normalizedValue = strtolower(trim($value));
-
+    
                 if ($normalizedValue === $normalizedImageNameLower) {
-                    $imagePath = public_path('uploads/dynamic_post_store/' . $normalizedImageName);
-
-                    if (file_exists($imagePath)) {
-                        unlink($imagePath);
-                    }
+                    // Remove the image reference from the data
                     $data[$key] = "";
                     $imageDeleted = true;
                     break;
                 }
             }
-
+    
             if (!$imageDeleted) {
                 return response()->json([
                     'status' => false,
@@ -581,14 +577,14 @@ class PostStoreController extends Controller
                     'message' => 'No Image Found',
                 ], 404);
             }
-
+    
             $post->data = $data;
             $post->save();
-
+    
             return response()->json([
                 'status' => true,
                 'code' => '200',
-                'message' => 'Image Deleted Successfully',
+                'message' => 'Image Reference Deleted Successfully',
             ], 200);
         } catch (Exception $e) {
             Log::error('Error deleting image', ['error' => $e->getMessage()]);

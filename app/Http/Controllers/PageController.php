@@ -624,10 +624,6 @@ class PageController extends Controller
         }
 
         if ($page->image) {
-            $imagePath = public_path('/uploads/page/' . $page->image);
-            if (file_exists($imagePath)) {
-                unlink($imagePath);
-            }
             $page->image = null;
             $page->save();
 
