@@ -36,7 +36,7 @@ class DynamicPostController extends Controller
                 ], 401);
             }
 
-            $post = DynamicPost::where('deleted_at', 0)->orderBy('id', 'desc')->get();
+            $post = DynamicPost::orderBy('id', 'desc')->get();
 
             if ($post->isEmpty()) {
                 return response()->json([
@@ -426,4 +426,46 @@ class DynamicPostController extends Controller
             ], 500);
         }
     }
+
+    public function restore($id)
+{
+    try {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User Not Authenticated',
+            ], 401);
+        }
+
+        $ids = explode(',', $id);
+        $ids = array_filter($ids);
+
+        $restoredCount = DynamicPost::whereIn('id', $ids)->where('deleted_at', 1)->update(['deleted_at' => 0]);
+
+        if ($restoredCount > 0) {
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'Dynamic Post Data Restored Successfully',
+                'restored_count' => $restoredCount,
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'No Dynamic Post Found To Restore',
+            ], 404);
+        }
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'code' => '500',
+            'message' => 'An Error Occurred',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
+
 }

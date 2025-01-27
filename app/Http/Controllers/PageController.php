@@ -25,7 +25,7 @@ class PageController extends Controller
             ], 401);
         }
 
-        $pages = Page::where('deleted_at', 0)->orderBy('id', 'desc')->get();
+        $pages = Page::orderBy('id', 'desc')->get();
 
         if ($pages->isEmpty()) {
             return response()->json([
@@ -640,4 +640,45 @@ class PageController extends Controller
             ], 404);
         }
     }
+
+    public function restore($id)
+{
+    try {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User Not Authenticated',
+            ], 401);
+        }
+
+        $ids = explode(',', $id);
+        $ids = array_filter($ids);
+
+        $restoredCount = Page::whereIn('id', $ids)->where('deleted_at', 1)->update(['deleted_at' => 0]);
+
+        if ($restoredCount > 0) {
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'Page Data Restored Successfully',
+                'restored_count' => $restoredCount,
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'No Page Found To Restore',
+            ], 404);
+        }
+    } catch (Exception $e) {
+        return response()->json([
+            'status' => false,
+            'code' => '500',
+            'message' => 'An Error Occurred',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
 }

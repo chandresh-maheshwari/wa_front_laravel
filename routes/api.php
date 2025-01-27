@@ -39,6 +39,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/page-active/{id}', [PageController::class, 'active']);
     Route::post('/page-status/{id}', [PageController::class, 'pageStatus']);
     Route::delete('page-image-delete/{id}', [PageController::class, 'deletePageImage']);
+    Route::put('/page/restore/{id}', [PageController::class, 'restore']);
 
     /** Dynamic Post api routes create by ns */
 
@@ -49,6 +50,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/dynamic-post-update/{id}', [DynamicPostController::class, 'update']);
     Route::delete('/dynamic-post-delete/{id}', [DynamicPostController::class, 'destroy']);
     Route::post('/dynamic-post-active/{id}', [DynamicPostController::class, 'active']);
+    Route::put('/dynamic-post/restore/{id}', [DynamicPostController::class, 'restore']);
 
 
     /**  post value store api routes create by ns*/
@@ -61,6 +63,7 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/post-data-delete/{id}', [PostStoreController::class, 'destroy']);
     Route::post('/post-data-active/{id}', [PostStoreController::class, 'active']);
     Route::delete('/post-img-delete/{id}/{imageName}', [PostStoreController::class, 'deleteImage']);
+    Route::put('/post-store/restore/{id}', [PostStoreController::class, 'restore']);
 
     /** Get Form data value api routes create by ns */
     Route::get('/get-form-data/{postTitle}', [GetFormDataController::class, 'getFormData']);
@@ -73,7 +76,8 @@ Route::middleware('auth:api')->group(function () {
       /**  Contact Page api routes create by ns*/
 
       Route::get('/contact-page-list', [ContactPageController::class, 'index']);
-      
+      Route::put('/contact-page/restore/{id}', [ContactPageController::class, 'restore']);
+
       Route::delete('/contact-page-delete/{id}', [ContactPageController::class, 'destroy']);
       Route::get('/contact-page/{id}', [ContactPageController::class, 'show']);
 
@@ -106,4 +110,4 @@ Route::post('/contact-page-store', [ContactPageController::class, 'store']);
 Route::get('/page-status-data', [PageController::class, 'getActivePageData']);
 
 /** Image API routes */
-Route::delete('/images/{id}', [ImageController::class, 'destroy']);
+// Route::delete('/images/{id}', [ImageController::class, 'destroy']);
