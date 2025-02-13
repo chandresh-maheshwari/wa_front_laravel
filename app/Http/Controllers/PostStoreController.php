@@ -1003,7 +1003,7 @@ class PostStoreController extends Controller
     private function parseInputData($inputData)
     {
         $parsedData = [];
-        // Implement your parsing logic here
+        // Implement your parsing logic here    
         // For example, you might use regex or JSON decoding
         // to extract key-value pairs from the input data
 
