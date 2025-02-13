@@ -83,8 +83,8 @@ class DynamicPostController extends Controller
             $this->validate($request, [
                 'post_title' => 'required|string|max:255',
                 'post_description' => 'required',
-                'post_description.*.label' => 'required|string',
-                'post_description.*.type' => 'required|string',
+                // 'post_description.*.label' => 'required|string',
+                // 'post_description.*.type' => 'required|string',
                 'post_type' => 'required|string',
                 'ordering' => 'sometimes|integer|min:1',
             ]);

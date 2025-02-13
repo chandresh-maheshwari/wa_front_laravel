@@ -38,7 +38,7 @@ class LoginController extends Controller
         $user->save();
         
         // $expireMinutes = $remember; 
-        $expireToken = ['exp' => now()->addMinutes(10)->timestamp];
+        $expireToken = ['exp' => now()->addMinutes(60)->timestamp];
         $add_token = JWTAuth::claims($expireToken)->fromUser($user);
         $user->add_token = $add_token;
         $user->save();
@@ -157,7 +157,7 @@ class LoginController extends Controller
         \App\Models\Otp::create([
             'user_id' => $user->id,
             'otp' => $otp,
-            'expires_at' => now()->addMinutes(10),
+            'expires_at' => now()->addMinutes(60),
         ]);
 
         Mail::to($user->email)->send(new \App\Mail\OtpMail($otp, $user));
