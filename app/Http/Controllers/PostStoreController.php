@@ -201,6 +201,114 @@ class PostStoreController extends Controller
     //         ], 500);
     //     }
     // }
+    // public function postStore(Request $request, $postTitle)
+    // {
+    //     try {
+    //         $user = Auth::user()->id;
+    //         if (!$user) {
+    //             return response()->json([
+    //                 'status' => false,
+    //                 'code' => '401',
+    //                 'message' => 'User Not Authenticated',
+    //             ], 401);
+    //         }
+
+    //         $postData = DynamicPost::where('post_title', $postTitle)->first();
+
+    //         if (!$postData) {
+    //             return response()->json([
+    //                 'status' => false,
+    //                 'code' => '404',
+    //                 'message' => 'Post Store Data Not Found',
+    //             ], 404);
+    //         }
+
+    //         $requestData = $request->all();
+    //         $transformedRequest = [];
+
+    //         foreach ($requestData as $key => $value) {
+    //             if (strpos($key, 'Section_image_') === 0) {
+    //                 continue;
+    //             }
+
+    //             if ($this->isJson($value)) {
+    //                 $sectionData = json_decode($value, true);
+    //                 $sectionTransformed = [];
+    //                 foreach ($sectionData as $sectionKey => $sectionValue) {
+    //                     $sectionTransformed[$sectionKey] = $sectionValue;
+    //                     $slugKey = 'field_slug_' . $this->convertToSlug($sectionKey);
+    //                     $sectionTransformed[$slugKey] = $this->convertToSlug($sectionKey);
+    //                 }
+    //                 // $sectionTransformed = $this->removeFakePaths($sectionTransformed);
+    //                 $transformedRequest[$key] = $sectionTransformed;
+    //             } else {
+    //                 $labelKey = str_replace('_', ' ', $key);
+    //                 $transformedRequest[$labelKey] = $value;
+    //                 $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
+    //             }
+    //         }
+
+    //         // Create the PostStore entry first to get the ID
+    //         $postStore = PostStore::create([
+    //             'post_name' => $postTitle,
+    //             'post_id' => $postData->id,
+    //             'data' => $transformedRequest,
+    //         ]);
+
+    //         // Now use the PostStore ID for the image file name
+    //         foreach ($request->files as $key => $file) {
+    //             if ($file->isValid()) {
+    //                 $destinationPath = public_path('uploads/dynamic_post_store');
+    //                 $originalName = $file->getClientOriginalName();
+    //                 $extension = $file->getClientOriginalExtension();
+    //                 $fileName = $postTitle . '_' . $postStore->id . '_' . pathinfo($originalName, PATHINFO_FILENAME) . '.' . $extension;
+    //                 $file->move($destinationPath, $fileName);
+
+    //                 if (preg_match('/Section_(\d+)_(.+)/', $key, $matches)) {
+    //                     $sectionIndex = $matches[1];
+    //                     $fieldName = $matches[2];
+    //                     $sectionKey = "Section_$sectionIndex";
+    //                     if (isset($transformedRequest[$sectionKey])) {
+    //                         $transformedRequest[$sectionKey][$fieldName] = $fileName;
+    //                     }
+    //                 } else {
+    //                     $labelKey = str_replace('_', ' ', $key);
+    //                     $transformedRequest[$labelKey] = $fileName;
+    //                 }
+    //             }
+    //         }
+
+    //         // Update the PostStore data with the new file names
+    //         $postStore->data = $transformedRequest;
+    //         $postStore->save();
+
+    //         if ($postStore) {
+    //             return response()->json([
+    //                 'status' => true,
+    //                 'code' => '200',
+    //                 'message' => 'Post Store Data Added Successfully',
+    //             ], 200);
+    //         } else {
+    //             return response()->json([
+    //                 'status' => false,
+    //                 'code' => '404',
+    //                 'message' => 'Something Went Wrong'
+    //             ], 404);
+    //         }
+    //     } catch (Exception $e) {
+    //         Log::error('Error storing post', [
+    //             'error' => $e->getMessage(),
+    //             'trace' => $e->getTraceAsString()
+    //         ]);
+    //         return response()->json([
+    //             'status' => false,
+    //             'code' => '500',
+    //             'message' => 'Internal Server Error',
+    //         ], 500);
+    //     }
+    // }
+
+
     public function postStore(Request $request, $postTitle)
     {
         try {
@@ -226,49 +334,22 @@ class PostStoreController extends Controller
             $requestData = $request->all();
             $transformedRequest = [];
 
-            // foreach ($requestData as $key => $value) {
-            //     if (strpos($key, 'Section_image_') === 0) {
-            //         continue;
-            //     }
-
-            //     if ($this->isJson($value)) {
-            //         $sectionData = json_decode($value, true);
-            //         $sectionTransformed = [];
-            //         foreach ($sectionData as $sectionKey => $sectionValue) {
-            //             $sectionTransformed[$sectionKey] = $sectionValue;
-            //             $slugKey = 'field_slug_' . $this->convertToSlug($sectionKey);
-            //             $sectionTransformed[$slugKey] = $this->convertToSlug($sectionKey);
-            //         }
-            //         // $sectionTransformed = $this->removeFakePaths($sectionTransformed);
-            //         $transformedRequest[$key] = $sectionTransformed;
-            //     } else {
-            //         $labelKey = str_replace('_', ' ', $key);
-            //         $transformedRequest[$labelKey] = $value;
-            //         $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
-            //     }
-            // }
-
             foreach ($requestData as $key => $value) {
-                if (strpos($key, 'Section_image_') === 0) {
-                    continue;
+                if (strpos($key, 'Section_image') === 0) {
+                    continue; // Skip keys starting with Section_image
                 }
-            
+
                 if ($this->isJson($value)) {
                     $sectionData = json_decode($value, true);
-            
-                    // Check if $sectionData is a valid array
-                    if (!is_array($sectionData)) {
-                        Log::error("Invalid JSON data for key: $key. Decoding result: " . var_export($sectionData, true));
-                        continue;  // Skip invalid section data
+                    if (is_array($sectionData)) { // Ensure $sectionData is an array
+                        $sectionTransformed = [];
+                        foreach ($sectionData as $sectionKey => $sectionValue) {
+                            $sectionTransformed[$sectionKey] = $sectionValue;
+                            $slugKey = 'field_slug_' . $this->convertToSlug($sectionKey);
+                            $sectionTransformed[$slugKey] = $this->convertToSlug($sectionKey);
+                        }
+                        $transformedRequest[$key] = $sectionTransformed;
                     }
-            
-                    $sectionTransformed = [];
-                    foreach ($sectionData as $sectionKey => $sectionValue) {
-                        $sectionTransformed[$sectionKey] = $sectionValue;
-                        $slugKey = 'field_slug_' . $this->convertToSlug($sectionKey);
-                        $sectionTransformed[$slugKey] = $this->convertToSlug($sectionKey);
-                    }
-                    $transformedRequest[$key] = $sectionTransformed;
                 } else {
                     $labelKey = str_replace('_', ' ', $key);
                     $transformedRequest[$labelKey] = $value;
@@ -285,6 +366,10 @@ class PostStoreController extends Controller
 
             // Now use the PostStore ID for the image file name
             foreach ($request->files as $key => $file) {
+                if (strpos($key, 'Section_image') === 0) {
+                    continue; // Skip files with keys starting with Section_image
+                }
+
                 if ($file->isValid()) {
                     $destinationPath = public_path('uploads/dynamic_post_store');
                     $originalName = $file->getClientOriginalName();
@@ -335,8 +420,6 @@ class PostStoreController extends Controller
             ], 500);
         }
     }
-
-
 
 
 
@@ -667,49 +750,22 @@ class PostStoreController extends Controller
 
             $transformedRequest = [];
 
-            // foreach ($requestData as $key => $value) {
-            //     if (strpos($key, 'Section_image_') === 0) {
-            //         continue; // Skip fields starting with Section_image_
-            //     }
-
-            //     if ($this->isJson($value)) {
-            //         $sectionData = json_decode($value, true);
-            //         $sectionTransformed = [];
-            //         foreach ($sectionData as $sectionKey => $sectionValue) {
-            //             $sectionTransformed[$sectionKey] = $sectionValue;
-            //             $slugKey = 'field_slug_' . $this->convertToSlug($sectionKey);
-            //             $sectionTransformed[$slugKey] = $this->convertToSlug($sectionKey);
-            //         }
-            //         // $sectionTransformed = $this->removeFakePaths($sectionTransformed);
-            //         $transformedRequest[$key] = $sectionTransformed;
-            //     } else {
-            //         $labelKey = str_replace('_', ' ', $key);
-            //         $transformedRequest[$labelKey] = $value;
-            //         $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
-            //     }
-            // }
-
             foreach ($requestData as $key => $value) {
-                if (strpos($key, 'Section_image_') === 0) {
-                    continue;
+                if (strpos($key, 'Section_image') === 0) {
+                    continue; // Skip fields starting with Section_image
                 }
-            
+
                 if ($this->isJson($value)) {
                     $sectionData = json_decode($value, true);
-            
-                    // Check if $sectionData is a valid array
-                    if (!is_array($sectionData)) {
-                        Log::error("Invalid JSON data for key: $key. Decoding result: " . var_export($sectionData, true));
-                        continue;  // Skip invalid section data
+                    if (is_array($sectionData)) { // Ensure $sectionData is an array
+                        $sectionTransformed = [];
+                        foreach ($sectionData as $sectionKey => $sectionValue) {
+                            $sectionTransformed[$sectionKey] = $sectionValue;
+                            $slugKey = 'field_slug_' . $this->convertToSlug($sectionKey);
+                            $sectionTransformed[$slugKey] = $this->convertToSlug($sectionKey);
+                        }
+                        $transformedRequest[$key] = $sectionTransformed;
                     }
-            
-                    $sectionTransformed = [];
-                    foreach ($sectionData as $sectionKey => $sectionValue) {
-                        $sectionTransformed[$sectionKey] = $sectionValue;
-                        $slugKey = 'field_slug_' . $this->convertToSlug($sectionKey);
-                        $sectionTransformed[$slugKey] = $this->convertToSlug($sectionKey);
-                    }
-                    $transformedRequest[$key] = $sectionTransformed;
                 } else {
                     $labelKey = str_replace('_', ' ', $key);
                     $transformedRequest[$labelKey] = $value;
@@ -718,6 +774,10 @@ class PostStoreController extends Controller
             }
 
             foreach ($request->files as $key => $file) {
+                if (strpos($key, 'Section_image') === 0) {
+                    continue; // Skip files with keys starting with Section_image
+                }
+
                 if ($file->isValid()) {
                     $destinationPath = public_path('uploads/dynamic_post_store');
                     $originalName = $file->getClientOriginalName();
