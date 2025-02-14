@@ -667,20 +667,48 @@ class PostStoreController extends Controller
 
             $transformedRequest = [];
 
+            // foreach ($requestData as $key => $value) {
+            //     if (strpos($key, 'Section_image_') === 0) {
+            //         continue; // Skip fields starting with Section_image_
+            //     }
+
+            //     if ($this->isJson($value)) {
+            //         $sectionData = json_decode($value, true);
+            //         $sectionTransformed = [];
+            //         foreach ($sectionData as $sectionKey => $sectionValue) {
+            //             $sectionTransformed[$sectionKey] = $sectionValue;
+            //             $slugKey = 'field_slug_' . $this->convertToSlug($sectionKey);
+            //             $sectionTransformed[$slugKey] = $this->convertToSlug($sectionKey);
+            //         }
+            //         // $sectionTransformed = $this->removeFakePaths($sectionTransformed);
+            //         $transformedRequest[$key] = $sectionTransformed;
+            //     } else {
+            //         $labelKey = str_replace('_', ' ', $key);
+            //         $transformedRequest[$labelKey] = $value;
+            //         $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
+            //     }
+            // }
+
             foreach ($requestData as $key => $value) {
                 if (strpos($key, 'Section_image_') === 0) {
-                    continue; // Skip fields starting with Section_image_
+                    continue;
                 }
-
+            
                 if ($this->isJson($value)) {
                     $sectionData = json_decode($value, true);
+            
+                    // Check if $sectionData is a valid array
+                    if (!is_array($sectionData)) {
+                        Log::error("Invalid JSON data for key: $key. Decoding result: " . var_export($sectionData, true));
+                        continue;  // Skip invalid section data
+                    }
+            
                     $sectionTransformed = [];
                     foreach ($sectionData as $sectionKey => $sectionValue) {
                         $sectionTransformed[$sectionKey] = $sectionValue;
                         $slugKey = 'field_slug_' . $this->convertToSlug($sectionKey);
                         $sectionTransformed[$slugKey] = $this->convertToSlug($sectionKey);
                     }
-                    // $sectionTransformed = $this->removeFakePaths($sectionTransformed);
                     $transformedRequest[$key] = $sectionTransformed;
                 } else {
                     $labelKey = str_replace('_', ' ', $key);
