@@ -478,3 +478,4 @@ class DynamicPostController extends Controller
         }
     }
 }
+
