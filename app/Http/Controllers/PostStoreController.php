@@ -374,26 +374,85 @@ class PostStoreController extends Controller
                     $destinationPath = public_path('uploads/dynamic_post_store');
                     $originalName = $file->getClientOriginalName();
                     $extension = $file->getClientOriginalExtension();
-                    $fileName = $postTitle . '_' . $postStore->id . '_' . pathinfo($originalName, PATHINFO_FILENAME) . '.' . $extension;
-                    $file->move($destinationPath, $fileName);
+                    $fileNameOuter = $postTitle . '_' . $postStore->id . '_' . pathinfo($originalName, PATHINFO_FILENAME) . '.' . $extension;
+                    $file->move($destinationPath, $fileNameOuter);
 
                     // Check if the file belongs to a section
                     $updated = false;
-                    foreach ($transformedRequest as $sectionKey => &$sectionValue) {
-                        if (is_array($sectionValue) && array_key_exists($key, $sectionValue)) {
-                            $sectionValue[$key] = $fileName;
-                            $sectionValue['field_slug_' . $key] = $this->convertToSlug($key);
-                            $updated = true;
-                            break;
+                    // Log::info('out foreach');
+                    // Log::info($transformedRequest);
+                    foreach ($transformedRequest as $sectionKey => $sectionValue) {
+
+                        // if(is_array($sectionValue)){
+                        //     Log::info('is array');
+                        // }else{
+                        //     Log::info('not arrray');
+                        // }
+                        // if(array_key_exists($key, $sectionValue)){
+                        //     Log::info('aaaaaaaaaaaaaaa');
+                        // }else{
+                        //     Log::info('bbbbbbbbbbbb');
+                        // }
+
+
+                        //  Log::info("out of is array");
+                        if (is_array($sectionValue) && array_key_exists($sectionKey, $transformedRequest)) {
+
+                            foreach ($request->files as $sectionkeyFile => $sectionfile) {
+                                if (strpos($key, 'Section_image_') === 0) {
+                                    continue; // Skip files with keys starting with Section_image_
+                                }
+
+                                Log::info("Section key==");
+                                 Log::info($sectionKey);
+                                 Log::info("Section key with underscor==");
+                                 Log::info($sectionkeyFile);
+
+                                if ($sectionfile->isValid()) {
+                                    $destinationPath = public_path('uploads/dynamic_post_store');
+                                    $originalName = $sectionfile->getClientOriginalName();
+                                    $extension = $sectionfile->getClientOriginalExtension();
+                                    $fileName = $postTitle . '_' . $postStore->id . '_' . pathinfo($originalName, PATHINFO_FILENAME) . '.' . $extension;
+                                    $sectionfile->move($destinationPath, $fileName);
+
+                                    // Check if the file belongs to a section
+                                    $updated = false;
+
+                                    $fieldname = str_replace("Section_image_".$sectionKey."_", "",$sectionkeyFile);
+
+                                    Log::info("Field name after remove str=");
+                                    Log::info($fieldname);
+
+                                    if ($fieldname != "") {
+                                        // $sectionIndex = $matches[1];
+                                        // $fieldName = $matches[2];
+                                        // $sectionKey = "Section_$sectionIndex";
+                                        if (isset($transformedRequest[$sectionKey])) {
+                                            $transformedRequest[$sectionKey][$fieldname] = $fileName;
+                                        }
+                                    } else {
+                                        $labelKey = str_replace('_', ' ', $sectionkeyFile);
+                                        $transformedRequest[$labelKey] = $fileName;
+                                        $transformedRequest['field_slug_' . $this->convertToSlug($sectionkeyFile)] = $this->convertToSlug($sectionkeyFile);
+                                    }
+                                    // Log::info("IN is array");
+                                    // Log::info($sectionValue);
+                                    // Log::info($key);
+                                    // $sectionValue[$key] = $fileName;
+                                    // $sectionValue['field_slug_' . $key] = $this->convertToSlug($key);
+                                    // $updated = true;
+                                    // break;
+                                }
+                            }
                         }
                     }
 
                     // If not updated in a section, update as a normal field
-                    if (!$updated) {
+                    // if (!$updated) {
                         $labelKey = str_replace('_', ' ', $key);
-                        $transformedRequest[$labelKey] = $fileName;
+                        $transformedRequest[$labelKey] = $fileNameOuter;
                         $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
-                    }
+                    // }
                 }
             }
 
@@ -444,9 +503,9 @@ class PostStoreController extends Controller
     //                 'message' => 'User Not Authenticated',
     //             ], 401);
     //         }
-    
+
     //         $postData = DynamicPost::where('post_title', $postTitle)->first();
-    
+
     //         if (!$postData) {
     //             return response()->json([
     //                 'status' => false,
@@ -454,13 +513,13 @@ class PostStoreController extends Controller
     //                 'message' => 'Post Store Data Not Found',
     //             ], 404);
     //         }
-    
+
     //         $requestData = $request->all();
     //         $transformedRequest = [];
-    
+
     //         foreach ($requestData as $key => $value) {
     //             $labelKey = str_replace('_', ' ', $key);
-    
+
     //             if (is_array($value)) {
     //                 $transformedRequest[$labelKey] = json_encode($value);
     //             } else {
@@ -469,17 +528,17 @@ class PostStoreController extends Controller
     //                 }
     //                 $transformedRequest[$labelKey] = $value;
     //             }
-    
+
     //             $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
     //         }
-    
+
     //         // Create the PostStore entry first
     //         $postStore = PostStore::create([
     //             'post_name' => $postTitle,
     //             'post_id' => $postData->id,
     //             'data' => $transformedRequest,
     //         ]);
-    
+
     //         if (!$postStore) {
     //             return response()->json([
     //                 'status' => false,
@@ -487,24 +546,24 @@ class PostStoreController extends Controller
     //                 'message' => 'Something Went Wrong'
     //             ], 404);
     //         }
-    
+
     //         // Now use the PostStore id for the image file name
     //         foreach ($request->files as $key => $file) {
     //             if ($file->isValid()) {
     //                 $destinationPath = public_path('uploads/dynamic_post_store');
-    
+
     //                 // Create a new file name with the format postname_poststoreid_imagename.extension
     //                 $originalName = $file->getClientOriginalName();
     //                 $extension = $file->getClientOriginalExtension();
     //                 $fileName = $postTitle . '_' . $postStore->id . '_' . pathinfo($originalName, PATHINFO_FILENAME) . '.' . $extension;
-    
+
     //                 $file->move($destinationPath, $fileName);
-    
+
     //                 $labelKey = str_replace('_', ' ', $key);
     //                 $transformedRequest[$labelKey] = $fileName;
     //             }
     //         }
-            
+
     //         foreach ($requestData as $key => $value) {
     //             if (is_array($value)) {
     //                 $sectionData = $value;
@@ -514,15 +573,15 @@ class PostStoreController extends Controller
     //                         $file = $request->file($sectionKey);
     //                         if ($file->isValid()) {
     //                             $destinationPath1 = public_path('uploads/dynamic_post_store');
-         
+
     //                             // Create a new file name with the format postname_poststoreid_imagename.extension
     //                             $originalName = $file->getClientOriginalName();
     //                             $extension = $file->getClientOriginalExtension();
     //                             $fileName = $postTitle . '_' . $postStore->id . '_' . pathinfo($originalName, PATHINFO_FILENAME) . '.' . $extension;
-         
+
     //                             // Move the file to the destination path
     //                             $file->move($destinationPath1, $fileName);
-         
+
     //                             // Update the section data with the new file name
     //                             $sectionData[$sectionKey] = $fileName;
     //                         } else {
@@ -536,11 +595,11 @@ class PostStoreController extends Controller
     //                 $transformedRequest[$key] = json_encode($sectionData);
     //             }
     //         }
-    
+
     //         // Update the PostStore data with the new file names
     //         $postStore->data = $transformedRequest;
     //         $postStore->save();
-    
+
     //         return response()->json([
     //             'status' => true,
     //             'code' => '200',
@@ -750,7 +809,7 @@ class PostStoreController extends Controller
             }
 
             $requestData = $request->all();
-            Log::info('Request data', ['data' => $requestData]);
+            // Log::info('Request data', ['data' => $requestData]);
 
             $transformedRequest = [];
 
@@ -810,7 +869,7 @@ class PostStoreController extends Controller
             $post->data = $existingData;
 
             if ($post->save()) {
-                Log::info('Post updated successfully', ['id' => $id]);
+                // Log::info('Post updated successfully', ['id' => $id]);
                 return response()->json([
                     'status' => true,
                     'code' => '200',
@@ -1130,7 +1189,3 @@ class PostStoreController extends Controller
         return $parsedData;
     }
 }
-
-
-
-
