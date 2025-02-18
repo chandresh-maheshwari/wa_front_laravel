@@ -432,7 +432,7 @@ class PostStoreController extends Controller
                                 // Check if the file belongs to a section
                                 $updated = false;
 
-                                $fieldname = str_replace("Section_image_" . $sectionKey . "_", "", $sectionkeyFile);
+                                $fieldname = str_replace("_", " ", str_replace("Section_image_" . $sectionKey . "_", "", $sectionkeyFile));
 
                                 // Log::info("Field name after remove str=");
                                 Log::info("filename==" . $fieldname);
@@ -915,7 +915,9 @@ class PostStoreController extends Controller
                                 // Check if the file belongs to a section
                                 $updated = false;
 
-                                $fieldname = str_replace("Section_image_" . $sectionKey . "_", "", $sectionkeyFile);
+                                // $fieldname = str_replace("Section_image_" . $sectionKey . "_", "", $sectionkeyFile);
+                                $fieldname = str_replace("_", " ", str_replace("Section_image_" . $sectionKey . "_", "", $sectionkeyFile));
+
 
                                 // Log::info("Field name after remove str=");
                                 Log::info("filename==".$fieldname);
