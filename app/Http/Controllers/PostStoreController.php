@@ -340,7 +340,7 @@ class PostStoreController extends Controller
                     continue; // Skip fields starting with Section_image_
                 }
                 Log::info("IN LOOP");
-                Log::info("keys==".$reqDatakey);
+                Log::info("keys==" . $reqDatakey);
                 Log::info([$value]);
 
                 if (is_numeric($value)) {
@@ -348,7 +348,7 @@ class PostStoreController extends Controller
                 } else if ($this->isJson($value)) {
                     $sectionData = json_decode($value, true);
                     if (is_array($sectionData)) {
-                        Log::info("keys== IN SECTION".$reqDatakey);
+                        Log::info("keys== IN SECTION" . $reqDatakey);
                         $sectionTransformed = [];
                         foreach ($sectionData as $sectionKey => $sectionValue) {
                             $sectionTransformed[$sectionKey] = $sectionValue;
@@ -356,21 +356,19 @@ class PostStoreController extends Controller
                             $sectionTransformed[$slugKey] = $this->convertToSlug($sectionKey);
                         }
                         $transformedRequest[$reqDatakey] = $sectionTransformed;
-                        
-                        
                     }
                 } else {
-                    Log::info("KEY normal==".$reqDatakey);
+                    Log::info("KEY normal==" . $reqDatakey);
                     $labelKey = str_replace("_", " ", $reqDatakey);
-                    Log::info("KEY new ==".$labelKey);
+                    Log::info("KEY new ==" . $labelKey);
                     $transformedRequest[$labelKey] = (string)$value;
                     $transformedRequest['field_slug_' . $this->convertToSlug($reqDatakey)] = $this->convertToSlug($reqDatakey);
                 }
             }
-           
+
             // Log the transformed request to check data
             Log::info([$transformedRequest]);
-            
+
 
             // Create the PostStore entry first to get the ID
             $postStore = PostStore::create([
@@ -381,7 +379,7 @@ class PostStoreController extends Controller
 
             Log::info([$transformedRequest]);
             // Now use the PostStore ID for the image file name
-// exit;
+            // exit;
 
             Log::info([$request->files]);
             foreach ($request->files as $key => $file) {
@@ -393,9 +391,12 @@ class PostStoreController extends Controller
                     $destinationPath = public_path('uploads/dynamic_post_store');
                     $originalName = $file->getClientOriginalName();
                     $extension = $file->getClientOriginalExtension();
-                    $fileNameOuter = $postTitle . '_' . $postStore->id . '_' . pathinfo($originalName, PATHINFO_FILENAME) . '.' . $extension;
+                    $postname = str_replace(' ', '_', $postTitle);
+                    Log::info('ssssssssssssssssssssssssssssssssssssssssss');
+                    Log::info($key);
+                    $fileNameOuter = $postname . '_' . $postStore->id . '_' . $key . '.' . $extension;
+                    // $fileNameOuter = $postname . '_' . $postStore->id . '_' . pathinfo($originalName, PATHINFO_FILENAME) . '.' . $extension;
                     $file->move($destinationPath, $fileNameOuter);
-
 
 
                     // If not updated in a section, update as a normal field
@@ -442,14 +443,19 @@ class PostStoreController extends Controller
                                 $destinationPath = public_path('uploads/dynamic_post_store');
                                 $originalName = $sectionfile->getClientOriginalName();
                                 $extension = $sectionfile->getClientOriginalExtension();
-                                $fileName = $postTitle . '_' . $postStore->id . '_' . pathinfo($originalName, PATHINFO_FILENAME) . '.' . $extension;
-                                $sectionfile->move($destinationPath, $fileName);
-
+                                
                                 // Check if the file belongs to a section
                                 $updated = false;
+                                
+                                $fieldname = str_replace("_", " ", str_replace("Section_image_" . $sectionKey . "_", "", $sectionkeyFile));                                
+                                $fieldnameforimg = str_replace(' ', '_', $fieldname);
+                                $postname = str_replace(' ', '_', $postTitle);
+                                $fileName = $postname . '_' . $postStore->id . '_' . $fieldnameforimg . '.' . $extension;
+                                // $fileName = $postname . '_' . $postStore->id . '_' . pathinfo($originalName, PATHINFO_FILENAME) . '.' . $extension;
+                                $sectionfile->move($destinationPath, $fileName);
 
-                                $fieldname = str_replace("_", " ", str_replace("Section_image_" . $sectionKey . "_", "", $sectionkeyFile));
 
+                                
                                 // Log::info("Field name after remove str=");
                                 Log::info("filename==" . $fieldname);
 
@@ -913,7 +919,7 @@ class PostStoreController extends Controller
 
                 Log::info("out of is array");
                 if (is_array($sectionValue) && array_key_exists($sectionKey, $transformedRequest)) {
-                    Log::info("IN IF CONDITION".$sectionKey);
+                    Log::info("IN IF CONDITION" . $sectionKey);
                     foreach ($request->files as $sectionkeyFile => $sectionfile) {
                         Log::info("IN FOREACH CONDITION");
                         if (strpos($sectionkeyFile, $sectionKey) > 0) {
@@ -938,7 +944,7 @@ class PostStoreController extends Controller
 
 
                                 // Log::info("Field name after remove str=");
-                                Log::info("filename==".$fieldname);
+                                Log::info("filename==" . $fieldname);
 
                                 if ($fieldname != "") {
                                     // $sectionIndex = $matches[1];
@@ -949,7 +955,7 @@ class PostStoreController extends Controller
                                     if (isset($transformedRequest[$sectionKey])) {
                                         $transformedRequest[$sectionKey][$fieldname] = $fileName;
                                     }
-                                } 
+                                }
                                 // else {
                                 //     $labelKey = str_replace('_', ' ', $sectionkeyFile);
                                 //     $transformedRequest[$labelKey] = $fileName;
