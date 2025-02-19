@@ -1096,73 +1096,86 @@ class PostStoreController extends Controller
      * If the post is active, it will be deactivated. create by ns
      */
 
-    public function active(Request $request, $id)
-    {
-        try {
-            $user = Auth::user();
-            if (!$user) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '401',
-                    'message' => 'User Not Authenticated',
-                ], 401);
-            }
+     
 
-            $idsArray = explode(',', $id);
+public function active(Request $request, $id)
+{
+    try {
+        // Log the user and request data
+        Log::info('User:', ['user' => Auth::user()]); 
+        Log::info('Request Data:', ['id' => $id, 'status' => $request->input('status')]);
+        
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'code' => '401',
+                'message' => 'User Not Authenticated',
+            ], 401);
+        }
 
-            $validatedData = Validator::make(
-                ['ids' => $idsArray],
-                ['ids' => 'required|array|min:1'],
-                ['ids.*' => 'integer|exists:dynamic_posts,id']
-            );
+        $idsArray = explode(',', $id);
+        Log::info('IDs Array:', ['ids' => $idsArray]);
 
-            if ($validatedData->fails()) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '422',
-                    'message' => 'Validation Failed',
-                    'errors' => $validatedData->errors(),
-                ], 422);
-            }
+        // Validation
+        $validatedData = Validator::make(
+            ['ids' => $idsArray],
+            ['ids' => 'required|array|min:1'],
+            ['ids.*' => 'integer|exists:post_stores,id']
+        );
 
-            $posts = postStore::whereIn('id', $idsArray)->get();
+        if ($validatedData->fails()) {
+            return response()->json([
+                'status' => false,
+                'code' => '422',
+                'message' => 'Validation Failed',
+                'errors' => $validatedData->errors(),
+            ], 422);
+        }
 
-            if ($posts->isEmpty()) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '404',
-                    'message' => 'No Records Found',
-                ], 404);
-            }
-            $newStatus = $request->input('status');
+        $posts = postStore::whereIn('id', $idsArray)->get();
+        Log::info('Fetched Posts:', ['posts' => $posts]);
 
-            if ($newStatus !== null && in_array($newStatus, [0, 1])) {
-                $posts->each(function ($post) use ($newStatus) {
-                    $post->status = $newStatus;
-                    $post->save();
-                });
-            } else {
-                return response()->json([
-                    'status' => false,
-                    'code' => '422',
-                    'message' => 'Invalid Status Value',
-                ], 422);
-            }
+        if ($posts->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'code' => '404',
+                'message' => 'No Records Found',
+            ], 404);
+        }
+
+        $newStatus = $request->input('status');
+        Log::info('New Status:', ['status' => $newStatus]);
+
+        // Ensure the status is either 0 or 1
+        if ($newStatus !== null && in_array($newStatus, [0, 1])) {
+            // Update status in batch
+            postStore::whereIn('id', $idsArray)->update(['status' => $newStatus]);
 
             return response()->json([
                 'status' => true,
                 'code' => '200',
                 'message' => 'Post Store Data Updated Successfully',
             ]);
-        } catch (\Exception $e) {
+        } else {
             return response()->json([
                 'status' => false,
-                'code' => '500',
-                'message' => 'An Error occurred',
-                'error' => $e->getMessage(),
-            ], 500);
+                'code' => '422',
+                'message' => 'Invalid Status Value',
+            ], 422);
         }
+
+    } catch (\Exception $e) {
+        Log::error('Error occurred:', ['error' => $e->getMessage()]);
+        return response()->json([
+            'status' => false,
+            'code' => '500',
+            'message' => 'An Error occurred',
+            'error' => $e->getMessage(),
+        ], 500);
     }
+}
+
 
     /** 
      * Delete the  image found in a post by its ID.
