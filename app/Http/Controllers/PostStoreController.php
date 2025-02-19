@@ -334,28 +334,43 @@ class PostStoreController extends Controller
             $requestData = $request->all();
             $transformedRequest = [];
 
-            foreach ($requestData as $key => $value) {
-                if (strpos($key, 'Section_image_') === 0) {
+            Log::info([$requestData]);
+            foreach ($requestData as $reqDatakey => $value) {
+                if (strpos($reqDatakey, 'Section_image_') === 0) {
                     continue; // Skip fields starting with Section_image_
                 }
+                Log::info("IN LOOP");
+                Log::info("keys==".$reqDatakey);
+                Log::info([$value]);
 
-                if ($this->isJson($value)) {
+                if (is_numeric($value)) {
+                    $transformedRequest[$reqDatakey] = (string)$value;
+                } else if ($this->isJson($value)) {
                     $sectionData = json_decode($value, true);
                     if (is_array($sectionData)) {
+                        Log::info("keys== IN SECTION".$reqDatakey);
                         $sectionTransformed = [];
                         foreach ($sectionData as $sectionKey => $sectionValue) {
                             $sectionTransformed[$sectionKey] = $sectionValue;
                             $slugKey = 'field_slug_' . $this->convertToSlug($sectionKey);
                             $sectionTransformed[$slugKey] = $this->convertToSlug($sectionKey);
                         }
-                        $transformedRequest[$key] = $sectionTransformed;
+                        $transformedRequest[$reqDatakey] = $sectionTransformed;
+                        
+                        
                     }
                 } else {
-                    $labelKey = str_replace('_', ' ', $key);
-                    $transformedRequest[$labelKey] = $value;
-                    $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
+                    Log::info("KEY normal==".$reqDatakey);
+                    $labelKey = str_replace("_", " ", $reqDatakey);
+                    Log::info("KEY new ==".$labelKey);
+                    $transformedRequest[$labelKey] = (string)$value;
+                    $transformedRequest['field_slug_' . $this->convertToSlug($reqDatakey)] = $this->convertToSlug($reqDatakey);
                 }
             }
+           
+            // Log the transformed request to check data
+            Log::info([$transformedRequest]);
+            
 
             // Create the PostStore entry first to get the ID
             $postStore = PostStore::create([
@@ -364,8 +379,9 @@ class PostStoreController extends Controller
                 'data' => $transformedRequest,
             ]);
 
+            Log::info([$transformedRequest]);
             // Now use the PostStore ID for the image file name
-
+// exit;
 
             Log::info([$request->files]);
             foreach ($request->files as $key => $file) {
@@ -832,7 +848,9 @@ class PostStoreController extends Controller
                     continue; // Skip fields starting with Section_image_
                 }
 
-                if ($this->isJson($value)) {
+                if (is_numeric($value)) {
+                    $transformedRequest[$key] = (string)$value;
+                } else if ($this->isJson($value)) {
                     // Handle fields with JSON data (sections)
                     $sectionData = json_decode($value, true);
                     if (is_array($sectionData)) {
