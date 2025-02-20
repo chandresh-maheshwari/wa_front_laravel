@@ -31,7 +31,6 @@ class PostStoreController extends Controller
             }
 
             $postData = PostStore::where('post_name', $postName)
-                ->where('deleted_at', 0)
                 ->orderBy('id', 'desc')
                 ->get();
 
