@@ -370,15 +370,15 @@ class DynamicPostController extends Controller
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
-
+    
             $idsArray = explode(',', $id);
-
+    
             $validatedData = Validator::make(
                 ['ids' => $idsArray],
                 ['ids' => 'required|array|min:1'],
                 ['ids.*' => 'integer|exists:dynamic_posts,id']
             );
-
+    
             if ($validatedData->fails()) {
                 return response()->json([
                     'status' => false,
@@ -387,9 +387,9 @@ class DynamicPostController extends Controller
                     'errors' => $validatedData->errors(),
                 ], 422);
             }
-
+    
             $posts = DynamicPost::whereIn('id', $idsArray)->get();
-
+    
             if ($posts->isEmpty()) {
                 return response()->json([
                     'status' => false,
@@ -397,21 +397,14 @@ class DynamicPostController extends Controller
                     'message' => 'No Records Found',
                 ], 404);
             }
-            $newStatus = $request->input('status');
-
-            if ($newStatus !== null && in_array($newStatus, [0, 1])) {
-                $posts->each(function ($post) use ($newStatus) {
-                    $post->status = $newStatus;
-                    $post->save();
-                });
-            } else {
-                return response()->json([
-                    'status' => false,
-                    'code' => '422',
-                    'message' => 'Invalid Status Value',
-                ], 422);
-            }
-
+    
+            // Loop through each post and toggle the status
+            $posts->each(function ($post) {
+                // Toggle the status: if it's 1, set to 0; if it's 0, set to 1
+                $post->status = $post->status == 1 ? 0 : 1;
+                $post->save();
+            });
+    
             return response()->json([
                 'status' => true,
                 'code' => '200',
@@ -426,6 +419,8 @@ class DynamicPostController extends Controller
             ], 500);
         }
     }
+    
+
 
     public function restore($id)
     {
