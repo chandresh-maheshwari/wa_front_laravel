@@ -19,6 +19,8 @@ class Page extends Model
         'page_description',
         'image',
         'ordering',
+        'button_name',
+        'button_link',
         'status',
         'page_status',
         'deleted_at',

@@ -72,6 +72,8 @@ class PageController extends Controller
         $page->post_type = $request->post_type;
         $page->page_name = $request->page_name;
         $page->page_description = $request['page_description'];
+        $page->button_name = $request->button_name;
+        $page->button_link = $request->button_link;
 
         if ($request->hasFile('image')) {
             $pageImage = $request->image->getClientOriginalName();
@@ -98,8 +100,6 @@ class PageController extends Controller
             ], 404);
         }
     }
-
-
 
     public function show($id)
     {
@@ -138,7 +138,7 @@ class PageController extends Controller
                 'message' => 'User Not Authenticated',
             ], 401);
         }
-    
+
         $page = Page::where('deleted_at', 0)->find($id);
         if (!$page) {
             return response()->json([
@@ -147,12 +147,12 @@ class PageController extends Controller
                 'message' => 'Page Data Not Found',
             ], 404);
         }
-    
+
         $postTitle = DynamicPost::where('id', $page->post_type)->value('post_title');
         if ($page->image) {
             $page->image = url('/uploads/page/' . $page->image);
         }
-    
+
         return response()->json([
             'status' => true,
             'code' => '200',
@@ -161,7 +161,6 @@ class PageController extends Controller
             'post_title' => $postTitle,
         ], 200);
     }
-    
 
     public function update(Request $request, $id)
     {
@@ -188,27 +187,33 @@ class PageController extends Controller
         //     'image' => 'nullable|file|mimes:jpg,jpeg,png,gif,svg|dimensions:max_width=1600,max_height=1600|dimensions:min_width=40,min_height=40',
         // ]);
 
-        if ($request->has('post_type')) {
+        if ($request->post_type) {
             $page->post_type = $request->post_type;
         }
-        if ($request->has('page_name')) {
+        if ($request->page_name) {
             $page->page_name = $request->page_name;
         }
-        if ($request->has('page_description')) {
+        if ($request->page_description) {
             $page->page_description = $request->page_description;
         }
+        if ($request->button_name) {
+            $page->button_name = $request->button_name;
+        }
+        if ($request->button_link) {
+            $page->button_link = $request->button_link;
+        }
 
-        if ($request->hasFile('image')) {
+        if ($request->image) {
             $pageImage = $request->image->getClientOriginalName();
 
             $request->image->move(public_path('/uploads/page'), $pageImage);
 
             $page->image = $pageImage;
         }
-        if ($request->has('ordering')) {
+        if ($request->ordering) {
             $page->ordering = $request->ordering;
         }
-        if ($request->has('deleted_at')) {
+        if ($request->deleted_at) {
             $page->deleted_at = $request->deleted_at;
         }
 
@@ -227,8 +232,6 @@ class PageController extends Controller
             ], 500);
         }
     }
-
-
 
     public function active(Request $request, $id)
     {
@@ -367,98 +370,14 @@ class PageController extends Controller
 
     /** This function used for the post show by page name create by ns */
 
-    // public function showByPageName($pageName)
-    // {
-    //     try {
-    //         $page = Page::where('page_name', $pageName)
-    //             ->where('deleted_at', 0)
-    //             ->where('status', 1)
-    //             ->first();
-    
-    //         if (!$page) {
-    //             return response()->json([
-    //                 'status' => false,
-    //                 'code' => '404',
-    //                 'message' => 'Page Data Not Found',
-    //             ], 404);
-    //         }
-    
-    //         if (!empty($page->image)) {
-    //             $page->image = url('uploads/page/' . $page->image);
-    //         }
-    
-    //         $postStores = PostStore::where('post_id', $page->post_type)
-    //             ->where('status', 1)
-    //             ->where('deleted_at', 0)
-    //             ->get();
-    
-    //         if ($postStores->isEmpty()) {
-    //             return response()->json([
-    //                 'status' => false,
-    //                 'code' => '404',
-    //                 'message' => 'Related Post Store Data Not Found',
-    //             ], 404);
-    //         }
-    
-    //         $allRestructuredData = [];
-    
-    //         foreach ($postStores as $postStore) {
-    //             $postStoreData = $postStore->toArray();
-                
-    //             if (isset($postStoreData['data'])) {
-    //                 $data = $postStoreData['data'];
-    //                 $transformedData = [];
-            
-    //                 foreach ($data as $key => $value) {
-    //                     $formattedKey = ucfirst(strtolower(preg_replace('/\s+/', '', $key)));
-            
-    //                     if (stripos($key, 'field_slug_') !== false) {
-    //                         $transformedData[$formattedKey] = $value;
-    //                     } elseif (stripos($key, 'image') !== false && !empty($value)) {
-    //                         $transformedData[$formattedKey] = url('uploads/dynamic_post_store/' . $value);
-    //                     } else {
-    //                         $transformedData[$formattedKey] = $value;
-    //                     }
-    //                 }
-            
-    //                 $postStoreData['data'] = $transformedData; 
-    //             }
-            
-    //             $allRestructuredData[] = $postStoreData;
-    //         }
-            
-    //         $pageData = $page->toArray();
-    //         $pageData['post_store'] = $allRestructuredData;
-            
-    //         $slugKey = str_replace('-', '_', $page->slug);
-    //         $pageData['slug'] = $slugKey;
-    
-    //         return response()->json([
-    //             'status' => true,
-    //             'code' => '200',
-    //             'message' => 'Page And Post Store Data Fetch Successfully',
-    //             'page' => $pageData,
-    //         ], 200);
-    
-    //     } catch (Exception $e) {
-    //         return response()->json([
-    //             'status' => false,
-    //             'code' => '500',
-    //             'message' => 'Internal Server Error',
-    //         ], 500);
-    //     }
-    // }
-    
-
-
-        public function showByPageName($pageName)
+    public function showByPageName($pageName)
     {
         try {
             $page = Page::where('page_name', $pageName)
                 ->where('deleted_at', 0)
                 ->where('status', 1)
                 ->first();
-    
+
             if (!$page) {
                 return response()->json([
                     'status' => false,
@@ -466,16 +385,16 @@ class PageController extends Controller
                     'message' => 'Page Data Not Found',
                 ], 404);
             }
-    
+
             if (!empty($page->image)) {
                 $page->image = url('uploads/page/' . $page->image);
             }
-    
+
             $postStores = PostStore::where('post_id', $page->post_type)
                 ->where('status', 1)
                 ->where('deleted_at', 0)
                 ->get();
-    
+
             if ($postStores->isEmpty()) {
                 return response()->json([
                     'status' => false,
@@ -483,193 +402,31 @@ class PageController extends Controller
                     'message' => 'Related Post Store Data Not Found',
                 ], 404);
             }
-    
+
             $allRestructuredData = [];
-    
+
             foreach ($postStores as $postStore) {
                 $postStoreData = $postStore->toArray();
-    
+
                 // Transform keys recursively
                 $postStoreData['data'] = $this->transformKeys($postStoreData['data']);
-    
+
                 $allRestructuredData[] = $postStoreData;
             }
-            
+
             $pageData = $page->toArray();
             $pageData['post_store'] = $allRestructuredData;
-            
+
             $slugKey = str_replace('-', '_', $page->slug);
             $pageData['slug'] = $slugKey;
-    
+
             return response()->json([
                 'status' => true,
                 'code' => '200',
                 'message' => 'Page And Post Store Data Fetch Successfully',
                 'page' => $pageData,
             ], 200);
-    
         } catch (Exception $e) {
-            return response()->json([
-                'status' => false,
-                'code' => '500',
-                'message' => 'Internal Server Error',
-            ], 500);
-        }
-    }
-
-    // private function transformKeys(array $data): array
-    // {
-    //     $transformedData = [];
-    //     foreach ($data as $key => $value) {
-    //         // Remove spaces from keys, except for those containing 'field_slug_'
-    //         $formattedKey = (stripos($key, 'field_slug_') === false) ? str_replace(' ', '', $key) : $key;
-
-    //         // If the value is an array, apply the transformation recursively
-    //         if (is_array($value)) {
-    //             $transformedData[$formattedKey] = $this->transformKeys($value);
-    //         } else {
-    //             $transformedData[$formattedKey] = $value;
-    //         }
-    //     }
-    //     return $transformedData;
-    // }
-    
-
-
-
-
-
-
-    public function postStore(Request $request, $postTitle)
-    {
-        try {
-            $user = Auth::user()->id;
-            if (!$user) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '401',
-                    'message' => 'User Not Authenticated',
-                ], 401);
-            }
-    
-            $postDynamicData = DynamicPost::where('post_title', $postTitle)->first();
-    
-            if (!$postDynamicData) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '404',
-                    'message' => 'Post Store Data Not Found',
-                ], 404);
-            }
-    
-            $requestData = $request->all();
-            $transformedRequest = [];
-    
-            foreach ($requestData as $key => $value) {
-                $labelKey = str_replace('_', ' ', $key);
-    
-                if (is_array($value)) {
-                    $transformedRequest[$labelKey] = json_encode($value);
-                } else {
-                    if (is_numeric($value)) {
-                        $value = $value + 0; 
-                    }
-                    $transformedRequest[$labelKey] = $value;
-                }
-    
-                $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
-            }
-    
-            // Create the PostStore entry first
-            $postStore = PostStore::create([
-                'post_name' => $postTitle,
-                'post_id' => $postDynamicData->id,
-                'data' => $transformedRequest,
-            ]);
-    
-            if (!$postStore) {
-                return response()->json([
-                    'status' => false,
-                    'code' => '404',
-                    'message' => 'Something Went Wrong'
-                ], 404);
-            }
-    
-            // Now use the PostStore id for the image file name
-            foreach ($request->files as $key => $file) {
-                if ($file->isValid()) {
-                    $destinationPath = public_path('uploads/dynamic_post_store');
-    
-                    // Create a new file name with the format postname_poststoreid_imagename.extension
-                    $originalName = $file->getClientOriginalName();
-                    $extension = $file->getClientOriginalExtension();
-                    $fileName = $postTitle . '_' . $postStore->id . '_' . pathinfo($originalName, PATHINFO_FILENAME) . '.' . $extension;
-    
-                    $file->move($destinationPath, $fileName);
-    
-                    $labelKey = str_replace('_', ' ', $key);
-                    $transformedRequest[$labelKey] = $fileName;
-                }
-            }
-            
-            foreach ($requestData as $key => $value) {
-                if (is_array($value)) {
-                    $sectionData = $value;
-                    foreach ($sectionData as $sectionKey => $sectionValue) {
-                        // Check if the section key corresponds to a file input
-                        if ($request->hasFile($sectionKey)) {
-                            $file = $request->file($sectionKey);
-                            if ($file->isValid()) {
-                                $destinationPath1 = public_path('uploads/dynamic_post_store');
-         
-                                // Create a new file name with the format postname_poststoreid_imagename.extension
-                                $originalName = $file->getClientOriginalName();
-                                $extension = $file->getClientOriginalExtension();
-                                $fileName = $postTitle . '_' . $postStore->id . '_' . pathinfo($originalName, PATHINFO_FILENAME) . '.' . $extension;
-         
-                                // Move the file to the destination path
-                                $file->move($destinationPath1, $fileName);
-         
-                                // Update the section data with the new file name
-                                $sectionData[$sectionKey] = $fileName;
-                            } else {
-                                Log::error('Invalid file for section key: ' . $sectionKey);
-                            }
-                        } else {
-                            Log::info('No file found for section key: ' . $sectionKey);
-                        }
-                    }
-                    // Ensure the transformedRequest is updated with the correct section data
-                    $transformedRequest[$key] = json_encode($sectionData);
-                }
-            }
-    
-            // Update the PostStore data with the new file names
-            $postStore->data = $transformedRequest;
-            $postStore->save();
-    
-            return response()->json([
-                'status' => true,
-                'code' => '200',
-                'message' => 'Post Store Data Added Successfully',
-            ], 200);
-        } catch (\Illuminate\Database\QueryException $e) {
-            Log::error('Database Query Error', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'request_data' => $request->all()
-            ]);
-            return response()->json([
-                'status' => false,
-                'code' => '500',
-                'message' => 'Database Error',
-            ], 500);
-        } catch (Exception $e) {
-            Log::error('General Error', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'request_data' => $request->all()
-            ]);
             return response()->json([
                 'status' => false,
                 'code' => '500',
@@ -687,7 +444,7 @@ class PageController extends Controller
                 ->where('deleted_at', 0)
                 ->orderBy('ordering', 'asc')
                 ->get();
-    
+
             if ($pages->isEmpty()) {
                 return response()->json([
                     'status' => false,
@@ -695,36 +452,36 @@ class PageController extends Controller
                     'message' => 'No Page Data Found',
                 ], 404);
             }
-    
+
             $allPagesData = [];
-    
+
             foreach ($pages as $page) {
                 if (!empty($page->image)) {
                     $page->image = url('uploads/page/' . $page->image);
                 }
-    
+
                 $postStores = PostStore::where('post_id', $page->post_type)
                     ->where('status', 1)
                     ->where('deleted_at', 0)
                     ->get();
-    
+
                 $allRestructuredData = [];
-    
+
                 foreach ($postStores as $postStore) {
                     $postStoreData = $postStore->toArray();
-    
+
                     // Transform keys recursively
                     $postStoreData = $this->transformKeys($postStoreData);
-    
+
                     $allRestructuredData[] = $postStoreData;
                 }
-    
+
                 $pageData = $page->toArray();
                 $pageData['post_store'] = $allRestructuredData;
-    
+
                 $slugKey = str_replace('-', '_', $page->slug);
                 $pageData['slug'] = $slugKey;
-    
+
                 $allPagesData[$slugKey] = $pageData;
             }
 
@@ -742,14 +499,14 @@ class PageController extends Controller
             ], 500);
         }
     }
-    
+
     // Helper function to transform keys
     private function transformKeys(array $data)
     {
         $transformedData = [];
         foreach ($data as $key => $value) {
             $normalizedKey = ucfirst(strtolower(preg_replace('/\s+/', '', $key)));
-            
+
             if (is_array($value)) {
                 // Recursively transform keys for nested arrays
                 $transformedData[$normalizedKey] = $this->transformKeys($value);
@@ -764,11 +521,6 @@ class PageController extends Controller
         }
         return $transformedData;
     }
-    
-    
-    
-
-
 
     /** This function used for the page status active or inactive create by ns  */
 
@@ -875,45 +627,43 @@ class PageController extends Controller
     }
 
     public function restore($id)
-{
-    try {
-        $user = Auth::user();
-        if (!$user) {
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User Not Authenticated',
+                ], 401);
+            }
+
+            $ids = explode(',', $id);
+            $ids = array_filter($ids);
+
+            $restoredCount = Page::whereIn('id', $ids)->where('deleted_at', 1)->update(['deleted_at' => 0]);
+
+            if ($restoredCount > 0) {
+                return response()->json([
+                    'status' => true,
+                    'code' => '200',
+                    'message' => 'Page Data Restored Successfully',
+                    'restored_count' => $restoredCount,
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'No Page Found To Restore',
+                ], 404);
+            }
+        } catch (Exception $e) {
             return response()->json([
                 'status' => false,
-                'code' => '401',
-                'message' => 'User Not Authenticated',
-            ], 401);
+                'code' => '500',
+                'message' => 'An Error Occurred',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        $ids = explode(',', $id);
-        $ids = array_filter($ids);
-
-        $restoredCount = Page::whereIn('id', $ids)->where('deleted_at', 1)->update(['deleted_at' => 0]);
-
-        if ($restoredCount > 0) {
-            return response()->json([
-                'status' => true,
-                'code' => '200',
-                'message' => 'Page Data Restored Successfully',
-                'restored_count' => $restoredCount,
-            ], 200);
-        } else {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'No Page Found To Restore',
-            ], 404);
-        }
-    } catch (Exception $e) {
-        return response()->json([
-            'status' => false,
-            'code' => '500',
-            'message' => 'An Error Occurred',
-            'error' => $e->getMessage(),
-        ], 500);
     }
 }
-}
-
-
