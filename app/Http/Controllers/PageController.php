@@ -203,7 +203,7 @@ class PageController extends Controller
             $page->button_link = $request->button_link;
         }
 
-        if ($request->image) {
+        if ($request->hasFile('image')) {
             $pageImage = $request->image->getClientOriginalName();
 
             $request->image->move(public_path('/uploads/page'), $pageImage);
