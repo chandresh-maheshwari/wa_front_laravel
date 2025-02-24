@@ -812,7 +812,7 @@ class PostStoreController extends Controller
     {
         try {
             Log::info('Update function called', ['id' => $id]);
-
+    
             $user = Auth::user();
             if (!$user) {
                 Log::warning('User not authenticated');
@@ -822,7 +822,7 @@ class PostStoreController extends Controller
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
-
+    
             // Retrieve the post to update
             $post = PostStore::where('id', $id)->where('deleted_at', 0)->first();
             if (!$post) {
@@ -833,7 +833,7 @@ class PostStoreController extends Controller
                     'message' => 'Post Store Data Not Found',
                 ], 404);
             }
-
+    
             // Retrieve the related DynamicPost data
             $postData = DynamicPost::where('id', $post->post_id)->first();
             if (!$postData) {
@@ -843,144 +843,82 @@ class PostStoreController extends Controller
                     'message' => 'Post Data Not Found',
                 ], 404);
             }
-
+    
             $requestData = $request->all();
             $transformedRequest = [];
-
+    
             // Process all fields except files
             foreach ($requestData as $key => $value) {
                 if (strpos($key, 'Section_image_') === 0) {
                     continue; // Skip fields starting with Section_image_
                 }
-
-                if (is_numeric($value)) {
-                    $transformedRequest[$key] = (string)$value;
-                } else if ($this->isJson($value)) {
-                    // Handle fields with JSON data (sections)
+    
+                if ($this->isJson($value)) {
                     $sectionData = json_decode($value, true);
-                    if (is_array($sectionData)) {
-                        $sectionTransformed = [];
-                        foreach ($sectionData as $sectionKey => $sectionValue) {
-                            $sectionTransformed[$sectionKey] = $sectionValue;
-                            $slugKey = 'field_slug_' . $this->convertToSlug($sectionKey);
-                            $sectionTransformed[$slugKey] = $this->convertToSlug($sectionKey);
-                        }
-                        $transformedRequest[$key] = $sectionTransformed;
+                    $sectionTransformed = [];
+                    foreach ($sectionData as $sectionKey => $sectionValue) {
+                        $sectionTransformed[$sectionKey] = $sectionValue;
+                        $slugKey = 'field_slug_' . $this->convertToSlug($sectionKey);
+                        $sectionTransformed[$slugKey] = $this->convertToSlug($sectionKey);
                     }
+                    $transformedRequest[$key] = $sectionTransformed;
                 } else {
-                    // For other fields
                     $labelKey = str_replace('_', ' ', $key);
                     $transformedRequest[$labelKey] = $value;
                     $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
                 }
             }
-
+    
             // Handle file uploads
             foreach ($request->files as $key => $file) {
                 if (strpos($key, 'Section_image_') === 0) {
                     continue; // Skip files with keys starting with Section_image_
                 }
-
+    
                 if ($file->isValid()) {
                     $destinationPath = public_path('uploads/dynamic_post_store');
                     $originalName = $file->getClientOriginalName();
                     $extension = $file->getClientOriginalExtension();
-                    $fileNameOuter = $post->post_name . '_' . $post->id  . '_' . pathinfo($originalName, PATHINFO_FILENAME) . '.' . $extension;
+                    $postname = str_replace(' ', '_', $post->post_name);
+                    $fileNameOuter = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
                     $file->move($destinationPath, $fileNameOuter);
-
-
-
-                    // If not updated in a section, update as a normal field
-                    // if (!$updated) {
+    
                     $labelKey = str_replace('_', ' ', $key);
                     $transformedRequest[$labelKey] = $fileNameOuter;
                     $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
-                    // }
                 }
             }
-
-            $updated = false;
-            Log::info('out foreach');
+    
+            // Check if the file belongs to a section
             foreach ($transformedRequest as $sectionKey => $sectionValue) {
-                Log::info($sectionValue);
-
-                // if(is_array($sectionValue)){
-                //     Log::info('is array');
-                // }else{
-                //     Log::info('not arrray');
-                // }
-                // if(array_key_exists($key, $sectionValue)){
-                //     Log::info('aaaaaaaaaaaaaaa');
-                // }else{
-                //     Log::info('bbbbbbbbbbbb');
-                // }
-
-
-                Log::info("out of is array");
                 if (is_array($sectionValue) && array_key_exists($sectionKey, $transformedRequest)) {
-                    Log::info("IN IF CONDITION" . $sectionKey);
                     foreach ($request->files as $sectionkeyFile => $sectionfile) {
-                        Log::info("IN FOREACH CONDITION");
                         if (strpos($sectionkeyFile, $sectionKey) > 0) {
-
-                            Log::info("Section key==");
-                            Log::info($sectionKey);
-                            Log::info("Section key with underscor==");
-                            Log::info($sectionkeyFile);
-
                             if ($sectionfile->isValid()) {
                                 $destinationPath = public_path('uploads/dynamic_post_store');
                                 $originalName = $sectionfile->getClientOriginalName();
                                 $extension = $sectionfile->getClientOriginalExtension();
-                                $fileName = $post->post_name . '_' . $post->id . '_' . pathinfo($originalName, PATHINFO_FILENAME) . '.' . $extension;
-                                $sectionfile->move($destinationPath, $fileName);
-
-                                // Check if the file belongs to a section
-                                $updated = false;
-
-                                // $fieldname = str_replace("Section_image_" . $sectionKey . "_", "", $sectionkeyFile);
                                 $fieldname = str_replace("_", " ", str_replace("Section_image_" . $sectionKey . "_", "", $sectionkeyFile));
-
-
-                                // Log::info("Field name after remove str=");
-                                Log::info("filename==" . $fieldname);
-
+                                $fieldnameforimg = str_replace(' ', '_', $fieldname);
+                                $postname = str_replace(' ', '_', $post->post_name);
+                                $fileName = $postname . '_' . $post->id . '_' . $fieldnameforimg . '.' . $extension;
+                                $sectionfile->move($destinationPath, $fileName);
+    
                                 if ($fieldname != "") {
-                                    // $sectionIndex = $matches[1];
-                                    // $fieldName = $matches[2];
-                                    // $sectionKey = "Section_$sectionIndex";
-                                    log::info('AAAAAAAAAAAAAAAAAAAAAAAAAAAA');
-                                    log::info($sectionKey);
                                     if (isset($transformedRequest[$sectionKey])) {
                                         $transformedRequest[$sectionKey][$fieldname] = $fileName;
                                     }
                                 }
-                                // else {
-                                //     $labelKey = str_replace('_', ' ', $sectionkeyFile);
-                                //     $transformedRequest[$labelKey] = $fileName;
-                                //     $transformedRequest['field_slug_' . $this->convertToSlug($sectionkeyFile)] = $this->convertToSlug($sectionkeyFile);
-                                // }
-                                // Log::info("IN is array");
-                                // Log::info($sectionValue);
-                                // Log::info($key);
-                                // $sectionValue[$key] = $fileName;
-                                // $sectionValue['field_slug_' . $key] = $this->convertToSlug($key);
-                                // $updated = true;
-                                // break;
                             }
-                            // continue; // Skip files with keys starting with Section_image_
                         }
                     }
                 }
             }
-
+    
             // Update the PostStore data with the new file names
             $post->data = $transformedRequest;
             $post->save();
-            // Update the post data
-            // $post->data = $existingData;
-
-            // Save the updated post data
+    
             if ($post->save()) {
                 return response()->json([
                     'status' => true,
@@ -1321,43 +1259,43 @@ class PostStoreController extends Controller
 
 
     public function restore($id)
-{
-    try {
-        $user = Auth::user();
-        if (!$user) {
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User Not Authenticated',
+                ], 401);
+            }
+
+            $ids = explode(',', $id);
+            $ids = array_filter($ids);
+
+            $restoredCount = PostStore::whereIn('id', $ids)->where('deleted_at', 1)->update(['deleted_at' => 0]);
+
+            if ($restoredCount > 0) {
+                return response()->json([
+                    'status' => true,
+                    'code' => '200',
+                    'message' => 'Post Store Data Restored Successfully',
+                    'restored_count' => $restoredCount,
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'No Post Store Found To Restore',
+                ], 404);
+            }
+        } catch (Exception $e) {
             return response()->json([
                 'status' => false,
-                'code' => '401',
-                'message' => 'User Not Authenticated',
-            ], 401);
+                'code' => '500',
+                'message' => 'An Error Occurred',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        $ids = explode(',', $id);
-        $ids = array_filter($ids);
-
-        $restoredCount = PostStore::whereIn('id', $ids)->where('deleted_at', 1)->update(['deleted_at' => 0]);
-
-        if ($restoredCount > 0) {
-            return response()->json([
-                'status' => true,
-                'code' => '200',
-                'message' => 'Post Store Data Restored Successfully',
-                'restored_count' => $restoredCount,
-            ], 200);
-        } else {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'No Post Store Found To Restore',
-            ], 404);
-        }
-    } catch (Exception $e) {
-        return response()->json([
-            'status' => false,
-            'code' => '500',
-            'message' => 'An Error Occurred',
-            'error' => $e->getMessage(),
-        ], 500);
     }
-}
 }
