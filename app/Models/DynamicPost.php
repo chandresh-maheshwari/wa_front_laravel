@@ -29,14 +29,16 @@ class DynamicPost extends Model
     ];
 
     public static function boot()
-    {
-        parent::boot();
+{
+    parent::boot();
 
-        static::saving(function ($dynamicPost) {
-
+    static::saving(function ($dynamicPost) {
+        if (!$dynamicPost->exists) {
             $dynamicPost->slug = Str::slug(str_replace(' ', '_', $dynamicPost->post_title));
-        });
-    }
+        }
+    });
+}
+
 
     public function savePost($data)
     {
