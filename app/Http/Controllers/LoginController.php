@@ -38,7 +38,7 @@ class LoginController extends Controller
         $user->save();
         
         // $expireMinutes = $remember; 
-        $expireToken = ['exp' => now()->addMinutes(60)->timestamp];
+        $expireToken = ['exp' => now()->addMinutes(30)->timestamp];
         $add_token = JWTAuth::claims($expireToken)->fromUser($user);
         $user->add_token = $add_token;
         $user->save();
