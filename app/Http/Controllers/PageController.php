@@ -75,13 +75,19 @@ class PageController extends Controller
         $page->button_name = $request->button_name;
         $page->button_link = $request->button_link;
 
-        if ($request->hasFile('image')) {
-            $pageImage = $request->image->getClientOriginalName();
-            $request->image->move(public_path('/uploads/page'), $pageImage);
-            $page->image = $pageImage;
-        } else {
-            $page->image = null;
-        }
+        if ($page->save()) {
+            $pageId = $page->id;
+            if ($request->hasFile('image')) {
+                $extension = $request->image->getClientOriginalExtension();
+                $imageName = $pageId . '_' . strtolower(str_replace(' ', '_', $request->page_name)) . '._.' . $extension;
+    
+                $request->image->move(public_path('/uploads/page'), $imageName);
+    
+                $page->image = $imageName;
+                $page->save();
+            } else {
+                $page->image = null;
+            }
 
         $page->ordering = $request['ordering'];
         $page->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
@@ -99,7 +105,9 @@ class PageController extends Controller
                 'message' => 'Something Went Wrong'
             ], 404);
         }
+        }
     }
+    
 
     public function show($id)
     {
