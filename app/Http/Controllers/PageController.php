@@ -512,23 +512,31 @@ class PageController extends Controller
     private function transformKeys(array $data)
     {
         $transformedData = [];
+        $fileExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'pdf', 'doc', 'docx'];
+    
         foreach ($data as $key => $value) {
             $normalizedKey = ucfirst(strtolower(preg_replace('/\s+/', '', $key)));
-
+    
             if (is_array($value)) {
-                // Recursively transform keys for nested arrays
                 $transformedData[$normalizedKey] = $this->transformKeys($value);
             } else {
-                // Check if the key is related to an image and transform the URL
-                if (stripos($key, 'image') !== false && !empty($value)) {
-                    $transformedData[$normalizedKey] = url('/uploads/dynamic_post_store/' . $value);
+                if (!empty($value) && is_string($value)) {
+                    $fileExtension = strtolower(pathinfo($value, PATHINFO_EXTENSION));
+    
+                    if (in_array($fileExtension, $fileExtensions)) {
+                        $transformedData[$normalizedKey] = url('/uploads/dynamic_post_store/' . $value);
+                    } else {
+                        $transformedData[$normalizedKey] = $value;
+                    }
                 } else {
                     $transformedData[$normalizedKey] = $value;
                 }
             }
         }
+        
         return $transformedData;
     }
+    
 
     /** This function used for the page status active or inactive create by ns  */
 
