@@ -442,11 +442,11 @@ class PostStoreController extends Controller
                                 $destinationPath = public_path('uploads/dynamic_post_store');
                                 $originalName = $sectionfile->getClientOriginalName();
                                 $extension = $sectionfile->getClientOriginalExtension();
-                                
+
                                 // Check if the file belongs to a section
                                 $updated = false;
-                                
-                                $fieldname = str_replace("_", " ", str_replace("Section_image_" . $sectionKey . "_", "", $sectionkeyFile));                                
+
+                                $fieldname = str_replace("_", " ", str_replace("Section_image_" . $sectionKey . "_", "", $sectionkeyFile));
                                 $fieldnameforimg = str_replace(' ', '_', $fieldname);
                                 $postname = str_replace(' ', '_', $postTitle);
                                 $fileName = $postname . '_' . $postStore->id . '_' . $fieldnameforimg . '.' . $extension;
@@ -454,7 +454,7 @@ class PostStoreController extends Controller
                                 $sectionfile->move($destinationPath, $fileName);
 
 
-                                
+
                                 // Log::info("Field name after remove str=");
                                 Log::info("filename==" . $fieldname);
 
@@ -812,7 +812,7 @@ class PostStoreController extends Controller
     {
         try {
             Log::info('Update function called', ['id' => $id]);
-    
+
             $user = Auth::user();
             if (!$user) {
                 Log::warning('User not authenticated');
@@ -822,7 +822,7 @@ class PostStoreController extends Controller
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
-    
+
             // Retrieve the post to update
             $post = PostStore::where('id', $id)->where('deleted_at', 0)->first();
             if (!$post) {
@@ -833,7 +833,7 @@ class PostStoreController extends Controller
                     'message' => 'Post Store Data Not Found',
                 ], 404);
             }
-    
+
             // Retrieve the related DynamicPost data
             $postData = DynamicPost::where('id', $post->post_id)->first();
             if (!$postData) {
@@ -843,16 +843,16 @@ class PostStoreController extends Controller
                     'message' => 'Post Data Not Found',
                 ], 404);
             }
-    
+
             $requestData = $request->all();
             $transformedRequest = [];
-    
+
             // Process all fields except files
             foreach ($requestData as $key => $value) {
                 if (strpos($key, 'Section_image_') === 0) {
                     continue; // Skip fields starting with Section_image_
                 }
-    
+
                 if ($this->isJson($value)) {
                     $sectionData = json_decode($value, true);
                     $sectionTransformed = [];
@@ -868,13 +868,13 @@ class PostStoreController extends Controller
                     $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
                 }
             }
-    
+
             // Handle file uploads
             foreach ($request->files as $key => $file) {
                 if (strpos($key, 'Section_image_') === 0) {
                     continue; // Skip files with keys starting with Section_image_
                 }
-    
+
                 if ($file->isValid()) {
                     $destinationPath = public_path('uploads/dynamic_post_store');
                     $originalName = $file->getClientOriginalName();
@@ -882,13 +882,13 @@ class PostStoreController extends Controller
                     $postname = str_replace(' ', '_', $post->post_name);
                     $fileNameOuter = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
                     $file->move($destinationPath, $fileNameOuter);
-    
+
                     $labelKey = str_replace('_', ' ', $key);
                     $transformedRequest[$labelKey] = $fileNameOuter;
                     $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
                 }
             }
-    
+
             // Check if the file belongs to a section
             foreach ($transformedRequest as $sectionKey => $sectionValue) {
                 if (is_array($sectionValue) && array_key_exists($sectionKey, $transformedRequest)) {
@@ -903,7 +903,7 @@ class PostStoreController extends Controller
                                 $postname = str_replace(' ', '_', $post->post_name);
                                 $fileName = $postname . '_' . $post->id . '_' . $fieldnameforimg . '.' . $extension;
                                 $sectionfile->move($destinationPath, $fileName);
-    
+
                                 if ($fieldname != "") {
                                     if (isset($transformedRequest[$sectionKey])) {
                                         $transformedRequest[$sectionKey][$fieldname] = $fileName;
@@ -914,11 +914,11 @@ class PostStoreController extends Controller
                     }
                 }
             }
-    
+
             // Update the PostStore data with the new file names
             $post->data = $transformedRequest;
             $post->save();
-    
+
             if ($post->save()) {
                 return response()->json([
                     'status' => true,
@@ -1033,89 +1033,88 @@ class PostStoreController extends Controller
      * If the post is active, it will be deactivated. create by ns
      */
 
-     
 
-     public function active(Request $request, $id)
-     {
-         try {
-             // Log the user and request data
-             Log::info('User:', ['user' => Auth::user()]); 
-             Log::info('Request Data:', ['id' => $id, 'status' => $request->input('status')]);
-             
-             $user = Auth::user();
-             if (!$user) {
-                 return response()->json([
-                     'status' => false,
-                     'code' => '401',
-                     'message' => 'User Not Authenticated',
-                 ], 401);
-             }
-     
-             $idsArray = explode(',', $id);
-             Log::info('IDs Array:', ['ids' => $idsArray]);
-     
-             // Validation
-             $validatedData = Validator::make(
-                 ['ids' => $idsArray],
-                 ['ids' => 'required|array|min:1'],
-                 ['ids.*' => 'integer|exists:post_stores,id']
-             );
-     
-             if ($validatedData->fails()) {
-                 return response()->json([
-                     'status' => false,
-                     'code' => '422',
-                     'message' => 'Validation Failed',
-                     'errors' => $validatedData->errors(),
-                 ], 422);
-             }
-     
-             $posts = postStore::whereIn('id', $idsArray)->get();
-             Log::info('Fetched Posts:', ['posts' => $posts]);
-     
-             if ($posts->isEmpty()) {
-                 return response()->json([
-                     'status' => false,
-                     'code' => '404',
-                     'message' => 'No Records Found',
-                 ], 404);
-             }
-     
-             $newStatus = (int) $request->input('status'); 
-             Log::info('New Status:', ['status' => $newStatus]);
-     
-            
-             if ($newStatus !== null && in_array($newStatus, [0, 1])) {
-                 // Log the update query
-                 Log::info('Updating Status for IDs:', ['ids' => $idsArray, 'status' => $newStatus]);
-     
-                 // Update status in batch
-                 postStore::whereIn('id', $idsArray)->update(['status' => $newStatus]);
-     
-                 return response()->json([
-                     'status' => true,
-                     'code' => '200',
-                     'message' => 'Post Store Data Updated Successfully',
-                 ]);
-             } else {
-                 return response()->json([
-                     'status' => false,
-                     'code' => '422',
-                     'message' => 'Invalid Status Value',
-                 ], 422);
-             }
-     
-         } catch (\Exception $e) {
-             Log::error('Error occurred:', ['error' => $e->getMessage()]);
-             return response()->json([
-                 'status' => false,
-                 'code' => '500',
-                 'message' => 'An Error occurred',
-                 'error' => $e->getMessage(),
-             ], 500);
-         }
-     }
-     
+
+    public function active(Request $request, $id)
+    {
+        try {
+            // Log the user and request data
+            Log::info('User:', ['user' => Auth::user()]);
+            Log::info('Request Data:', ['id' => $id, 'status' => $request->input('status')]);
+
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User Not Authenticated',
+                ], 401);
+            }
+
+            $idsArray = explode(',', $id);
+            Log::info('IDs Array:', ['ids' => $idsArray]);
+
+            // Validation
+            $validatedData = Validator::make(
+                ['ids' => $idsArray],
+                ['ids' => 'required|array|min:1'],
+                ['ids.*' => 'integer|exists:post_stores,id']
+            );
+
+            if ($validatedData->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '422',
+                    'message' => 'Validation Failed',
+                    'errors' => $validatedData->errors(),
+                ], 422);
+            }
+
+            $posts = postStore::whereIn('id', $idsArray)->get();
+            Log::info('Fetched Posts:', ['posts' => $posts]);
+
+            if ($posts->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'No Records Found',
+                ], 404);
+            }
+
+            $newStatus = (int) $request->input('status');
+            Log::info('New Status:', ['status' => $newStatus]);
+
+
+            if ($newStatus !== null && in_array($newStatus, [0, 1])) {
+                // Log the update query
+                Log::info('Updating Status for IDs:', ['ids' => $idsArray, 'status' => $newStatus]);
+
+                // Update status in batch
+                postStore::whereIn('id', $idsArray)->update(['status' => $newStatus]);
+
+                return response()->json([
+                    'status' => true,
+                    'code' => '200',
+                    'message' => 'Post Store Data Updated Successfully',
+                ]);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'code' => '422',
+                    'message' => 'Invalid Status Value',
+                ], 422);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error occurred:', ['error' => $e->getMessage()]);
+            return response()->json([
+                'status' => false,
+                'code' => '500',
+                'message' => 'An Error occurred',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 
 
     /** 
@@ -1273,22 +1272,17 @@ class PostStoreController extends Controller
             $ids = explode(',', $id);
             $ids = array_filter($ids);
 
-            $restoredCount = PostStore::whereIn('id', $ids)->where('deleted_at', 1)->update(['deleted_at' => 0]);
-
-            if ($restoredCount > 0) {
+            foreach ($ids as $singlneid) {
+                $restoredCount = PostStore::where('id', $singlneid)
+                    ->where('deleted_at', 1)
+                    ->update(['deleted_at' => 0]);
+            }
                 return response()->json([
                     'status' => true,
                     'code' => '200',
                     'message' => 'Post Store Data Restored Successfully',
                     'restored_count' => $restoredCount,
                 ], 200);
-            } else {
-                return response()->json([
-                    'status' => false,
-                    'code' => '404',
-                    'message' => 'No Post Store Found To Restore',
-                ], 404);
-            }
         } catch (Exception $e) {
             return response()->json([
                 'status' => false,
