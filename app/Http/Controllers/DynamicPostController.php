@@ -1,25 +1,24 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\DynamicPost;
 use App\Models\PostStore;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use PhpParser\Node\Expr\PostDec;
 
 class DynamicPostController extends Controller
 {
     protected $request;
     protected $dynamicPost1;
-    function __construct(Request $request, DynamicPost $dynamicPost)
+    public function __construct(Request $request, DynamicPost $dynamicPost)
     {
         $this->request = $request;
         $this->dynamicPost1 = $dynamicPost;
     }
 
-    /** 
+    /**
      * List all posts that are not deleted.
      * Ensures the user is authenticated before fetching the posts. create by ns
      */
@@ -28,7 +27,7 @@ class DynamicPostController extends Controller
     {
         try {
             $user = Auth::user()->id;
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => false,
                     'code' => '401',
@@ -63,7 +62,7 @@ class DynamicPostController extends Controller
         }
     }
 
-    /** 
+    /**
      * Store a new post in the database.
      * Validates the request data before saving. create by ns
      */
@@ -72,7 +71,7 @@ class DynamicPostController extends Controller
     {
         try {
             $user = Auth::user();
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => false,
                     'code' => '401',
@@ -82,15 +81,28 @@ class DynamicPostController extends Controller
 
             $this->validate($request, [
                 'post_title' => 'required|string|max:255',
-                'post_description' => 'required',
-                // 'post_description.*.label' => 'required|string',
-                // 'post_description.*.type' => 'required|string',
+                'post_description' => 'required|array',
                 'post_type' => 'required|string',
-                'ordering' => 'sometimes|integer|min:1',
+                'ordering' => 'integer|min:1',
             ]);
 
             $postData = $request['post_description'];
             $postData1 = $request['post_type'];
+
+            $generateSlugs = function (&$data) use (&$generateSlugs) {
+                foreach ($data as $key => &$value) {
+                    if (is_array($value)) {
+                        $generateSlugs($value);
+                    } elseif ($key === 'label') {
+                        $slug = str_replace(' ', '', $value); 
+                        $slugKey = 'field_slug_' . $slug;
+                        $data[$slugKey] = $slug;
+                    }
+                }
+            };
+
+            // Apply slug generation to post description
+            $generateSlugs($postData);
 
             $ordering = $request['ordering'] ?? 1;
             if ($ordering == 0) {
@@ -101,7 +113,7 @@ class DynamicPostController extends Controller
                 'post_title' => $request['post_title'],
                 'post_description' => $postData,
                 'post_type' => $postData1,
-                'ordering' => $ordering
+                'ordering' => $ordering,
             ]);
 
             if (isset($saveData) && $saveData !== false) {
@@ -114,7 +126,7 @@ class DynamicPostController extends Controller
                 return response()->json([
                     'status' => false,
                     'code' => '404',
-                    'message' => 'Something Went Wrong'
+                    'message' => 'Something Went Wrong',
                 ], 404);
             }
         } catch (\Exception $e) {
@@ -127,7 +139,7 @@ class DynamicPostController extends Controller
         }
     }
 
-    /** 
+    /**
      * Display a specific post by its ID.
      * Ensures the post is not deleted before displaying. create by ns
      */
@@ -136,7 +148,7 @@ class DynamicPostController extends Controller
     {
         try {
             $user = Auth::user()->id;
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => false,
                     'code' => '401',
@@ -145,7 +157,7 @@ class DynamicPostController extends Controller
             }
 
             $post = DynamicPost::where('id', $id)->where('deleted_at', 0)->first();
-            if (!$post) {
+            if (! $post) {
                 return response()->json([
                     'status' => false,
                     'code' => '404',
@@ -168,7 +180,7 @@ class DynamicPostController extends Controller
         }
     }
 
-    /** 
+    /**
      * Retrieve a post by its ID for editing.
      * Ensures the post is not deleted before fetching. create by ns
      */
@@ -177,7 +189,7 @@ class DynamicPostController extends Controller
     {
         try {
             $user = Auth::user()->id;
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => false,
                     'code' => '401',
@@ -186,7 +198,7 @@ class DynamicPostController extends Controller
             }
 
             $data = DynamicPost::where('deleted_at', 0)->find($id);
-            if (!$data) {
+            if (! $data) {
                 return response()->json([
                     'status' => false,
                     'code' => '404',
@@ -209,77 +221,156 @@ class DynamicPostController extends Controller
         }
     }
 
-    /** 
+    /**
      * Update a post's title and description by its ID.
      * Ensures the post is not deleted before updating. create by ns
      */
+    public function update(Request $request, $id)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User Not Authenticated',
+                ], 401);
+            }
 
-     public function update(Request $request, $id)
-     {
-         try {
-             $user = Auth::user();
-             if (!$user) {
-                 return response()->json([
-                     'status' => false,
-                     'code' => '401',
-                     'message' => 'User Not Authenticated',
-                 ], 401);
-             }
-     
-             $post = DynamicPost::where('id', $id)->where('deleted_at', 0)->first();
-             if (!$post) {
-                 return response()->json([
-                     'status' => false,
-                     'code' => '404',
-                     'message' => 'Dynamic Post Data Not Found',
-                 ], 404);
-             }
-     
-             $oldPostTitle = $post->post_title; // Store the old post title
-             $post->post_title = $request['post_title'];
-     
-             if ($request->has('post_description')) {
-                 $post->post_description = $request['post_description'];
-             }
-     
-             if ($request->has('post_type')) {
-                 $post->post_type = $request['post_type'];
-             }
-     
-             if ($request->has('ordering')) {
-                 $post->ordering = $request['ordering'];
-             }
-     
-             if ($post->save()) {
-                 // Update the post_name in the post_store table where it matches the old post title
-                 if ($oldPostTitle !== $post->post_title) {
-                     PostStore::where('post_name', $oldPostTitle)->update(['post_name' => $post->post_title]);
-                 }
-     
-                 return response()->json([
-                     'status' => true,
-                     'code' => '200',
-                     'message' => 'Dynamic Post Data Updated Successfully',
-                 ], 200);
-             } else {
-                 return response()->json([
-                     'status' => false,
-                     'code' => '500',
-                     'message' => 'Failed To Update Dynamic Post',
-                 ], 500);
-             }
-         } catch (\Exception $e) {
-             return response()->json([
-                 'status' => false,
-                 'code' => '500',
-                 'message' => 'An Error Occurred',
-                 'error' => $e->getMessage(),
-             ], 500);
-         }
-     }
+            $post = DynamicPost::where('id', $id)->where('deleted_at', 0)->first();
+            if (!$post) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'Dynamic Post Data Not Found',
+                ], 404);
+            }
 
+            $oldPostTitle = $post->post_title; 
+            $post->post_title = $request['post_title'];
 
-    /** 
+            if ($request->has('post_description')) {
+                $newDescription = $request['post_description'];
+                $existingDescription = $post->post_description;
+
+                // Function to generate slugs and handle nested objects
+                $generateSlugs = function (&$data, $existingData) use (&$generateSlugs) {
+                    foreach ($data as $key => &$value) {
+                        if (is_array($value)) {
+                            // If it's an array (nested object), recursively call the function to update the nested structure
+                            $generateSlugs($value, $existingData[$key] ?? []);
+                        } elseif ($key === 'label') {
+                            $slug = str_replace(' ', '', $value); 
+                            $slugKey = 'field_slug_' . $slug;
+
+                            // Preserve existing slug if it exists
+                            foreach ($existingData as $existingKey => $existingValue) {
+                                if (strpos($existingKey, 'field_slug_') === 0) {
+                                    $data[$existingKey] = $existingValue;
+                                }
+                            }
+                        }
+                    }
+                };
+
+                // Apply slug generation to new description
+                $generateSlugs($newDescription, $existingDescription);
+
+                // Update related PostStore names if they exist
+                $updatePostStoreLabels = function ($newData, $existingData, $postId) use (&$updatePostStoreLabels) {
+                    foreach ($newData as $key => $value) {
+                        if (isset($value['label'])) {
+                            $oldLabel = $existingData[$key]['label'] ?? null;
+                            $newLabel = $value['label'];
+                            if ($oldLabel && $oldLabel !== $newLabel) {
+
+                                // Fetch the data from PostStore
+                                $postStores = PostStore::where('post_id', $postId)->get();
+
+                                foreach ($postStores as $postStore) {
+                                    $postData = $postStore->data;
+
+                                    if (isset($postData[$oldLabel])) {
+                                        $postData[$newLabel] = $postData[$oldLabel];
+                                        unset($postData[$oldLabel]);
+                                    }
+
+                                    // Handle nested objects
+                                    $updateNestedLabels = function (&$data) use ($oldLabel, $newLabel, &$updateNestedLabels) {
+                                        foreach ($data as $key => &$value) {
+                                            if (is_array($value)) {
+                                                if (isset($value[$oldLabel])) {
+                                                    $value[$newLabel] = $value[$oldLabel];
+                                                    unset($value[$oldLabel]);
+                                                }
+                                                $updateNestedLabels($value);        
+                                            }
+                                        }
+                                    };
+
+                                    $updateNestedLabels($postData);
+                                    $postStore->data = $postData;
+
+                                    if (!$postStore->save()) {
+                                        Log::error("Failed to save updated PostStore data for post_id: {$postStore->post_id}");
+                                    } else {
+                                        Log::info("Successfully saved updated PostStore data for post_id: {$postStore->post_id}");
+                                    }
+                                }
+                            }
+                        }
+
+                        // Recursively check nested structures
+                        if (is_array($value)) {
+                            $updatePostStoreLabels($value, $existingData[$key] ?? [], $postId);
+                        }
+                    }
+                };
+
+                // Apply label updates to PostStore
+                $updatePostStoreLabels($newDescription, $existingDescription, $id);
+
+                // Update post_description with the new one
+                $post->post_description = $newDescription;
+            }
+
+            if ($request->has('post_type')) {
+                $post->post_type = $request['post_type'];
+            }
+
+            if ($request->has('ordering')) {
+                $post->ordering = $request['ordering'];
+            }
+
+            if ($post->save()) {
+                // Update the post_name in the post_store table where it matches the old post title
+                if ($oldPostTitle !== $post->post_title) {
+                    PostStore::where('post_name', $oldPostTitle)->update(['post_name' => $post->post_title]);
+                }
+
+                return response()->json([
+                    'status' => true,
+                    'code' => '200',
+                    'message' => 'Dynamic Post Data Updated Successfully',
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'code' => '500',
+                    'message' => 'Failed To Update Dynamic Post',
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'code' => '500',
+                'message' => 'An Error Occurred',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Soft delete a post by its title.
      * If the post is already deleted, it returns a message indicating so. create by ns
      */
@@ -288,7 +379,7 @@ class DynamicPostController extends Controller
     {
         try {
             $user = Auth::user();
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => false,
                     'code' => '401',
@@ -354,8 +445,7 @@ class DynamicPostController extends Controller
         }
     }
 
-
-    /** 
+    /**
      * Toggle the active status of a post by its title.
      * If the post is active, it will be deactivated. create by ns
      */
@@ -363,22 +453,22 @@ class DynamicPostController extends Controller
     {
         try {
             $user = Auth::user();
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status' => false,
                     'code' => '401',
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
-    
+
             $idsArray = explode(',', $id);
-    
+
             $validatedData = Validator::make(
                 ['ids' => $idsArray],
                 ['ids' => 'required|array|min:1'],
                 ['ids.*' => 'integer|exists:dynamic_posts,id']
             );
-    
+
             if ($validatedData->fails()) {
                 return response()->json([
                     'status' => false,
@@ -387,9 +477,9 @@ class DynamicPostController extends Controller
                     'errors' => $validatedData->errors(),
                 ], 422);
             }
-    
+
             $posts = DynamicPost::whereIn('id', $idsArray)->get();
-    
+
             if ($posts->isEmpty()) {
                 return response()->json([
                     'status' => false,
@@ -397,14 +487,14 @@ class DynamicPostController extends Controller
                     'message' => 'No Records Found',
                 ], 404);
             }
-    
+
             // Loop through each post and toggle the status
             $posts->each(function ($post) {
                 // Toggle the status: if it's 1, set to 0; if it's 0, set to 1
                 $post->status = $post->status == 1 ? 0 : 1;
                 $post->save();
             });
-    
+
             return response()->json([
                 'status' => true,
                 'code' => '200',
@@ -419,8 +509,6 @@ class DynamicPostController extends Controller
             ], 500);
         }
     }
-    
-
 
     public function restore($id)
     {
@@ -428,8 +516,8 @@ class DynamicPostController extends Controller
             $user = Auth::user();
             if (! $user) {
                 return response()->json([
-                    'status'  => false,
-                    'code'    => '401',
+                    'status' => false,
+                    'code' => '401',
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
@@ -458,19 +546,24 @@ class DynamicPostController extends Controller
                 ], 200);
             } else {
                 return response()->json([
-                    'status'  => false,
-                    'code'    => '404',
+                    'status' => false,
+                    'code' => '404',
                     'message' => 'No Dynamic Post Found To Restore',
                 ], 404);
             }
         } catch (\Exception $e) {
             return response()->json([
-                'status'  => false,
-                'code'    => '500',
+                'status' => false,
+                'code' => '500',
                 'message' => 'An Error Occurred',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
-}
 
+    private function isJson($string)
+    {
+        json_decode($string);
+        return (json_last_error() == JSON_ERROR_NONE);
+    }
+}

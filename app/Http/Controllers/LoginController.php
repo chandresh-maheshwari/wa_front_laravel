@@ -45,6 +45,8 @@ class LoginController extends Controller
         $userData = $user->toArray();
         unset($userData['add_token']);
 
+
+        
         return response()->json([
             'status' => true,
             'code' => '200',
