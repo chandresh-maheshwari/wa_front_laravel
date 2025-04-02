@@ -596,7 +596,7 @@ class PostStoreController extends Controller
                         'file_basename' => $fileName, 
                     ]);
 
-                    $labelKey = str_replace('_', ' ', $key);
+                    $labelKey = $key;
                     $transformedRequest[$labelKey] = $fileName;
                     $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
 
