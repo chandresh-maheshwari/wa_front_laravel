@@ -522,9 +522,6 @@ class PostStoreController extends Controller
 
                     preg_match('/data:image\/(.*?);/', $type, $matches);
                     $extension = $matches[1] ?? 'jpg'; // Default to jpg if no extension found
-                    if (strpos($key, 'Section ') === 0) {
-                        $key = str_replace(' ', '_', $key);
-                    }
 
                     if (strpos($key, 'Section_image_') === 0) {
                         continue;
@@ -544,7 +541,7 @@ class PostStoreController extends Controller
                     file_put_contents($destinationPath . '/' . $fileNameOuter, $imageData);
 
                     // Handle dynamic fields
-                    $labelKey = str_replace('_', ' ', $key);
+                    $labelKey = $key;
                     $transformedRequest[$labelKey]   = $fileNameOuter;
                     $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
                 }
@@ -569,7 +566,7 @@ class PostStoreController extends Controller
                     $file->move($destinationPath, $fileNameOuter);
 
                     // Handle dynamic fields
-                    $labelKey = str_replace('_', ' ', $key);
+                    $labelKey = $key;
                     $transformedRequest[$labelKey] = $fileNameOuter;
                     $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
                 }
@@ -586,7 +583,7 @@ class PostStoreController extends Controller
                             $individualFile->move($destinationPath, $fileNameOuter);
 
                             // Handle dynamic fields
-                            $labelKey = str_replace('_', ' ', $key);
+                            $labelKey = $key;
                             $transformedRequest[$labelKey] = $fileNameOuter;
                             $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
                         }
