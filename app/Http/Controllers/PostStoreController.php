@@ -177,8 +177,6 @@ class PostStoreController extends Controller
                     preg_match('/data:image\/(.*?);/', $type, $matches);
                     $extension = $matches[1] ?? 'jpg'; // Default to jpg if no extension found
 
-                    
-
                     if (strpos($key, 'Section_image_') === 0) {
                         continue;
                     }
@@ -215,7 +213,7 @@ class PostStoreController extends Controller
 
                     // Regular file handling
                     $destinationPath = public_path('uploads/dynamic_post_store');
-                    $originalName  = $file->getClientOriginalName();
+                    $originalName = $file->getClientOriginalName();
                     $extension = $file->getClientOriginalExtension();
                     $postname = str_replace(' ', '_', $postTitle);
                     $fileNameOuter = $postname . '_' . $postStore->id . '_' . $key . '.' . $extension;
@@ -260,34 +258,34 @@ class PostStoreController extends Controller
                             list($type, $base64Data) = explode(';', $fieldValue);
                             list(, $base64Data) = explode(',', $base64Data); // Get the base64 data part
                             $imageData = base64_decode($base64Data);
-            
+
                             // Extract the file extension from the base64 data (e.g., jpeg, png)
                             preg_match('/data:image\/(.*?);/', $type, $matches);
                             $extension = $matches[1] ?? 'jpg'; // Default to jpg if no extension found
-            
+
                             // Generate the file name for saving the image
                             $fieldnameforimg = str_replace(' ', '_', $fieldKey);
                             $postname = str_replace(' ', '_', $postTitle);
                             $fileName = $postname . '_' . $postStore->id . '_' . $sectionKey . '_' . $fieldnameforimg . '.' . $extension;
-            
+
                             // Define the path where the image will be saved
                             $destinationPath = public_path('uploads/dynamic_post_store');
-            
+
                             // Ensure the destination directory exists
-                            if (!file_exists($destinationPath)) {
+                            if (! file_exists($destinationPath)) {
                                 mkdir($destinationPath, 0777, true);
                             }
-            
+
                             // Save the decoded image data to the file
                             file_put_contents($destinationPath . '/' . $fileName, $imageData);
-            
+
                             // Update the transformed request with the file name
                             $transformedRequest[$sectionKey][$fieldKey] = $fileName;
                         }
                     }
                 }
             }
-            
+
             $postStore->data = $transformedRequest;
             $postStore->save();
 
@@ -436,7 +434,7 @@ class PostStoreController extends Controller
                 'code' => '200',
                 'message' => 'Post Store Data Fetch Successfully',
                 'results' => [
-                'data' => $postArray,
+                    'data' => $postArray,
                 ],
             ], 200);
         } catch (Exception $e) {
@@ -485,7 +483,7 @@ class PostStoreController extends Controller
                 ], 404);
             }
 
-            $requestData        = $request->all();
+            $requestData = $request->all();
             $transformedRequest = [];
 
             // Process all fields except files
@@ -524,7 +522,6 @@ class PostStoreController extends Controller
 
                     preg_match('/data:image\/(.*?);/', $type, $matches);
                     $extension = $matches[1] ?? 'jpg'; // Default to jpg if no extension found
-
                     if (strpos($key, 'Section ') === 0) {
                         $key = str_replace(' ', '_', $key);
                     }
@@ -548,7 +545,7 @@ class PostStoreController extends Controller
 
                     // Handle dynamic fields
                     $labelKey = str_replace('_', ' ', $key);
-                    $transformedRequest[$labelKey] = $fileNameOuter;
+                    $transformedRequest[$labelKey]   = $fileNameOuter;
                     $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
                 }
                 // Check if $file is an instance of UploadedFile (regular file upload)
@@ -565,7 +562,7 @@ class PostStoreController extends Controller
 
                     // Regular file handling
                     $destinationPath = public_path('uploads/dynamic_post_store');
-                    $originalName  = $file->getClientOriginalName();
+                    $originalName = $file->getClientOriginalName();
                     $extension = $file->getClientOriginalExtension();
                     $postname = str_replace(' ', '_', $post->post_name);
                     $fileNameOuter = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
@@ -582,7 +579,7 @@ class PostStoreController extends Controller
                         // Check if individualFile is an instance of UploadedFile (for file upload)
                         if ($individualFile instanceof \Illuminate\Http\UploadedFile  && $individualFile->isValid()) {
                             $destinationPath = public_path('uploads/dynamic_post_store');
-                            $originalName = $individualFile->getClientOriginalName();
+                            $originalName  = $individualFile->getClientOriginalName();
                             $extension = $individualFile->getClientOriginalExtension();
                             $postname = str_replace(' ', '_', $post->post_name);
                             $fileNameOuter = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
@@ -594,15 +591,27 @@ class PostStoreController extends Controller
                             $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
                         }
                     }
+                } else {
+                    $fileName = basename($file);       
+                    Log::error('Invalid file type', [
+                        'key' => $key,
+                        'file' => $file,
+                        'file_basename' => $fileName, 
+                    ]);
+
+                    $labelKey = str_replace('_', ' ', $key);
+                    $transformedRequest[$labelKey] = $fileName;
+                    $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
+
                 }
             }
 
             // Save the transformed data back to the PostStore
             $updated = false;
             foreach ($transformedRequest as $sectionKey => $sectionValue) {
-                // Check if the value for the section is an array or object (fields inside the section)
+                // Check if the section value is an array (contains fields inside the section)
                 if (is_array($sectionValue) || is_object($sectionValue)) {
-                    // Iterate through each key-value pair in the section (fields within the section)
+                    // Iterate through each key-value pair in the section (fields inside the section)
                     foreach ($sectionValue as $fieldKey => $fieldValue) {
                         // Check if the field value is a base64 string (image data)
                         if (is_string($fieldValue) && strpos($fieldValue, 'data:image/') === 0) {
@@ -616,7 +625,7 @@ class PostStoreController extends Controller
                             $extension = $matches[1] ?? 'jpg'; // Default to jpg if no extension found
             
                             // Generate the file name for saving the image
-                            $fieldnameforimg = str_replace(' ', '_', $fieldKey);
+                            $fieldnameforimg = str_replace(' ', '_', $fieldKey); // Handle spaces in field names
                             $postname = str_replace(' ', '_', $post->post_name);
                             $fileName = $postname . '_' . $post->id . '_' . $sectionKey . '_' . $fieldnameforimg . '.' . $extension;
             
@@ -624,7 +633,7 @@ class PostStoreController extends Controller
                             $destinationPath = public_path('uploads/dynamic_post_store');
             
                             // Ensure the destination directory exists
-                            if (!file_exists($destinationPath)) {
+                            if (! file_exists($destinationPath)) {
                                 mkdir($destinationPath, 0777, true);
                             }
             
@@ -634,11 +643,28 @@ class PostStoreController extends Controller
                             // Update the transformed request with the file name
                             $transformedRequest[$sectionKey][$fieldKey] = $fileName;
                         }
+                        else {
+                            if (is_string($fieldValue)) {
+                                $fileName = basename($fieldValue);
+                                $transformedRequest[$sectionKey][$fieldKey] = $fileName;
+                            } else {
+                                Log::error('Invalid file type', [
+                                    'key' => $sectionKey,
+                                    'field_key' => $fieldKey,
+                                    'file' => $fieldValue,
+                                    'request' => $transformedRequest,
+                                ]);
+                            }
+                        }
                     }
+                } else {
+                    Log::error('Invalid section value', [
+                        'section_key' => $sectionKey,
+                        'section_value' => $sectionValue,
+                    ]);
                 }
             }
             
-
             // Update the PostStore data with the new file names
             $post->data = $transformedRequest;
             $post->save();
@@ -863,7 +889,7 @@ class PostStoreController extends Controller
                 } else {
                     $normalizedValue = strtolower(trim($value));
                     if ($normalizedValue === $normalizedImageNameLower) {
-                        $data[$key] = "";
+                        $data[$key]  = "";
                         $imageDeleted = true;
                         break;
                     }
@@ -905,7 +931,7 @@ class PostStoreController extends Controller
     {
         try {
 
-            $inputData = $request->input('data');
+            $inputData  = $request->input('data');
             $parsedData = $this->parseInputData($inputData);
 
             $validator = Validator::make($parsedData, [
