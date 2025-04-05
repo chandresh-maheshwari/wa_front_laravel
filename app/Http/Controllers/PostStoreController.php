@@ -137,7 +137,7 @@ class PostStoreController extends Controller
                             foreach ($sectionData as $sectionKey => $sectionValue) {
                                 $sectionTransformed[$sectionKey] = $sectionValue;
                                 $slugKey = 'field_slug_' . $this->convertToSlug($sectionKey);
-                                $sectionTransformed[$slugKey] = $this->convertToSlug($sectionKey);
+                                $sectionTransformed[$slugKey] = $this->convertToSlug1($sectionKey);
                             }
                             $transformedRequest[$reqDatakey] = $sectionTransformed;
                         }
@@ -149,13 +149,13 @@ class PostStoreController extends Controller
                     foreach ($sectionData as $sectionKey => $sectionValue) {
                         $sectionTransformed[$sectionKey] = $sectionValue;
                         $slugKey = 'field_slug_' . $this->convertToSlug($sectionKey);
-                        $sectionTransformed[$slugKey] = $this->convertToSlug($sectionKey);
+                        $sectionTransformed[$slugKey] = $this->convertToSlug1($sectionKey);
                     }
                     $transformedRequest[$reqDatakey] = $sectionTransformed;
                 } else {
                     $labelKey = $reqDatakey;
                     $transformedRequest[$labelKey] = (string) $value;
-                    $transformedRequest['field_slug_' . $this->convertToSlug($reqDatakey)] = $this->convertToSlug($reqDatakey);
+                    $transformedRequest['field_slug_' . $this->convertToSlug($reqDatakey)] = $this->convertToSlug1($reqDatakey);
                 }
             }
 
@@ -197,7 +197,7 @@ class PostStoreController extends Controller
                     // Handle dynamic fields
                     $labelKey = $key;
                     $transformedRequest[$labelKey] = $fileNameOuter;
-                    $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
+                    $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug1($key);
                 }
                 // Check if $file is an instance of UploadedFile (regular file upload)
                 elseif ($file instanceof \Illuminate\Http\UploadedFile  && $file->isValid()) {
@@ -222,7 +222,7 @@ class PostStoreController extends Controller
                     // Handle dynamic fields
                     $labelKey = $key;
                     $transformedRequest[$labelKey] = $fileNameOuter;
-                    $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
+                    $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug1($key);
                 }
                 // In case of an array, loop through the files
                 elseif (is_array($file)) {
@@ -239,7 +239,7 @@ class PostStoreController extends Controller
                             // Handle dynamic fields
                             $labelKey = $key;
                             $transformedRequest[$labelKey] = $fileNameOuter;
-                            $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
+                            $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug1($key);
                         }
                     }
                 }
@@ -922,6 +922,11 @@ class PostStoreController extends Controller
     private function convertToSlug($string)
     {
         return str_replace([' ', '_', '/'], '', strtolower($string));
+    }
+
+    private function convertToSlug1($string)
+    {
+        return str_replace([' ', '/'], '', $string);
     }
 
     public function addData(Request $request)

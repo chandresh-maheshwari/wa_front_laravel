@@ -66,6 +66,10 @@ class DynamicPostController extends Controller
      * Store a new post in the database.
      * Validates the request data before saving. create by ns
      */
+    private function convertToSlug($string)
+    {
+        return str_replace([' ', '_', '/'], '', strtolower($string));
+    }
 
     public function addPost(Request $request)
     {
@@ -95,7 +99,8 @@ class DynamicPostController extends Controller
                         $generateSlugs($value);
                     } elseif ($key === 'label') {
                         $slug = str_replace(' ', '', $value); 
-                        $slugKey = 'field_slug_' . $slug;
+                        $slugKey = 'field_slug_' . $this->convertToSlug($slug);
+                        // $slugKey = 'field_slug_' . $slug;
                         $data[$slugKey] = $slug;
                     }
                 }
@@ -261,12 +266,12 @@ class DynamicPostController extends Controller
                             $generateSlugs($value, $existingData[$key] ?? []);
                         } elseif ($key === 'label') {
                             $slug = str_replace(' ', '', $value); 
-                            $slugKey = 'field_slug_' . $slug;
+                            // $slugKey = 'field_slug_' . $slug;
 
                             // Preserve existing slug if it exists
                             foreach ($existingData as $existingKey => $existingValue) {
                                 if (strpos($existingKey, 'field_slug_') === 0) {
-                                    $data[$existingKey] = $existingValue;
+                                    $data[$existingKey] = $slug;
                                 }
                             }
                         }
@@ -289,17 +294,29 @@ class DynamicPostController extends Controller
 
                                 foreach ($postStores as $postStore) {
                                     $postData = $postStore->data;
-
                                     if (isset($postData[$oldLabel])) {
+                                        
+                                        // Log::info("BEFOREEEEEEEEEE");
+                                        // $oldLabel = "Home Section Image";
+                                        $formattedLabel = strtolower(str_replace(['_', ' '], '', $oldLabel));
+                                        // Log::info($formattedLabel);
+                                        $postData['field_slug_'.$formattedLabel] = strtolower(str_replace(' ', '', $newLabel));
+                                         // $postData['field_slug_'.$formattedLabel] = $postData(strtolower(str_replace(' ', '', $newLabel)));
+                                        // $postData['field_slug_'.$newLabel] = $postData[strtolower(str_replace(' ', '', $formattedLabel))];
+                                        // $postData['field_slug_'.$formattedLabel] = $postData[strtolower(str_replace(' ', '', $newLabel))];
                                         $postData[$newLabel] = $postData[$oldLabel];
                                         unset($postData[$oldLabel]);
                                     }
-
+                                    // Log::info("AFTERRRRRRRRRR");
+                                    // Log::info($postData);
                                     // Handle nested objects
                                     $updateNestedLabels = function (&$data) use ($oldLabel, $newLabel, &$updateNestedLabels) {
                                         foreach ($data as $key => &$value) {
                                             if (is_array($value)) {
                                                 if (isset($value[$oldLabel])) {
+                                                    $formattedLabel = strtolower(str_replace(['_', ' '], '', $oldLabel));
+                                                    $value['field_slug_'.$formattedLabel] = strtolower(str_replace(' ', '', $newLabel));
+
                                                     $value[$newLabel] = $value[$oldLabel];
                                                     unset($value[$oldLabel]);
                                                 }
@@ -309,8 +326,10 @@ class DynamicPostController extends Controller
                                     };
 
                                     $updateNestedLabels($postData);
+                                    Log::info($postData);
                                     $postStore->data = $postData;
-
+                                    Log::info("LAST");
+                                    Log::info($postData);
                                     if (!$postStore->save()) {
                                         Log::error("Failed to save updated PostStore data for post_id: {$postStore->post_id}");
                                     } else {

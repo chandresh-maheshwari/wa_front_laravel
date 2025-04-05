@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Exception;
-
+use Illuminate\Support\Facades\Log;
 
 class PageController extends Controller
 {
@@ -478,6 +478,8 @@ class PageController extends Controller
                 foreach ($postStores as $postStore) {
                     $postStoreData = $postStore->toArray();
 
+                    Log::info("WWWWWWWWWWWWWWWWW");
+                    Log::info($postStoreData);
                     // Transform keys recursively
                     $postStoreData = $this->transformKeys($postStoreData);
 
@@ -515,13 +517,17 @@ class PageController extends Controller
         $fileExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'pdf', 'doc', 'docx'];
     
         foreach ($data as $key => $value) {
-            $normalizedKey = ucfirst(strtolower(preg_replace('/\s+/', '', $key)));
+            // $normalizedKey = ucfirst(strtolower(preg_replace('/\s+/', '', $key)));
+            $normalizedKey = ucfirst(preg_replace('/\s+/', '', $key));
+            Log::info("AAAAAAA");
+            Log::info($normalizedKey);
     
             if (is_array($value)) {
                 $transformedData[$normalizedKey] = $this->transformKeys($value);
             } else {
                 if (!empty($value) && is_string($value)) {
-                    $fileExtension = strtolower(pathinfo($value, PATHINFO_EXTENSION));
+                    // $fileExtension = strtolower(pathinfo($value, PATHINFO_EXTENSION));
+                    $fileExtension = pathinfo($value, PATHINFO_EXTENSION);
     
                     if (in_array($fileExtension, $fileExtensions)) {
                         $transformedData[$normalizedKey] = url('/uploads/dynamic_post_store/' . $value);
