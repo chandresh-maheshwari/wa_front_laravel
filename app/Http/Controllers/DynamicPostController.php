@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\DynamicPost;
@@ -98,7 +99,7 @@ class DynamicPostController extends Controller
                     if (is_array($value)) {
                         $generateSlugs($value);
                     } elseif ($key === 'label') {
-                        $slug = str_replace(' ', '', $value); 
+                        $slug = str_replace(' ', '', $value);
                         $slugKey = 'field_slug_' . $this->convertToSlug($slug);
                         // $slugKey = 'field_slug_' . $slug;
                         $data[$slugKey] = $slug;
@@ -251,7 +252,7 @@ class DynamicPostController extends Controller
                 ], 404);
             }
 
-            $oldPostTitle = $post->post_title; 
+            $oldPostTitle = $post->post_title;
             $post->post_title = $request['post_title'];
 
             if ($request->has('post_description')) {
@@ -265,7 +266,7 @@ class DynamicPostController extends Controller
                             // If it's an array (nested object), recursively call the function to update the nested structure
                             $generateSlugs($value, $existingData[$key] ?? []);
                         } elseif ($key === 'label') {
-                            $slug = str_replace(' ', '', $value); 
+                            $slug = str_replace(' ', '', $value);
                             // $slugKey = 'field_slug_' . $slug;
 
                             // Preserve existing slug if it exists
@@ -285,51 +286,83 @@ class DynamicPostController extends Controller
                 $updatePostStoreLabels = function ($newData, $existingData, $postId) use (&$updatePostStoreLabels) {
                     foreach ($newData as $key => $value) {
                         if (isset($value['label'])) {
+
+                            //                         static $isFirstIteration = true;
+
+                            // // Store the existing data during the first iteration
+                            // static $originalExistingData = null;
+
+                            // // If it's the first iteration, store the existing data
+                            // if ($isFirstIteration) {
+                            //     $originalExistingData = $existingData; // Save the original existing data
+                            //     $isFirstIteration = false; // Set flag to false to indicate subsequent iterations
+                            // }
                             $oldLabel = $existingData[$key]['label'] ?? null;
                             $newLabel = $value['label'];
-                            if ($oldLabel && $oldLabel !== $newLabel) {
+                            // $formattedLabel_new = strtolower(str_replace(['_', ' '], '', $oldLabel));
 
+                            $keyOld = array_keys($existingData[$key]);
+
+                            foreach ($keyOld as $newKey => $keyoldValues) {
+                                if (stripos($keyoldValues, 'field_slug_') !== false) {
+                                    // Log::info("keyoldValues=".$keyoldValues);
+                                    $oldLabelNew = $keyoldValues;
+                                }
+                            }
+
+                            // Logging for debugging
+                            Log::info("Processing label change");
+                            Log::info("new keys=", $keyOld);
+                            Log::info($key);
+                            Log::info($existingData[$key]);
+                            Log::info($value);
+                            Log::info($value['label']);
+
+                            if ($oldLabel && $oldLabel !== $newLabel) {
                                 // Fetch the data from PostStore
                                 $postStores = PostStore::where('post_id', $postId)->get();
 
                                 foreach ($postStores as $postStore) {
-                                    $postData = $postStore->data;
-                                    if (isset($postData[$oldLabel])) {
-                                        
-                                        // Log::info("BEFOREEEEEEEEEE");
-                                        // $oldLabel = "Home Section Image";
-                                        $formattedLabel = strtolower(str_replace(['_', ' '], '', $oldLabel));
-                                        // Log::info($formattedLabel);
-                                        $postData['field_slug_'.$formattedLabel] = strtolower(str_replace(' ', '', $newLabel));
-                                         // $postData['field_slug_'.$formattedLabel] = $postData(strtolower(str_replace(' ', '', $newLabel)));
-                                        // $postData['field_slug_'.$newLabel] = $postData[strtolower(str_replace(' ', '', $formattedLabel))];
-                                        // $postData['field_slug_'.$formattedLabel] = $postData[strtolower(str_replace(' ', '', $newLabel))];
-                                        $postData[$newLabel] = $postData[$oldLabel];
-                                        unset($postData[$oldLabel]);
+                                    // Store the original data to preserve the first state
+                                    $originalPostData = $postStore->data;
+
+                                    // Check if the old label exists in the original data and update it
+                                    if (isset($originalPostData[$oldLabel])) {
+                                        // $formattedLabel = strtolower(str_replace(['_', ' '], '', $oldLabel));
+                                        Log::info("OLD LANEL ET");
+                                        Log::info($oldLabelNew);
+                                        $originalPostData[$oldLabelNew] = str_replace(' ', '', $newLabel);
+                                        // $originalPostData['field_slug_' . $formattedLabel] = str_replace(' ', '', $newLabel);
+                                        $originalPostData[$newLabel] = $originalPostData[$oldLabel];
+                                        unset($originalPostData[$oldLabel]);
                                     }
-                                    // Log::info("AFTERRRRRRRRRR");
-                                    // Log::info($postData);
-                                    // Handle nested objects
-                                    $updateNestedLabels = function (&$data) use ($oldLabel, $newLabel, &$updateNestedLabels) {
+
+                                    // Handle nested structures with original data
+                                    $updateNestedLabels = function (&$data) use ($oldLabel, $newLabel, &$updateNestedLabels, $oldLabelNew) {
                                         foreach ($data as $key => &$value) {
                                             if (is_array($value)) {
                                                 if (isset($value[$oldLabel])) {
-                                                    $formattedLabel = strtolower(str_replace(['_', ' '], '', $oldLabel));
-                                                    $value['field_slug_'.$formattedLabel] = strtolower(str_replace(' ', '', $newLabel));
+                                                    // $formattedLabel = str_replace(['_', ' '], '', $oldLabel);
+                                                    // $value['field_slug_' . $formattedLabel] = strtolower(str_replace(' ', '', $newLabel));
+                                                    // $value[$oldLabel] = strtolower(str_replace(' ', '', $newLabel));
+                                                    $value[$oldLabelNew] = str_replace(' ', '', $newLabel);
 
+                                                    
                                                     $value[$newLabel] = $value[$oldLabel];
                                                     unset($value[$oldLabel]);
                                                 }
-                                                $updateNestedLabels($value);        
+                                                $updateNestedLabels($value);
                                             }
                                         }
                                     };
 
-                                    $updateNestedLabels($postData);
-                                    Log::info($postData);
-                                    $postStore->data = $postData;
-                                    Log::info("LAST");
-                                    Log::info($postData);
+                                    // Update nested labels in the original data
+                                    $updateNestedLabels($originalPostData);
+
+                                    // Save the original (modified) data back
+                                    $postStore->data = $originalPostData;
+
+                                    // Check if save is successful
                                     if (!$postStore->save()) {
                                         Log::error("Failed to save updated PostStore data for post_id: {$postStore->post_id}");
                                     } else {
@@ -339,12 +372,13 @@ class DynamicPostController extends Controller
                             }
                         }
 
-                        // Recursively check nested structures
+                        // Recursively handle nested data structures
                         if (is_array($value)) {
                             $updatePostStoreLabels($value, $existingData[$key] ?? [], $postId);
                         }
                     }
                 };
+
 
                 // Apply label updates to PostStore
                 $updatePostStoreLabels($newDescription, $existingDescription, $id);

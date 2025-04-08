@@ -159,6 +159,8 @@ class PostStoreController extends Controller
                 }
             }
 
+            // Log::info("TESTTTTTTTTTTTTTTTTTTTTTT");
+            // Log::info($transformedRequest);
             $postStore = PostStore::create([
                 'post_name' => $postTitle,
                 'post_id' => $postData->id,
@@ -499,7 +501,7 @@ class PostStoreController extends Controller
                         foreach ($sectionData as $sectionKey => $sectionValue) {
                             $sectionTransformed[$sectionKey] = $sectionValue;
                             $slugKey = 'field_slug_' . $this->convertToSlug($sectionKey);
-                            $sectionTransformed[$slugKey] = $this->convertToSlug($sectionKey);
+                            $sectionTransformed[$slugKey] = $this->convertToSlug1($sectionKey);
                         }
                         $transformedRequest[$key] = $sectionTransformed;
                     } else {
@@ -507,7 +509,7 @@ class PostStoreController extends Controller
                 } else {
                     $labelKey = $key;
                     $transformedRequest[$labelKey] = $value;
-                    $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
+                    $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug1($key);
                 }
             }
 
@@ -543,7 +545,7 @@ class PostStoreController extends Controller
                     // Handle dynamic fields
                     $labelKey = $key;
                     $transformedRequest[$labelKey]   = $fileNameOuter;
-                    $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
+                    $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug1($key);
                 }
                 // Check if $file is an instance of UploadedFile (regular file upload)
                 elseif ($file instanceof \Illuminate\Http\UploadedFile  && $file->isValid()) {
@@ -568,7 +570,7 @@ class PostStoreController extends Controller
                     // Handle dynamic fields
                     $labelKey = $key;
                     $transformedRequest[$labelKey] = $fileNameOuter;
-                    $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
+                    $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug1($key);
                 }
                 // In case of an array, loop through the files
                 elseif (is_array($file)) {
@@ -585,7 +587,7 @@ class PostStoreController extends Controller
                             // Handle dynamic fields
                             $labelKey = $key;
                             $transformedRequest[$labelKey] = $fileNameOuter;
-                            $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
+                            $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug1($key);
                         }
                     }
                 } else {
@@ -598,7 +600,7 @@ class PostStoreController extends Controller
 
                     $labelKey = $key;
                     $transformedRequest[$labelKey] = $fileName;
-                    $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug($key);
+                    $transformedRequest['field_slug_' . $this->convertToSlug($key)] = $this->convertToSlug1($key);
 
                 }
             }
