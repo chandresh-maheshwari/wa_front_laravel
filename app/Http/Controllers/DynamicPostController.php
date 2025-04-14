@@ -258,6 +258,8 @@ class DynamicPostController extends Controller
             if ($request->has('post_description')) {
                 $newDescription = $request['post_description'];
                 $existingDescription = $post->post_description;
+                // Log::info("TITLEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
+                // Log::info($newDescription);
 
                 // Function to generate slugs and handle nested objects
                 $generateSlugs = function (&$data, $existingData) use (&$generateSlugs) {
@@ -270,11 +272,11 @@ class DynamicPostController extends Controller
                             // $slugKey = 'field_slug_' . $slug;
 
                             // Preserve existing slug if it exists
-                            foreach ($existingData as $existingKey => $existingValue) {
-                                if (strpos($existingKey, 'field_slug_') === 0) {
-                                    $data[$existingKey] = $slug;
+                                foreach ($existingData as $existingKey => $existingValue) {
+                                    if (strpos($existingKey, 'field_slug_') === 0) {
+                                        $data[$existingKey] = $slug;
+                                    }
                                 }
-                            }
                         }
                     }
                 };
@@ -287,7 +289,7 @@ class DynamicPostController extends Controller
                     foreach ($newData as $key => $value) {
                         if (isset($value['label'])) {
 
-                            //                         static $isFirstIteration = true;
+                            // static $isFirstIteration = true;
 
                             // // Store the existing data during the first iteration
                             // static $originalExistingData = null;
@@ -311,12 +313,12 @@ class DynamicPostController extends Controller
                             }
 
                             // Logging for debugging
-                            Log::info("Processing label change");
-                            Log::info("new keys=", $keyOld);
-                            Log::info($key);
-                            Log::info($existingData[$key]);
-                            Log::info($value);
-                            Log::info($value['label']);
+                            // Log::info("Processing label change");
+                            // Log::info("new keys=", $keyOld);
+                            // Log::info($key);
+                            // Log::info($existingData[$key]);
+                            // Log::info($value);
+                            // Log::info($value['label']);
 
                             if ($oldLabel && $oldLabel !== $newLabel) {
                                 // Fetch the data from PostStore
@@ -329,8 +331,8 @@ class DynamicPostController extends Controller
                                     // Check if the old label exists in the original data and update it
                                     if (isset($originalPostData[$oldLabel])) {
                                         // $formattedLabel = strtolower(str_replace(['_', ' '], '', $oldLabel));
-                                        Log::info("OLD LANEL ET");
-                                        Log::info($oldLabelNew);
+                                        // Log::info("OLD LANEL ET");
+                                        // Log::info($oldLabelNew);
                                         $originalPostData[$oldLabelNew] = str_replace(' ', '', $newLabel);
                                         // $originalPostData['field_slug_' . $formattedLabel] = str_replace(' ', '', $newLabel);
                                         $originalPostData[$newLabel] = $originalPostData[$oldLabel];
@@ -346,6 +348,8 @@ class DynamicPostController extends Controller
                                                     // $value['field_slug_' . $formattedLabel] = strtolower(str_replace(' ', '', $newLabel));
                                                     // $value[$oldLabel] = strtolower(str_replace(' ', '', $newLabel));
                                                     $value[$oldLabelNew] = str_replace(' ', '', $newLabel);
+                                                    Log::info("SECTION NAME");
+                                                    Log::info($value[$oldLabel]);
 
                                                     
                                                     $value[$newLabel] = $value[$oldLabel];
