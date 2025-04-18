@@ -69,7 +69,7 @@ class DynamicPostController extends Controller
      */
     private function convertToSlug($string)
     {
-        return str_replace([' ', '_', '/'], '', strtolower($string));
+        return str_replace([' ', '_', '/'], '', ($string));
     }
 
     public function addPost(Request $request)
@@ -260,7 +260,7 @@ class DynamicPostController extends Controller
             $existingDescription = $post->post_description;
 
             // Slugify function: removes spaces and lowercases the label
-            $slugify = fn($label) => preg_replace('/\s+/', '', strtolower($label));
+            $slugify = fn($label) => preg_replace('/\s+/', '', ($label));
 
             // 🔁 Preserve old section structure
             $preserveOldSectionData = function (&$newData, $existingData) {
