@@ -562,8 +562,38 @@ class PostStoreController extends Controller
                 if (isset($existingData[$slugKey])) {
                     $transformedRequest[$slugKey] = $this->convertToSlug1($key);
                 }
+            } elseif (is_array($file)) {
+                foreach ($file as $individualFile) {
+                    if ($individualFile instanceof \Illuminate\Http\UploadedFile && $individualFile->isValid()) {
+                        $destinationPath = public_path('uploads/dynamic_post_store');
+                        $extension = $individualFile->getClientOriginalExtension();
+                        $postname = str_replace(' ', '_', $post->post_name);
+                        $fileNameOuter = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
+                        $individualFile->move($destinationPath, $fileNameOuter);
+
+                        $transformedRequest[$key] = $fileNameOuter;
+
+                        $slugKeyBase = $this->convertToSlugBase($key);
+                        $slugKey = 'field_slug_' . $slugKeyBase;
+                        $transformedRequest[$slugKey] = $this->convertToSlug1($key);
+                    }
+                }
+            } else {
+                $fileName = basename($file);
+                Log::error('Invalid file type', [
+                    'key' => $key,
+                    'file' => $file,
+                    'file_basename' => $fileName,
+                ]);
+
+                $transformedRequest[$key] = $fileName;
+
+                $slugKeyBase = $this->convertToSlugBase($key);
+                $slugKey = 'field_slug_' . $slugKeyBase;
+                $transformedRequest[$slugKey] = $this->convertToSlug1($key);
             }
         }
+        
 
         // Handle nested image fields
         foreach ($transformedRequest as $sectionKey => $sectionValue) {
