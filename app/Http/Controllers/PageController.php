@@ -80,34 +80,34 @@ class PageController extends Controller
             if ($request->hasFile('image')) {
                 $extension = $request->image->getClientOriginalExtension();
                 $imageName = $pageId . '_' . strtolower(str_replace(' ', '_', $request->page_name)) . '._.' . $extension;
-    
+
                 $request->image->move(public_path('/uploads/page'), $imageName);
-    
+
                 $page->image = $imageName;
                 $page->save();
             } else {
                 $page->image = null;
             }
 
-        $page->ordering = $request['ordering'];
-        $page->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
+            $page->ordering = $request['ordering'];
+            $page->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
 
-        if ($page->save()) {
-            return response()->json([
-                'status' => true,
-                'code' => '200',
-                'message' => 'Page Data Added Successfully',
-            ], 200);
-        } else {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Something Went Wrong'
-            ], 404);
-        }
+            if ($page->save()) {
+                return response()->json([
+                    'status' => true,
+                    'code' => '200',
+                    'message' => 'Page Data Added Successfully',
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'Something Went Wrong'
+                ], 404);
+            }
         }
     }
-    
+
 
     public function show($id)
     {
@@ -515,20 +515,20 @@ class PageController extends Controller
     {
         $transformedData = [];
         $fileExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'pdf', 'doc', 'docx'];
-    
+
         foreach ($data as $key => $value) {
             // $normalizedKey = ucfirst(strtolower(preg_replace('/\s+/', '', $key)));
-            $normalizedKey = ucfirst(preg_replace('/\s+/', '', $key));
+            $normalizedKey = preg_replace('/\s+/', '', $key);
             Log::info("AAAAAAA");
             Log::info($normalizedKey);
-    
+
             if (is_array($value)) {
                 $transformedData[$normalizedKey] = $this->transformKeys($value);
             } else {
                 if (!empty($value) && is_string($value)) {
                     // $fileExtension = strtolower(pathinfo($value, PATHINFO_EXTENSION));
                     $fileExtension = pathinfo($value, PATHINFO_EXTENSION);
-    
+
                     if (in_array($fileExtension, $fileExtensions)) {
                         $transformedData[$normalizedKey] = url('/uploads/dynamic_post_store/' . $value);
                     } else {
@@ -539,10 +539,51 @@ class PageController extends Controller
                 }
             }
         }
-        
+
         return $transformedData;
     }
-    
+
+
+    // private function transformKeys(array $data)
+    // {
+    //     $transformedData = [];
+    //     $fileExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'pdf', 'doc', 'docx'];
+
+    //     foreach ($data as $key => $value) {
+    //         // Remove spaces from the key
+    //         $keyNoSpaces = preg_replace('/\s+/', '', $key);
+
+    //         // Check conditions
+    //         $shouldUcFirst = is_array($value) || is_object($value) || strpos($keyNoSpaces, 'Field_Slug_') === 0;
+
+    //         // Apply ucfirst if needed
+    //         $normalizedKey = $shouldUcFirst ? ucfirst($keyNoSpaces) : $keyNoSpaces;
+
+    //         Log::info("Normalized Key: " . $normalizedKey);
+
+    //         // Recursively transform if it's an array
+    //         if (is_array($value)) {
+    //             $transformedData[$normalizedKey] = $this->transformKeys($value);
+    //         } else {
+    //             if (!empty($value) && is_string($value)) {
+    //                 $fileExtension = strtolower(pathinfo($value, PATHINFO_EXTENSION));
+
+    //                 if (in_array($fileExtension, $fileExtensions)) {
+    //                     $transformedData[$normalizedKey] = url('/uploads/dynamic_post_store/' . $value);
+    //                 } else {
+    //                     $transformedData[$normalizedKey] = $value;
+    //                 }
+    //             } else {
+    //                 $transformedData[$normalizedKey] = $value;
+    //             }
+    //         }
+    //     }
+
+    //     return $transformedData;
+    // }
+
+
+
 
     /** This function used for the page status active or inactive create by ns  */
 

@@ -100,7 +100,7 @@ class DynamicPostController extends Controller
                         $generateSlugs($value);
                     } elseif ($key === 'label') {
                         $slug = str_replace(' ', '', $value);
-                        $slugKey = 'field_slug_' . $this->convertToSlug($slug);
+                        $slugKey = 'Field_Slug_' . $this->convertToSlug($slug);
                         // $slugKey = 'field_slug_' . $slug;
                         $data[$slugKey] = $slug;
                     }
@@ -311,7 +311,7 @@ class DynamicPostController extends Controller
                         $slugKeyFound = false;
             
                         foreach ($value as $innerKey => $innerVal) {
-                            if (strpos($innerKey, 'field_slug_') === 0) {
+                            if (strpos($innerKey, 'Field_Slug_') === 0) {
                                 $value[$innerKey] = $newSlug;
                                 $slugKeyFound = true;
                             }
@@ -320,7 +320,7 @@ class DynamicPostController extends Controller
                         // If not found, try restoring the same key name from old data
                         if (!$slugKeyFound && isset($existingData[$key])) {
                             foreach ($existingData[$key] as $oldFieldKey => $oldFieldValue) {
-                                if (strpos($oldFieldKey, 'field_slug_') === 0) {
+                                if (strpos($oldFieldKey, 'Field_Slug_') === 0) {
                                     $value[$oldFieldKey] = $newSlug;
                                     $slugKeyFound = true;
                                     break;
@@ -330,7 +330,7 @@ class DynamicPostController extends Controller
             
                         // If still not found, just create one using new slug as the key name
                         if (!$slugKeyFound) {
-                            $value["field_slug_" . $newSlug] = $newSlug;
+                            $value["Field_Slug_" . $newSlug] = $newSlug;
                         }
                     }
                 }
@@ -390,7 +390,7 @@ class DynamicPostController extends Controller
                                     }
 
                                     foreach ($postSectionData as $key => $val) {
-                                        if (strpos($key, 'field_slug_') === 0 && strpos($val, $slugify($oldLabel)) !== false) {
+                                        if (strpos($key, 'Field_Slug_') === 0 && strpos($val, $slugify($oldLabel)) !== false) {
                                             $postSectionData[$key] = $slugify($newLabel);
                                         }
                                     }
@@ -415,7 +415,7 @@ class DynamicPostController extends Controller
                             }
 
                             foreach ($originalPostData as $dataKey => $val) {
-                                if (strpos($dataKey, 'field_slug_') === 0 && strpos($val, $slugify($oldLabel)) !== false) {
+                                if (strpos($dataKey, 'Field_Slug_') === 0 && strpos($val, $slugify($oldLabel)) !== false) {
                                     $originalPostData[$dataKey] = $slugify($newLabel);
                                 }
                             }
