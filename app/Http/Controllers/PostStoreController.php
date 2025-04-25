@@ -555,6 +555,7 @@ class PostStoreController extends Controller
     
                     if (!file_exists($destinationPath)) mkdir($destinationPath, 0777, true);
                     file_put_contents($destinationPath . '/' . $fileNameOuter, $imageData);
+
     
                     $transformedRequest[$key] = $fileNameOuter;
     
@@ -592,7 +593,12 @@ class PostStoreController extends Controller
                             $fileNameOuter = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
                             $individualFile->move($destinationPath, $fileNameOuter);
     
-                            $transformedRequest[$key] = $fileNameOuter;
+                            if (!file_exists($destinationPath)) mkdir($destinationPath, 0777, true);
+                            file_put_contents($destinationPath . '/' . $fileNameOuter, $imageData);
+                            
+            
+                            $transformedRequest[$key] = basename($fileNameOuter);
+                            // $transformedRequest[$key] = $fileNameOuter;
     
                             $slugKeyBase = $this->convertToSlugBase($key);
                             $slugKey = 'Field_Slug_' . $slugKeyBase;
