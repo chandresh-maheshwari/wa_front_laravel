@@ -651,26 +651,9 @@ class PostStoreController extends Controller
             }
     
             // Merge updated values with old ones
-            // Ensure fields not in request are carried forward
-            foreach ($existingData as $key => $value) {
-                if (!array_key_exists($key, $transformedRequest)) {
-                    $transformedRequest[$key] = $value;
-                }
-            }
-    
-            // Handle nested sections
-            foreach ($existingData as $sectionKey => $sectionValue) {
-                if (is_array($sectionValue) && isset($transformedRequest[$sectionKey]) && is_array($transformedRequest[$sectionKey])) {
-                    foreach ($sectionValue as $fieldKey => $fieldValue) {
-                        if (!array_key_exists($fieldKey, $transformedRequest[$sectionKey])) {
-                            $transformedRequest[$sectionKey][$fieldKey] = $fieldValue;
-                        }
-                    }
-                }
-            }
-    
-            Log::info('Final Data:', $transformedRequest);
-            $post->data = $transformedRequest;
+            $finalData = array_replace_recursive($existingData, $transformedRequest);
+            Log::info('Final Data:', $finalData);
+            $post->data = $finalData;
     
             if ($post->save()) {
                 return response()->json([
@@ -695,7 +678,6 @@ class PostStoreController extends Controller
             ], 500);
         }
     }
-    
     
 private function convertToSlugBase($string)
 {
