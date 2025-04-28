@@ -487,45 +487,34 @@ class PostStoreController extends Controller
             $transformedRequest = [];
     
             // Process main level fields
-            foreach ($requestData as $key => $value) {
-                if (is_numeric($key)) {
-                    continue;
-                }
-                if (is_array($value)) {
-                    foreach ($value as $subKey => $subValue) {
-                        // Check if the subKey (field) is a URL (like 'link' or 'web')
-                        if (filter_var($subValue, FILTER_VALIDATE_URL)) {
-                            // Skip processing URLs as files
-                            $transformedRequest[$key][$subKey] = $subValue;
-                        } else {
-                            // Process image and other fields as normal
-                            $transformedRequest[$key][$subKey] = $subValue;
-    
-                            $slugKeyBase = $this->convertToSlugBase($subKey);
-                            $slugKey = 'Field_Slug_' . $slugKeyBase;
-    
-                            if (isset($existingData[$key][$slugKey])) {
-                                $transformedRequest[$key][$slugKey] = $this->convertToSlug1($subKey);
-                            }
-                        }
-                    }
-                } else {
-                    // Handle URL fields at the main level (like 'link' or 'web')
-                    if (filter_var($value, FILTER_VALIDATE_URL)) {
-                        // Don't process URLs as files, just save them as is
-                        $transformedRequest[$key] = $value;
-                    } else {
-                        $transformedRequest[$key] = $value;
-    
-                        $slugKeyBase = $this->convertToSlugBase($key);
-                        $slugKey = 'Field_Slug_' . $slugKeyBase;
-    
-                        if (isset($existingData[$slugKey])) {
-                            $transformedRequest[$slugKey] = $this->convertToSlug1($key);
-                        }
-                    }
-                }
-            }
+            // Process main level fields
+foreach ($requestData as $key => $value) {
+    if (is_numeric($key)) {
+        continue;
+    }
+
+    // Check if the field is a URL (like 'link' or 'web')
+    if (filter_var($value, FILTER_VALIDATE_URL)) {
+        // If the URL has not changed (i.e., it matches the existing data), skip processing
+        if (isset($existingData[$key]) && $existingData[$key] == $value) {
+            continue; // Skip saving this URL if it's the same as before
+        }
+        
+        // Save the URL as it is (no processing as a file upload)
+        $transformedRequest[$key] = $value;
+    } else {
+        // Process all other fields that are not URLs (image handling and other fields)
+        $transformedRequest[$key] = $value;
+
+        $slugKeyBase = $this->convertToSlugBase($key);
+        $slugKey = 'Field_Slug_' . $slugKeyBase;
+
+        if (isset($existingData[$slugKey])) {
+            $transformedRequest[$slugKey] = $this->convertToSlug1($key);
+        }
+    }
+}
+
     
             // File uploads section (ensure we skip URLs here too)
             foreach ($request->all() as $key => $file) {
@@ -550,7 +539,7 @@ class PostStoreController extends Controller
                     if (strpos($key, 'Section_image_') === 0) continue;
     
                     $postname = str_replace(' ', '_', $post->post_name);
-                    $fileNameOuter = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
+                    $fileNameOuter = $postname . '_' . $post->id . '_' . $key . '.' . $extension; 
                     $destinationPath = public_path('uploads/dynamic_post_store');
     
                     if (!file_exists($destinationPath)) mkdir($destinationPath, 0777, true);
@@ -637,7 +626,7 @@ class PostStoreController extends Controller
                             $fileName = $postname . '_' . $post->id . '_' . $sectionKey . '_' . $fieldnameforimg . '.' . $extension;
     
                             $destinationPath = public_path('uploads/dynamic_post_store');
-                            if (!file_exists($destinationPath)) {
+                            if (!file_exists($destinationPath)) {  
                                 mkdir($destinationPath, 0777, true);
                             }
     
