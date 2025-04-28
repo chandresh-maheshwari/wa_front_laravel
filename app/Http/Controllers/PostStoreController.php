@@ -536,7 +536,7 @@ class PostStoreController extends Controller
             // Skip URL fields dynamically (like 'link' and 'web')
             if (filter_var($file, FILTER_VALIDATE_URL)) {
                 continue; // Skip the processing of URLs
-            }
+            } 
 
             // Check if no new file is provided, keep the existing image (if any)
             if (empty($file) || is_string($file) && strpos($file, 'data:image/') !== 0) {
