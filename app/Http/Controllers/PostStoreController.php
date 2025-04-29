@@ -513,7 +513,9 @@ class PostStoreController extends Controller
 
             // Handle file uploads (base64 or UploadedFile)
             foreach ($request->all() as $key => $file) {
+                // Log::info("AAAAAAAAAAAAA");
                 if (is_string($file) && strpos($file, 'data:image/') === 0) {
+                    Log::info("AAAAAAAAAAAAA");
                     list($type, $base64Data) = explode(';', $file);
                     list(, $base64Data) = explode(',', $base64Data);
                     $imageData = base64_decode($base64Data);
@@ -535,25 +537,31 @@ class PostStoreController extends Controller
                     $slugKeyBase = $this->convertToSlugBase($key);
                     $slugKey = 'field_slug_' . $slugKeyBase;
                     $transformedRequest[$slugKey] = $this->convertToSlug1($key);
-                } elseif ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
-                    if (strpos($key, 'Section ') === 0) {
-                        $key = str_replace(' ', '_', $key);
-                    }
+                }
+                //  elseif ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
+                //     Log::info("BBBBBBBBBBB");
 
-                    if (strpos($key, 'Section_image_') === 0) continue;
+                //     if (strpos($key, 'Section ') === 0) {
+                //         $key = str_replace(' ', '_', $key);
+                //     }
 
-                    $destinationPath = public_path('uploads/dynamic_post_store');
-                    $extension = $file->getClientOriginalExtension();
-                    $postname = str_replace(' ', '_', $post->post_name);
-                    $fileNameOuter = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
-                    $file->move($destinationPath, $fileNameOuter);
+                //     if (strpos($key, 'Section_image_') === 0) continue;
 
-                    $transformedRequest[$key] = $fileNameOuter;
+                //     $destinationPath = public_path('uploads/dynamic_post_store');
+                //     $extension = $file->getClientOriginalExtension();
+                //     $postname = str_replace(' ', '_', $post->post_name);
+                //     $fileNameOuter = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
+                //     $file->move($destinationPath, $fileNameOuter);
 
-                    $slugKeyBase = $this->convertToSlugBase($key);
-                    $slugKey = 'field_slug_' . $slugKeyBase;
-                    $transformedRequest[$slugKey] = $this->convertToSlug1($key);
-                } elseif (is_array($file)) {
+                //     $transformedRequest[$key] = $fileNameOuter;
+
+                //     $slugKeyBase = $this->convertToSlugBase($key);
+                //     $slugKey = 'field_slug_' . $slugKeyBase;
+                //     $transformedRequest[$slugKey] = $this->convertToSlug1($key);
+                // } 
+                elseif (is_array($file)) {
+                    Log::info("CCCCCCCCC");
+
                     foreach ($file as $individualFile) {
                         if ($individualFile instanceof \Illuminate\Http\UploadedFile && $individualFile->isValid()) {
                             $destinationPath = public_path('uploads/dynamic_post_store');
@@ -569,8 +577,29 @@ class PostStoreController extends Controller
                             $transformedRequest[$slugKey] = $this->convertToSlug1($key);
                         }
                     }
-                } else {
-                    $fileName = basename($file);
+                } 
+                else {
+                    // Log::info("DDDDDDDDD");
+                    // Log::info($request->all());
+                    // Log::info($file);
+                    // Log::info($file);
+
+                    // $fileName = basename($file);
+                    // Log::info($fileName);
+
+                    if (!empty($file)) {
+                        $extension = pathinfo(parse_url($file, PHP_URL_PATH), PATHINFO_EXTENSION);
+                    
+                        // Check if extension exists and is a typical file extension (e.g., jpg, png, pdf, etc.)
+                        if (!empty($extension)) {
+                            $fileName = basename($file);
+                            Log::info("File name: " . $fileName);
+                        } else{
+                            $fileName = $file;
+                        }
+                    }
+
+
                     Log::error('Invalid file type', [
                         'key' => $key,
                         'file' => $file,
@@ -608,7 +637,18 @@ class PostStoreController extends Controller
                             $transformedRequest[$sectionKey][$fieldKey] = $fileName;
                         } else {
                             if (is_string($fieldValue)) {
-                                $fileName = basename($fieldValue);
+                                if (!empty($file)) {
+                                    $extension = pathinfo(parse_url($fieldValue, PHP_URL_PATH), PATHINFO_EXTENSION);
+                                
+                                    // Check if extension exists and is a typical file extension (e.g., jpg, png, pdf, etc.)
+                                    if (!empty($extension)) {
+                                        $fileName = basename($fieldValue);
+                                        Log::info("File name: " . $fileName);
+                                    } else{
+                                        $fileName = $fieldValue;
+                                    }
+                                }
+                                // $fileName = basename($fieldValue);
                                 $transformedRequest[$sectionKey][$fieldKey] = $fileName;
                             } else {
                                 Log::error('Invalid file type in section', [
@@ -623,7 +663,7 @@ class PostStoreController extends Controller
             }
             // Merge and save final data
             $finalData = array_merge($existingData, $transformedRequest);
-            log::info('Final Data:', $finalData);
+            // log::info('Final Data:', $finalData);
             $post->data = $finalData;
 
             if ($post->save()) {
