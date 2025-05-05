@@ -232,272 +232,291 @@ class DynamicPostController extends Controller
      * Ensures the post is not deleted before updating. create by ns
      */
     public function update(Request $request, $id)
-{
-    try {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json([
-                'status' => false,
-                'code' => '401',
-                'message' => 'User Not Authenticated',
-            ], 401);
-        }
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User Not Authenticated',
+                ], 401);
+            }
 
-        $post = DynamicPost::where('id', $id)->where('deleted_at', 0)->first();
-        if (!$post) {
-            return response()->json([
-                'status' => false,
-                'code' => '404',
-                'message' => 'Dynamic Post Data Not Found',
-            ], 404);
-        }
+            $post = DynamicPost::where('id', $id)->where('deleted_at', 0)->first();
+            if (!$post) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '404',
+                    'message' => 'Dynamic Post Data Not Found',
+                ], 404);
+            }
 
-        $oldPostTitle = $post->post_title;
-        $post->post_title = $request['post_title'];
+            $oldPostTitle = $post->post_title;
+            $post->post_title = $request['post_title'];
 
-        if ($request->has('post_description')) {
-            $newDescription = $request['post_description'];
-            $existingDescription = $post->post_description;
+            if ($request->has('post_description')) {
+                $newDescription = $request['post_description'];
+                $existingDescription = $post->post_description;
 
-            // Slugify function: removes spaces and lowercases the label
-            $slugify = fn($label) => preg_replace('/\s+/', '', ($label));
+                // Slugify function: removes spaces and lowercases the label
+                $slugify = fn($label) => preg_replace('/\s+/', '', ($label));
 
-            // 🔁 Preserve old section structure
-            $preserveOldSectionData = function (&$newData, $existingData) {
-                foreach ($newData as $newKey => &$newSection) {
-                    if (!is_array($newSection)) continue;
+                // 🔁 Preserve old section structure
+                $preserveOldSectionData = function (&$newData, $existingData) {
+                    foreach ($newData as $newKey => &$newSection) {
+                        if (!is_array($newSection)) continue;
 
-                    foreach ($existingData as $oldKey => $oldSection) {
-                        if (!is_array($oldSection)) continue;
+                        foreach ($existingData as $oldKey => $oldSection) {
+                            if (!is_array($oldSection)) continue;
 
-                        $oldFirstField = $oldSection[0] ?? null;
-                        $newFirstField = $newSection[0] ?? null;
+                            $oldFirstField = $oldSection[0] ?? null;
+                            $newFirstField = $newSection[0] ?? null;
 
-                        if ($oldFirstField && $newFirstField &&
-                            $oldFirstField['type'] === $newFirstField['type'] &&
-                            count($oldSection) === count($newSection)) {
+                            if (
+                                $oldFirstField && $newFirstField &&
+                                $oldFirstField['type'] === $newFirstField['type'] &&
+                                count($oldSection) === count($newSection)
+                            ) {
 
-                            foreach ($oldSection as $fieldKey => $fieldValue) {
-                                if (!isset($newSection[$fieldKey]) && $fieldKey !== 'enabled') {
-                                    $newSection[$fieldKey] = $fieldValue;
-                                } elseif (is_array($fieldValue) && isset($newSection[$fieldKey])) {
-                                    $newSection[$fieldKey] = array_merge($fieldValue, $newSection[$fieldKey]);
+                                foreach ($oldSection as $fieldKey => $fieldValue) {
+                                    if (!isset($newSection[$fieldKey]) && $fieldKey !== 'enabled') {
+                                        $newSection[$fieldKey] = $fieldValue;
+                                    } elseif (is_array($fieldValue) && isset($newSection[$fieldKey])) {
+                                        $newSection[$fieldKey] = array_merge($fieldValue, $newSection[$fieldKey]);
+                                    }
+                                }
+
+                                if (!isset($newSection['enabled']) && isset($oldSection['enabled'])) {
+                                    $newSection['enabled'] = $oldSection['enabled'];
+                                }
+
+                                break;
+                            }
+                        }
+                    }
+                };
+
+                $generateSlugs = function (&$data, $existingData) use (&$generateSlugs, $slugify) {
+                    foreach ($data as $key => &$value) {
+                        // Recursively go deeper for nested sections
+                        if (is_array($value) && !isset($value['label'])) {
+                            $generateSlugs($value, $existingData[$key] ?? []);
+                            continue;
+                        }
+
+                        // Process individual fields that have a 'label'
+                        if (isset($value['label'])) {
+                            $newSlug = $slugify($value['label']);
+
+                            // Flag to check if any field_slug_ already exists
+                            $slugKeyFound = false;
+
+                            foreach ($value as $innerKey => $innerVal) {
+                                if (strpos($innerKey, 'Field_Slug_') === 0) {
+                                    $value[$innerKey] = $newSlug;
+                                    $slugKeyFound = true;
                                 }
                             }
 
-                            if (!isset($newSection['enabled']) && isset($oldSection['enabled'])) {
-                                $newSection['enabled'] = $oldSection['enabled'];
+                            // If not found, try restoring the same key name from old data
+                            if (!$slugKeyFound && isset($existingData[$key])) {
+                                foreach ($existingData[$key] as $oldFieldKey => $oldFieldValue) {
+                                    if (strpos($oldFieldKey, 'Field_Slug_') === 0) {
+                                        $value[$oldFieldKey] = $newSlug;
+                                        $slugKeyFound = true;
+                                        break;
+                                    }
+                                }
                             }
 
-                            break;
-                        }
-                    }
-                }
-            };
-
-            $generateSlugs = function (&$data, $existingData) use (&$generateSlugs, $slugify) {
-                foreach ($data as $key => &$value) {
-                    // Recursively go deeper for nested sections
-                    if (is_array($value) && !isset($value['label'])) {
-                        $generateSlugs($value, $existingData[$key] ?? []);
-                        continue;
-                    }
-            
-                    // Process individual fields that have a 'label'
-                    if (isset($value['label'])) {
-                        $newSlug = $slugify($value['label']);
-            
-                        // Flag to check if any field_slug_ already exists
-                        $slugKeyFound = false;
-            
-                        foreach ($value as $innerKey => $innerVal) {
-                            if (strpos($innerKey, 'Field_Slug_') === 0) {
-                                $value[$innerKey] = $newSlug;
-                                $slugKeyFound = true;
+                            // If still not found, just create one using new slug as the key name
+                            if (!$slugKeyFound) {
+                                $value["Field_Slug_" . $newSlug] = $newSlug;
                             }
                         }
-            
-                        // If not found, try restoring the same key name from old data
-                        if (!$slugKeyFound && isset($existingData[$key])) {
-                            foreach ($existingData[$key] as $oldFieldKey => $oldFieldValue) {
-                                if (strpos($oldFieldKey, 'Field_Slug_') === 0) {
-                                    $value[$oldFieldKey] = $newSlug;
-                                    $slugKeyFound = true;
+                    }
+                };
+
+
+                $updatePostStoreLabels = function ($newData, $existingData, $postId) use ($slugify) {
+                    $postStores = PostStore::where('post_id', $postId)->get();
+
+                    foreach ($postStores as $postStore) {
+                        $originalPostData = $postStore->data;
+                        
+                        // First, handle section renames to preserve all section data
+                        foreach ($newData as $newSectionKey => $newSection) {
+                            if (!is_array($newSection)) continue;
+
+                            // Find corresponding old section by matching type
+                            $oldSectionKey = null;
+                            foreach ($existingData as $key => $section) {
+                                if (is_array($section) && isset($section[0]) && isset($newSection[0]) &&
+                                    $section[0]['type'] === $newSection[0]['type']) {
+                                    $oldSectionKey = $key;
                                     break;
                                 }
                             }
-                        }
-            
-                        // If still not found, just create one using new slug as the key name
-                        if (!$slugKeyFound) {
-                            $value["Field_Slug_" . $newSlug] = $newSlug;
-                        }
-                    }
-                }
-            };
-            
 
-            $renameSectionKeysInPostStore = function (&$postStoreData, $existingDescription, $newDescription) {
-                $existingKeys = array_keys($existingDescription);
-                $newKeys = array_keys($newDescription);
+                            // If section exists but was renamed
+                            if ($oldSectionKey && $oldSectionKey !== $newSectionKey && isset($originalPostData[$oldSectionKey])) {
+                                $originalPostData[$newSectionKey] = $originalPostData[$oldSectionKey];
+                                unset($originalPostData[$oldSectionKey]);
+                            }
+                            
+                            // Initialize section if it doesn't exist
+                            if (!isset($originalPostData[$newSectionKey])) {
+                                $originalPostData[$newSectionKey] = [];
+                            }
 
-                foreach ($existingKeys as $index => $oldSection) {
-                    if (isset($newKeys[$index])) {
-                        $newSection = $newKeys[$index];
+                            // Process fields within the section
+                            if (is_array($newSection)) {
+                                foreach ($newSection as $fieldIndex => $newField) {
+                                    if (!is_array($newField) || !isset($newField['label']) || !is_string($newField['label'])) continue;
 
-                        if (
-                            isset($postStoreData[$oldSection]) &&
-                            !isset($postStoreData[$newSection])
-                        ) {
-                            $postStoreData[$newSection] = $postStoreData[$oldSection];
-                            unset($postStoreData[$oldSection]);
-                        }
-                    }
-                }
-            };
+                                    $newLabel = $newField['label'];
+                                    $newSlug = $slugify($newLabel);
 
-            $updatePostStoreLabels = function ($newData, $existingData, $postId) use ($slugify) {
-                $postStores = PostStore::where('post_id', $postId)->get();
-
-                foreach ($postStores as $postStore) {
-                    $originalPostData = $postStore->data;
-
-                    $oldSectionKeys = array_keys($existingData);
-                    $newSectionKeys = array_keys($newData);
-
-                    foreach ($oldSectionKeys as $index => $oldSectionKey) {
-                        if (!isset($newSectionKeys[$index])) continue;
-
-                        $newSectionKey = $newSectionKeys[$index];
-                        $oldSection = $existingData[$oldSectionKey] ?? [];
-                        $newSection = $newData[$newSectionKey] ?? [];
-
-                        if (is_array($oldSection) && is_array($newSection)) {
-                            $postSectionData = $originalPostData[$newSectionKey] ?? [];
-
-                            foreach ($oldSection as $fieldIndex => $oldField) {
-                                $newField = $newSection[$fieldIndex] ?? null;
-
-                                if (!isset($oldField['label']) || !isset($newField['label'])) continue;
-
-                                $oldLabel = $oldField['label'];
-                                $newLabel = $newField['label'];
-
-                                if ($oldLabel !== $newLabel) {
-                                    if (isset($postSectionData[$oldLabel])) {
-                                        $postSectionData[$newLabel] = $postSectionData[$oldLabel];
-                                        unset($postSectionData[$oldLabel]);
+                                    // Find if this field existed before with a different label
+                                    $oldLabel = null;
+                                    $oldSlug = null;
+                                    if ($oldSectionKey && isset($existingData[$oldSectionKey][$fieldIndex]['label'])) {
+                                        $oldLabel = $existingData[$oldSectionKey][$fieldIndex]['label'];
+                                        $oldSlug = $slugify($oldLabel);
                                     }
 
-                                    foreach ($postSectionData as $key => $val) {
-                                        if (strpos($key, 'Field_Slug_') === 0 && strpos($val, $slugify($oldLabel)) !== false) {
-                                            $postSectionData[$key] = $slugify($newLabel);
+                                    if ($oldLabel && $oldLabel !== $newLabel) {
+                                        // This is an existing field being renamed
+                                        $originalFieldSlugKey = null;
+                                        
+                                        // First find the original Field_Slug key for this field
+                                        foreach ($originalPostData[$newSectionKey] as $key => $value) {
+                                            if (strpos($key, 'Field_Slug_') === 0 && $value === $oldSlug) {
+                                                $originalFieldSlugKey = $key;
+                                                break;
+                                            }
                                         }
+
+                                        // Now update the field and its Field_Slug value
+                                        foreach ($originalPostData[$newSectionKey] as $key => $value) {
+                                            if ($key === $oldLabel) {
+                                                // Update the field key and value
+                                                $originalPostData[$newSectionKey][$newLabel] = $value;
+                                                unset($originalPostData[$newSectionKey][$key]);
+                                            } elseif ($key === $originalFieldSlugKey) {
+                                                // Update only this field's Field_Slug value
+                                                $originalPostData[$newSectionKey][$key] = $newSlug;
+                                            }
+                                        }
+                                    } elseif (!isset($originalPostData[$newSectionKey][$newLabel])) {
+                                        // This is a new field - create new Field_Slug key
+                                        $originalPostData[$newSectionKey][$newLabel] = null;
+                                        $originalPostData[$newSectionKey]["Field_Slug_" . $newSlug] = $newSlug;
                                     }
                                 }
                             }
-
-                            $originalPostData[$newSectionKey] = $postSectionData;
                         }
-                    }
 
-                    // Top-level fields
-                    foreach ($newData as $key => $value) {
-                        if (!is_array($value) || !isset($value['label'])) continue;
+                        // Handle top-level fields
+                        foreach ($newData as $key => $value) {
+                            if (!is_array($value) || !isset($value['label']) || !is_string($value['label'])) continue;
 
-                        $oldLabel = $existingData[$key]['label'] ?? null;
-                        $newLabel = $value['label'];
+                            $newLabel = $value['label'];
+                            $newSlug = $slugify($newLabel);
+                            $oldLabel = $existingData[$key]['label'] ?? null;
+                            $oldSlug = $oldLabel ? $slugify($oldLabel) : null;
 
-                        if ($oldLabel && $newLabel && $oldLabel !== $newLabel) {
-                            if (isset($originalPostData[$oldLabel])) {
-                                $originalPostData[$newLabel] = $originalPostData[$oldLabel];
-                                unset($originalPostData[$oldLabel]);
-                            }
-
-                            foreach ($originalPostData as $dataKey => $val) {
-                                if (strpos($dataKey, 'Field_Slug_') === 0 && strpos($val, $slugify($oldLabel)) !== false) {
-                                    $originalPostData[$dataKey] = $slugify($newLabel);
+                            if ($oldLabel && $oldLabel !== $newLabel) {
+                                // This is an existing field being renamed
+                                $originalFieldSlugKey = null;
+                                
+                                // First find the original Field_Slug key for this field
+                                foreach ($originalPostData as $key => $value) {
+                                    if (strpos($key, 'Field_Slug_') === 0 && $value === $oldSlug) {
+                                        $originalFieldSlugKey = $key;
+                                        break;
+                                    }
                                 }
+
+                                // Now update the field and its Field_Slug value
+                                foreach ($originalPostData as $key => $value) {
+                                    if ($key === $oldLabel) {
+                                        // Update the field key and value
+                                        $originalPostData[$newLabel] = $value;
+                                        unset($originalPostData[$key]);
+                                    } elseif ($key === $originalFieldSlugKey) {
+                                        // Update only this field's Field_Slug value
+                                        $originalPostData[$key] = $newSlug;
+                                    }
+                                }
+                            } elseif (!isset($originalPostData[$newLabel])) {
+                                // This is a new field - create new Field_Slug key
+                                $originalPostData[$newLabel] = null;
+                                $originalPostData["Field_Slug_" . $newSlug] = $newSlug;
                             }
                         }
+
+                        $originalPostData = array_filter(
+                            $originalPostData,
+                            fn($val, $key) => !is_numeric($key),
+                            ARRAY_FILTER_USE_BOTH
+                        );
+
+                        $postStore->data = $originalPostData;
+                        $postStore->save();
                     }
+                };
 
-                    $originalPostData = array_filter(
-                        $originalPostData,
-                        fn($val, $key) => !is_numeric($key),
-                        ARRAY_FILTER_USE_BOTH
-                    );
+                $preserveOldSectionData($newDescription, $existingDescription);
+                $generateSlugs($newDescription, $existingDescription);
 
-                    $postStore->data = $originalPostData;
-                    $postStore->save();
+                // Update slugs and handle field changes
+                $updatePostStoreLabels($newDescription, $existingDescription, $id);
+
+                $post->post_description = $newDescription;
+            }
+
+            // Update other post fields
+            if ($request->has('post_type')) {
+                $post->post_type = $request['post_type'];
+            }
+
+            if ($request->has('ordering')) {
+                $post->ordering = $request['ordering'];
+            }
+
+            if ($post->save()) {
+                if ($oldPostTitle !== $post->post_title) {
+                    PostStore::where('post_name', $oldPostTitle)->update(['post_name' => $post->post_title]);
                 }
-            };
 
-            $preserveOldSectionData($newDescription, $existingDescription);
-            $generateSlugs($newDescription, $existingDescription);
-
-            // Step 1: Rename section keys
-            $postStoresToUpdate = PostStore::where('post_id', $id)->get();
-            foreach ($postStoresToUpdate as $postStore) {
-                $originalData = $postStore->data;
-                $renameSectionKeysInPostStore($originalData, $existingDescription, $newDescription);
-
-                $originalData = array_filter(
-                    $originalData,
-                    fn($val, $key) => !is_numeric($key),
-                    ARRAY_FILTER_USE_BOTH
-                );
-                
-                $postStore->data = $originalData;
-                $postStore->save();
+                return response()->json([
+                    'status' => true,
+                    'code' => '200',
+                    'message' => 'Dynamic Post Data Updated Successfully',
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'code' => '500',
+                    'message' => 'Failed To Update Dynamic Post',
+                ], 500);
             }
-
-            // Step 2: Update slugs based on label
-            $updatePostStoreLabels($newDescription, $existingDescription, $id);
-
-            $post->post_description = $newDescription;
-        }
-
-        // Update other post fields
-        if ($request->has('post_type')) {
-            $post->post_type = $request['post_type'];
-        }
-
-        if ($request->has('ordering')) {
-            $post->ordering = $request['ordering'];
-        }
-
-        if ($post->save()) {
-            if ($oldPostTitle !== $post->post_title) {
-                PostStore::where('post_name', $oldPostTitle)->update(['post_name' => $post->post_title]);
-            }
-
-            return response()->json([
-                'status' => true,
-                'code' => '200',
-                'message' => 'Dynamic Post Data Updated Successfully',
-            ], 200);
-        } else {
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'code' => '500',
-                'message' => 'Failed To Update Dynamic Post',
+                'message' => 'An Error Occurred',
+                'error' => $e->getMessage(),
             ], 500);
         }
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => false,
-            'code' => '500',
-            'message' => 'An Error Occurred',
-            'error' => $e->getMessage(),
-        ], 500);
     }
-}
 
 
 
 
- 
+
 
     /**
      * Soft delete a post by its title.
