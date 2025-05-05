@@ -494,6 +494,7 @@ class PostStoreController extends Controller
                 if (is_array($value)) {
                     foreach ($value as $subKey => $subValue) {
                         if (filter_var($subValue, FILTER_VALIDATE_URL)) {
+                            // For URLs, store them as is without modification
                             $transformedRequest[$key][$subKey] = $subValue;
                         } else {
                             $transformedRequest[$key][$subKey] = $subValue;
@@ -501,7 +502,13 @@ class PostStoreController extends Controller
                     }
                 } else {
                     if (filter_var($value, FILTER_VALIDATE_URL)) {
-                        $transformedRequest[$key] = $value;
+                        // Check if the URL is already a complete path to our upload directory
+                        if (strpos($value, '/uploads/dynamic_post_store/') !== false) {
+                            // Extract just the filename from the full URL
+                            $transformedRequest[$key] = basename($value);
+                        } else {
+                            $transformedRequest[$key] = $value;
+                        }
                     } else {
                         $transformedRequest[$key] = $value;
                     }
@@ -511,7 +518,10 @@ class PostStoreController extends Controller
             // Handle file uploads and base64 images
             foreach ($request->all() as $key => $file) {
                 if (is_numeric($key)) continue;
-                if (filter_var($file, FILTER_VALIDATE_URL)) continue;
+                if (filter_var($file, FILTER_VALIDATE_URL)) {
+                    // Skip if it's already a valid URL
+                    continue;
+                }
      
                 if (is_string($file) && strpos($file, 'data:image/') === 0) {
                     list($type, $base64Data) = explode(';', $file);
@@ -568,7 +578,13 @@ class PostStoreController extends Controller
                 if (is_array($sectionValue)) {
                     foreach ($sectionValue as $fieldKey => $fieldValue) {
                         if (filter_var($fieldValue, FILTER_VALIDATE_URL)) {
-                            $transformedRequest[$sectionKey][$fieldKey] = $fieldValue;
+                            // Check if the URL is already a complete path to our upload directory
+                            if (strpos($fieldValue, '/uploads/dynamic_post_store/') !== false) {
+                                // Extract just the filename from the full URL
+                                $transformedRequest[$sectionKey][$fieldKey] = basename($fieldValue);
+                            } else {
+                                $transformedRequest[$sectionKey][$fieldKey] = $fieldValue;
+                            }
                         } elseif (is_string($fieldValue) && strpos($fieldValue, 'data:image/') === 0) {
                             list($type, $base64Data) = explode(';', $fieldValue);
                             list(, $base64Data) = explode(',', $base64Data);
