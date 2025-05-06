@@ -56,6 +56,7 @@ Route::middleware('auth:api')->group(function () {
     /**  post value store api routes create by ns*/
 
     Route::get('/post-data-list/{postName}', [PostStoreController::class, 'getList']);
+    Route::get('/post-data/{id}', [PostStoreController::class, 'getPostData']);
     Route::post('/post-data-store/{postTitle}', [PostStoreController::class, 'postStore']);
     Route::get('/post-data-show/{postName}', [PostStoreController::class, 'show']);
     Route::get('/post-data-edit/{id}', [PostStoreController::class, 'edit']);
