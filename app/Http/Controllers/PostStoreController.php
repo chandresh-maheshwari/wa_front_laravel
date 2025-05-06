@@ -79,6 +79,58 @@ class PostStoreController extends Controller
         }
     }
 
+
+
+    public function getPostData($post_id)
+    {
+        try {
+            $user = Auth::user()->id;
+            if (! $user) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '401',
+                    'message' => 'User Not Authenticated',
+                ], 401);
+            }
+
+            $postData = PostStore::where('post_id', $post_id)
+                ->orderBy('id', 'desc')
+                ->get();
+
+            if ($postData->isEmpty()) {
+                return response()->json([
+                    'status' => true,
+                    'code' => '200',
+                    'message' => 'No Post Store Data Found',
+                    'results' => [],
+                ], 200);
+            }
+
+         
+
+            return response()->json([
+                'status' => true,
+                'code' => '200',
+                'message' => 'Post Store Data Fetch Successfully',
+                'results' => $postData,
+            ], 200);
+        } catch (Exception $e) {
+            Log::error('Error in getList method', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'status' => false,
+                'code' => '500',
+                'message' => 'Internal Server Error',
+            ], 500);
+        }
+    }
+
+
+
+
+    
     private function isImageFileName($value)
     {
         if (! is_string($value)) {
