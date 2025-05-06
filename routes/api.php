@@ -64,7 +64,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/post-data-active/{id}', [PostStoreController::class, 'active']);
     Route::delete('/post-img-delete/{id}/{imageName}', [PostStoreController::class, 'deleteImage']);
     Route::put('/post-store/restore/{id}', [PostStoreController::class, 'restore']);
-    Route::get('/get-post-data-particularById/{postId}', [PostStoreController::class, 'getDataParticularById']);
+    Route::get('/get-post-data-particularById/{postId}', [PostStoreController::class, 'getPostDataParticularById']);
 
     /** Get Form data value api routes create by ns */
     Route::get('/get-form-data/{postTitle}', [GetFormDataController::class, 'getFormData']);

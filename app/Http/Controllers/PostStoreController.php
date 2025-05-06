@@ -973,7 +973,7 @@ private function convertToSlugBase($string)
 
     /** Getting post data by particular id code by ns */
 
-    public function getDataParticularById($postId)
+    public function getPostDataParticularById($postId)
     {
         try {
             $user = Auth::user()->id;
