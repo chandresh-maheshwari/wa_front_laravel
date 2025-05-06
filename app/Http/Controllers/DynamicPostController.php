@@ -114,6 +114,7 @@ class DynamicPostController extends Controller
             if ($ordering == 0) {
                 $ordering = 1;
             }
+            $exists = DynamicPost::where('ordering', $ordering)->exists();
 
             $saveData = $this->dynamicPost1->savePost([
                 'post_title' => $request['post_title'],
@@ -121,7 +122,15 @@ class DynamicPostController extends Controller
                 'post_type' => $postData1,
                 'ordering' => $ordering,
             ]);
+         
 
+            if ($exists) {
+                return response()->json([
+                    'status' => false,
+                    'code' => '409',
+                    'message' => 'The ordering value already exists. Please choose a different one.',
+                ], 409);
+            }
             if (isset($saveData) && $saveData !== false) {
                 return response()->json([
                     'status' => true,

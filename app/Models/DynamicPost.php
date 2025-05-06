@@ -1,11 +1,9 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-
 
 class DynamicPost extends Model
 {
@@ -21,7 +19,7 @@ class DynamicPost extends Model
         'status',
         'deleted_at',
         'created_at',
-        'updated_at'
+        'updated_at',
     ];
 
     protected $casts = [
@@ -40,10 +38,14 @@ class DynamicPost extends Model
 
     public function savePost($data)
     {
+        $exists = self::where('ordering', $data['ordering'])->exists();
+        if ($exists) {
+            return false;
+        }
         $this->post_title = $data['post_title'];
         $this->post_description = $data['post_description'];
-        $this->post_type = $data['post_type']; 
-        $this->ordering = $data['ordering']; 
+        $this->post_type = $data['post_type'];
+        $this->ordering = $data['ordering'];
         return $this->save();
     }
 }

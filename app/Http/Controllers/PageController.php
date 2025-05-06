@@ -62,12 +62,21 @@ class PageController extends Controller
         $this->validate($request, [
             'page_name' => 'required|string',
             'image' => 'nullable|file|mimes:jpeg,png,gif,svg|dimensions:max_width=1600,max_height=1600|dimensions:min_width=40,min_height=40',
+            'ordering' => 'nullable|integer', // Ensure ordering is an integer
         ], [
 
             'image.file' => 'The image must be a valid file.',
             'image.mimes' => 'The image must be a file of type: jpeg, png, gif, svg.',
             'image.dimensions' => 'The image must have valid dimensions (max: 1600x1600, min: 40x40).',
         ]);
+
+        if (Page::where('ordering', $request->ordering)->exists()) {
+            return response()->json([
+                'status' => false,
+                'code' => '400',
+                'message' => 'The ordering value already exists. Please choose a different one',
+            ], 400);
+        }
         $page = new Page();
         $page->post_type = $request->post_type;
         $page->page_name = $request->page_name;
@@ -91,6 +100,8 @@ class PageController extends Controller
 
             $page->ordering = $request['ordering'];
             $page->deleted_at = $request->has('deleted_at') ? $request['deleted_at'] : 0;
+
+            
 
             if ($page->save()) {
                 return response()->json([
