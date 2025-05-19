@@ -74,6 +74,7 @@ class DynamicPostController extends Controller
 
     public function addPost(Request $request)
     {
+        Log::info('Request Data:', $request->all());
         try {
             $user = Auth::user();
             if (! $user) {
@@ -89,6 +90,8 @@ class DynamicPostController extends Controller
                 'post_description' => 'required|array',
                 'post_type' => 'required|string',
                 'ordering' => 'integer|min:1',
+                'slider_post' => 'nullable|string|in:Yes,No', 
+
             ]);
 
             $postData = $request['post_description'];
@@ -114,6 +117,9 @@ class DynamicPostController extends Controller
             if ($ordering == 0) {
                 $ordering = 1;
             }
+
+            $slider_post = ($request->has('slider_post') && $request->input('slider_post') === 'Yes') ? 'Yes' : 'No';
+
             $exists = DynamicPost::where('ordering', $ordering)->exists();
 
             $saveData = $this->dynamicPost1->savePost([
@@ -121,6 +127,7 @@ class DynamicPostController extends Controller
                 'post_description' => $postData,
                 'post_type' => $postData1,
                 'ordering' => $ordering,
+                'slider_post' => $slider_post,
             ]);
          
 
@@ -493,6 +500,9 @@ class DynamicPostController extends Controller
 
             if ($request->has('ordering')) {
                 $post->ordering = $request['ordering'];
+            }
+            if ($request->has('slider_post')) {
+                $post->slider_post = $request['slider_post'];
             }
 
             if ($post->save()) {

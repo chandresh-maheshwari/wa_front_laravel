@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DynamicPost;
-use App\Models\PostStore;
-use App\Models\Page;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth;
 use Exception;
+use App\Models\Page;
+use App\Models\PostStore;
+use App\Models\DynamicPost;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class PageController extends Controller
 {
@@ -409,30 +410,49 @@ class PageController extends Controller
                 $page->image = url('uploads/page/' . $page->image);
             }
 
-            $postStores = PostStore::where('post_id', $page->post_type)
-                ->where('status', 1)
-                ->where('deleted_at', 0)
-                ->get();
+            // $postStores = PostStore::where('post_id', $page->post_type)
+            //     ->where('status', 1)
+            //     ->where('deleted_at', 0)
+            //     ->get();
+            $postStores = DB::table('post_store')
+            ->select('dynamic_post.slider_post', 'post_store.*')
+            ->leftJoin('dynamic_post', 'post_store.post_id', '=', 'dynamic_post.id')
+            ->where('post_store.post_id', $page->post_type)
+            ->where('post_store.status', 1)
+            ->where('post_store.deleted_at', 0)
+            ->get();
 
             if ($postStores->isEmpty()) {
                 return response()->json([
                     'status' => false,
                     'code' => '404',
-                    'message' => 'Related Post Store Data Not Found',
+                    'message' => 'Related Post Store Data Not 
+                     ',
                 ], 404);
             }
 
             $allRestructuredData = [];
 
+            // foreach ($postStores as $postStore) {
+            //     $postStoreData = $postStore->toArray();
+
+            //     // Transform keys recursively
+            //     $postStoreData['data'] = $this->transformKeys($postStoreData['data']);
+
+            //     $allRestructuredData[] = $postStoreData;
+            // }
             foreach ($postStores as $postStore) {
-                $postStoreData = $postStore->toArray();
+                $postStoreData = (array) $postStore;
+                if (!empty($postStoreData['data']) && is_string($postStoreData['data'])) {
+                    $decodedData = json_decode($postStoreData['data'], true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $postStoreData['data'] = $decodedData;
+                    }
+                }
 
-                // Transform keys recursively
-                $postStoreData['data'] = $this->transformKeys($postStoreData['data']);
-
+                $postStoreData = $this->transformKeys($postStoreData);
                 $allRestructuredData[] = $postStoreData;
             }
-
             $pageData = $page->toArray();
             $pageData['post_store'] = $allRestructuredData;
 
@@ -440,7 +460,8 @@ class PageController extends Controller
             $pageData['slug'] = $slugKey;
 
             return response()->json([
-                'status' => true,
+                'status' => true, 
+                
                 'code' => '200',
                 'message' => 'Page And Post Store Data Fetch Successfully',
                 'page' => $pageData,
@@ -479,21 +500,41 @@ class PageController extends Controller
                     $page->image = url('uploads/page/' . $page->image);
                 }
 
-                $postStores = PostStore::where('post_id', $page->post_type)
-                    ->where('status', 1)
-                    ->where('deleted_at', 0)
-                    ->get();
+                // $postStores = PostStore::where('post_id', $page->post_type)
+                //                          ->where('status', 1)
+                //                          ->where('deleted_at', 0)
+                //                          ->get();
+
+                $postStores = DB::table('post_store')
+                                  ->select('dynamic_post.slider_post', 'post_store.*')
+                                  ->leftJoin('dynamic_post', 'post_store.post_id', '=', 'dynamic_post.id')
+                                  ->where('post_store.post_id', $page->post_type)
+                                  ->where('post_store.status', 1)
+                                  ->where('post_store.deleted_at', 0)
+                                  ->get();
 
                 $allRestructuredData = [];
 
+                // foreach ($postStores as $postStore) {
+                //     $postStoreData = $postStore->toArray();
+
+                //     Log::info("WWWWWWWWWWWWWWWWW");
+                //     Log::info($postStoreData);
+                //     // Transform keys recursively
+                //     $postStoreData = $this->transformKeys($postStoreData);
+
+                //     $allRestructuredData[] = $postStoreData;
+                // }
                 foreach ($postStores as $postStore) {
-                    $postStoreData = $postStore->toArray();
+                    $postStoreData = (array) $postStore;
+                    if (!empty($postStoreData['data']) && is_string($postStoreData['data'])) {
+                        $decodedData = json_decode($postStoreData['data'], true);
+                        if (json_last_error() === JSON_ERROR_NONE) {
+                            $postStoreData['data'] = $decodedData;
+                        }
+                    }
 
-                    Log::info("WWWWWWWWWWWWWWWWW");
-                    Log::info($postStoreData);
-                    // Transform keys recursively
                     $postStoreData = $this->transformKeys($postStoreData);
-
                     $allRestructuredData[] = $postStoreData;
                 }
 
@@ -538,7 +579,7 @@ class PageController extends Controller
             } else {
                 if (!empty($value) && is_string($value)) {
                     // $fileExtension = strtolower(pathinfo($value, PATHINFO_EXTENSION));
-                    $fileExtension = pathinfo($value, PATHINFO_EXTENSION);
+                    $fileExtension = pathinfo($value, PATHINFO_EXTENSION);  
 
                     if (in_array($fileExtension, $fileExtensions)) {
                         $transformedData[$normalizedKey] = url('/uploads/dynamic_post_store/' . $value);

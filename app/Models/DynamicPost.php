@@ -17,6 +17,7 @@ class DynamicPost extends Model
         'post_type',
         'ordering',
         'status',
+        'slider_post',
         'deleted_at',
         'created_at',
         'updated_at',
@@ -46,6 +47,7 @@ class DynamicPost extends Model
         $this->post_description = $data['post_description'];
         $this->post_type = $data['post_type'];
         $this->ordering = $data['ordering'];
+        $this->slider_post = $data['slider_post'];
         return $this->save();
     }
 }
