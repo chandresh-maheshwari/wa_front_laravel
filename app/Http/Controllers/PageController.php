@@ -410,17 +410,11 @@ class PageController extends Controller
                 $page->image = url('uploads/page/' . $page->image);
             }
 
-            // $postStores = PostStore::where('post_id', $page->post_type)
-            //     ->where('status', 1)
-            //     ->where('deleted_at', 0)
-            //     ->get();
-            $postStores = DB::table('post_store')
-            ->select('dynamic_post.slider_post', 'post_store.*')
-            ->leftJoin('dynamic_post', 'post_store.post_id', '=', 'dynamic_post.id')
-            ->where('post_store.post_id', $page->post_type)
-            ->where('post_store.status', 1)
-            ->where('post_store.deleted_at', 0)
-            ->get();
+            $postStores = PostStore::where('post_id', $page->post_type)
+                ->where('status', 1)
+                ->where('deleted_at', 0)
+                ->get();
+           
 
             if ($postStores->isEmpty()) {
                 return response()->json([
@@ -433,26 +427,15 @@ class PageController extends Controller
 
             $allRestructuredData = [];
 
-            // foreach ($postStores as $postStore) {
-            //     $postStoreData = $postStore->toArray();
-
-            //     // Transform keys recursively
-            //     $postStoreData['data'] = $this->transformKeys($postStoreData['data']);
-
-            //     $allRestructuredData[] = $postStoreData;
-            // }
             foreach ($postStores as $postStore) {
-                $postStoreData = (array) $postStore;
-                if (!empty($postStoreData['data']) && is_string($postStoreData['data'])) {
-                    $decodedData = json_decode($postStoreData['data'], true);
-                    if (json_last_error() === JSON_ERROR_NONE) {
-                        $postStoreData['data'] = $decodedData;
-                    }
-                }
+                $postStoreData = $postStore->toArray();
 
-                $postStoreData = $this->transformKeys($postStoreData);
+                // Transform keys recursively
+                $postStoreData['data'] = $this->transformKeys($postStoreData['data']);
+
                 $allRestructuredData[] = $postStoreData;
             }
+           
             $pageData = $page->toArray();
             $pageData['post_store'] = $allRestructuredData;
 
@@ -500,43 +483,26 @@ class PageController extends Controller
                     $page->image = url('uploads/page/' . $page->image);
                 }
 
-                // $postStores = PostStore::where('post_id', $page->post_type)
-                //                          ->where('status', 1)
-                //                          ->where('deleted_at', 0)
-                //                          ->get();
+                $postStores = PostStore::where('post_id', $page->post_type)
+                                         ->where('status', 1)
+                                         ->where('deleted_at', 0)
+                                         ->get();
 
-                $postStores = DB::table('post_store')
-                                  ->select('dynamic_post.slider_post', 'post_store.*')
-                                  ->leftJoin('dynamic_post', 'post_store.post_id', '=', 'dynamic_post.id')
-                                  ->where('post_store.post_id', $page->post_type)
-                                  ->where('post_store.status', 1)
-                                  ->where('post_store.deleted_at', 0)
-                                  ->get();
+               
 
                 $allRestructuredData = [];
 
-                // foreach ($postStores as $postStore) {
-                //     $postStoreData = $postStore->toArray();
-
-                //     Log::info("WWWWWWWWWWWWWWWWW");
-                //     Log::info($postStoreData);
-                //     // Transform keys recursively
-                //     $postStoreData = $this->transformKeys($postStoreData);
-
-                //     $allRestructuredData[] = $postStoreData;
-                // }
                 foreach ($postStores as $postStore) {
-                    $postStoreData = (array) $postStore;
-                    if (!empty($postStoreData['data']) && is_string($postStoreData['data'])) {
-                        $decodedData = json_decode($postStoreData['data'], true);
-                        if (json_last_error() === JSON_ERROR_NONE) {
-                            $postStoreData['data'] = $decodedData;
-                        }
-                    }
+                    $postStoreData = $postStore->toArray();
 
+                    Log::info("WWWWWWWWWWWWWWWWW");
+                    Log::info($postStoreData);
+                    // Transform keys recursively
                     $postStoreData = $this->transformKeys($postStoreData);
+
                     $allRestructuredData[] = $postStoreData;
                 }
+               
 
                 $pageData = $page->toArray();
                 $pageData['post_store'] = $allRestructuredData;

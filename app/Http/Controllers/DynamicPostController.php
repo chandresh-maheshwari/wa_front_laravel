@@ -118,7 +118,6 @@ class DynamicPostController extends Controller
                 $ordering = 1;
             }
 
-            $slider_post = ($request->has('slider_post') && $request->input('slider_post') === 'Yes') ? 'Yes' : 'No';
 
             $exists = DynamicPost::where('ordering', $ordering)->exists();
 
@@ -127,7 +126,6 @@ class DynamicPostController extends Controller
                 'post_description' => $postData,
                 'post_type' => $postData1,
                 'ordering' => $ordering,
-                'slider_post' => $slider_post,
             ]);
          
 
@@ -501,9 +499,7 @@ class DynamicPostController extends Controller
             if ($request->has('ordering')) {
                 $post->ordering = $request['ordering'];
             }
-            if ($request->has('slider_post')) {
-                $post->slider_post = $request['slider_post'];
-            }
+           
 
             if ($post->save()) {
                 if ($oldPostTitle !== $post->post_title) {
