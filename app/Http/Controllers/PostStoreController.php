@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\DynamicPost;
@@ -24,8 +23,8 @@ class PostStoreController extends Controller
             $user = Auth::user()->id;
             if (! $user) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '401',
+                    'status'  => false,
+                    'code'    => '401',
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
@@ -36,8 +35,8 @@ class PostStoreController extends Controller
 
             if ($postData->isEmpty()) {
                 return response()->json([
-                    'status' => true,
-                    'code' => '200',
+                    'status'  => true,
+                    'code'    => '200',
                     'message' => 'No Post Store Data Found',
                     'results' => [],
                 ], 200);
@@ -61,8 +60,8 @@ class PostStoreController extends Controller
             });
 
             return response()->json([
-                'status' => true,
-                'code' => '200',
+                'status'  => true,
+                'code'    => '200',
                 'message' => 'Post Store Data Fetch Successfully',
                 'results' => $postData,
             ], 200);
@@ -72,14 +71,12 @@ class PostStoreController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             return response()->json([
-                'status' => false,
-                'code' => '500',
+                'status'  => false,
+                'code'    => '500',
                 'message' => 'Internal Server Error',
             ], 500);
         }
     }
-
-
 
     public function getPostData($post_id)
     {
@@ -87,8 +84,8 @@ class PostStoreController extends Controller
             $user = Auth::user()->id;
             if (! $user) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '401',
+                    'status'  => false,
+                    'code'    => '401',
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
@@ -99,18 +96,16 @@ class PostStoreController extends Controller
 
             if ($postData->isEmpty()) {
                 return response()->json([
-                    'status' => true,
-                    'code' => '200',
+                    'status'  => true,
+                    'code'    => '200',
                     'message' => 'No Post Store Data Found',
                     'results' => [],
                 ], 200);
             }
 
-         
-
             return response()->json([
-                'status' => true,
-                'code' => '200',
+                'status'  => true,
+                'code'    => '200',
                 'message' => 'Post Store Data Fetch Successfully',
                 'results' => $postData,
             ], 200);
@@ -120,17 +115,13 @@ class PostStoreController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             return response()->json([
-                'status' => false,
-                'code' => '500',
+                'status'  => false,
+                'code'    => '500',
                 'message' => 'Internal Server Error',
             ], 500);
         }
     }
 
-
-
-
-    
     private function isImageFileName($value)
     {
         if (! is_string($value)) {
@@ -138,7 +129,7 @@ class PostStoreController extends Controller
         }
 
         $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'];
-        $extension = pathinfo($value, PATHINFO_EXTENSION);
+        $extension       = pathinfo($value, PATHINFO_EXTENSION);
         return in_array(strtolower($extension), $imageExtensions);
     }
 
@@ -149,8 +140,8 @@ class PostStoreController extends Controller
             $user = Auth::user()->id;
             if (! $user) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '401',
+                    'status'  => false,
+                    'code'    => '401',
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
@@ -159,8 +150,8 @@ class PostStoreController extends Controller
 
             if (! $postData) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '404',
+                    'status'  => false,
+                    'code'    => '404',
                     'message' => 'Post Store Data Not Found',
                 ], 404);
             }
@@ -169,46 +160,51 @@ class PostStoreController extends Controller
             $transformedRequest = [];
 
             foreach ($requestData as $reqDatakey => $value) {
-                // If the key starts with "Section", replace the space between 'Section' and the number with an underscore
+
                 if (strpos($reqDatakey, 'Section ') === 0) {
-                    // $reqDatakey = str_replace(' ', '_', $reqDatakey); // Replace space with underscore in Section keys
-                }
+                    if (strpos($reqDatakey, 'Section_image_') === 0) {
+                        continue;
+                    }
 
-                // Skip fields starting with Section_image_
-                if (strpos($reqDatakey, 'Section_image_') === 0) {
-                    continue;
-                }
-
-                // Now handle different types of values for transformation
-                if (is_numeric($value)) {
-                    $transformedRequest[$reqDatakey] = (string) $value;
-                } elseif ($this->isJson($value)) {
-                    if (is_string($value)) {
-                        $sectionData = json_decode($value, true);
-                        if (is_array($sectionData)) {
-                            $sectionTransformed = [];
-                            foreach ($sectionData as $sectionKey => $sectionValue) {
-                                $sectionTransformed[$sectionKey] = $sectionValue;
-                                $slugKey = 'Field_Slug_' . $this->convertToSlug($sectionKey);
-                                $sectionTransformed[$slugKey] = $this->convertToSlug1($sectionKey);
+                    if ($this->isJson($value)) {
+                        if (is_string($value)) {
+                            $sectionData = json_decode($value, true);
+                            if (is_array($sectionData)) {
+                                $sectionTransformed = [];
+                                foreach ($sectionData as $sectionKey => $sectionValue) {
+                                    $sectionTransformed[$sectionKey] = $sectionValue;
+                                    $slugKey                         = 'Field_Slug_' . $this->convertToSlug($sectionKey);
+                                    $sectionTransformed[$slugKey]    = $this->convertToSlug1($sectionKey);
+                                }
+                                $transformedRequest[$reqDatakey] = $sectionTransformed;
                             }
-                            $transformedRequest[$reqDatakey] = $sectionTransformed;
                         }
+                    } elseif (is_array($value)) {
+                        $sectionData        = $value;
+                        $sectionTransformed = [];
+                        foreach ($sectionData as $sectionKey => $sectionValue) {
+                            $sectionTransformed[$sectionKey] = $sectionValue;
+                            $slugKey                         = 'Field_Slug_' . $this->convertToSlug($sectionKey);
+                            $sectionTransformed[$slugKey]    = $this->convertToSlug1($sectionKey);
+                        }
+                        $transformedRequest[$reqDatakey] = $sectionTransformed;
                     }
-                } elseif (is_array($value)) {
-                    // Handle case where $value is already an array
-                    $sectionData = $value;
-                    $sectionTransformed = [];
-                    foreach ($sectionData as $sectionKey => $sectionValue) {
-                        $sectionTransformed[$sectionKey] = $sectionValue;
-                        $slugKey = 'Field_Slug_' . $this->convertToSlug($sectionKey);
-                        $sectionTransformed[$slugKey] = $this->convertToSlug1($sectionKey);
-                    }
-                    $transformedRequest[$reqDatakey] = $sectionTransformed;
                 } else {
-                    $labelKey = $reqDatakey;
-                    $transformedRequest[$labelKey] = (string) $value;
-                    $transformedRequest['Field_Slug_' . $this->convertToSlug($reqDatakey)] = $this->convertToSlug1($reqDatakey);
+
+                    if (strpos($reqDatakey, 'Section_image_') === 0) {
+                        continue;
+                    }
+
+                    if (is_array($value)) {
+                        $transformedRequest[$reqDatakey] = $value;
+                        $slugKey                         = 'Field_Slug_' . $this->convertToSlug($reqDatakey);
+                        $transformedRequest[$slugKey]    = $this->convertToSlug1($reqDatakey);
+                    } else {
+                        $labelKey                                                              = $reqDatakey;
+                        $transformedRequest[$labelKey]                                         = (string) $value;
+                        $transformedRequest['Field_Slug_' . $this->convertToSlug($reqDatakey)] = $this->convertToSlug1($reqDatakey);
+
+                    }
                 }
             }
 
@@ -216,15 +212,15 @@ class PostStoreController extends Controller
             // Log::info($transformedRequest);
             $postStore = PostStore::create([
                 'post_name' => $postTitle,
-                'post_id' => $postData->id,
-                'data' => $transformedRequest,
+                'post_id'   => $postData->id,
+                'data'      => $transformedRequest,
             ]);
 
             foreach ($request->all() as $key => $file) {
                 if (is_string($file) && strpos($file, 'data:image/') === 0) {
 
                     list($type, $base64Data) = explode(';', $file);
-                    list(, $base64Data) = explode(',', $base64Data);
+                    list(, $base64Data)      = explode(',', $base64Data);
 
                     // Decode the base64 data
                     $imageData = base64_decode($base64Data);
@@ -236,7 +232,7 @@ class PostStoreController extends Controller
                         continue;
                     }
 
-                    $postname = str_replace(' ', '_', $postTitle);
+                    $postname      = str_replace(' ', '_', $postTitle);
                     $fileNameOuter = $postname . '_' . $postStore->id . '_' . $key . '.' . $extension;
 
                     $destinationPath = public_path('uploads/dynamic_post_store');
@@ -250,8 +246,8 @@ class PostStoreController extends Controller
                     file_put_contents($destinationPath . '/' . $fileNameOuter, $imageData);
 
                     // Handle dynamic fields
-                    $labelKey = $key;
-                    $transformedRequest[$labelKey] = $fileNameOuter;
+                    $labelKey                                                       = $key;
+                    $transformedRequest[$labelKey]                                  = $fileNameOuter;
                     $transformedRequest['Field_Slug_' . $this->convertToSlug($key)] = $this->convertToSlug1($key);
                 }
                 // Check if $file is an instance of UploadedFile (regular file upload)
@@ -268,15 +264,15 @@ class PostStoreController extends Controller
 
                     // Regular file handling
                     $destinationPath = public_path('uploads/dynamic_post_store');
-                    $originalName = $file->getClientOriginalName();
-                    $extension = $file->getClientOriginalExtension();
-                    $postname = str_replace(' ', '_', $postTitle);
-                    $fileNameOuter = $postname . '_' . $postStore->id . '_' . $key . '.' . $extension;
+                    $originalName    = $file->getClientOriginalName();
+                    $extension       = $file->getClientOriginalExtension();
+                    $postname        = str_replace(' ', '_', $postTitle);
+                    $fileNameOuter   = $postname . '_' . $postStore->id . '_' . $key . '.' . $extension;
                     $file->move($destinationPath, $fileNameOuter);
 
                     // Handle dynamic fields
-                    $labelKey = $key;
-                    $transformedRequest[$labelKey] = $fileNameOuter;
+                    $labelKey                                                       = $key;
+                    $transformedRequest[$labelKey]                                  = $fileNameOuter;
                     $transformedRequest['Field_Slug_' . $this->convertToSlug($key)] = $this->convertToSlug1($key);
                 }
                 // In case of an array, loop through the files
@@ -285,15 +281,15 @@ class PostStoreController extends Controller
                         // Check if individualFile is an instance of UploadedFile (for file upload)
                         if ($individualFile instanceof \Illuminate\Http\UploadedFile  && $individualFile->isValid()) {
                             $destinationPath = public_path('uploads/dynamic_post_store');
-                            $originalName = $individualFile->getClientOriginalName();
-                            $extension = $individualFile->getClientOriginalExtension();
-                            $postname = str_replace(' ', '_', $postTitle);
-                            $fileNameOuter = $postname . '_' . $postStore->id . '_' . $key . '.' . $extension;
+                            $originalName    = $individualFile->getClientOriginalName();
+                            $extension       = $individualFile->getClientOriginalExtension();
+                            $postname        = str_replace(' ', '_', $postTitle);
+                            $fileNameOuter   = $postname . '_' . $postStore->id . '_' . $key . '.' . $extension;
                             $individualFile->move($destinationPath, $fileNameOuter);
 
                             // Handle dynamic fields
-                            $labelKey = $key;
-                            $transformedRequest[$labelKey] = $fileNameOuter;
+                            $labelKey                                                       = $key;
+                            $transformedRequest[$labelKey]                                  = $fileNameOuter;
                             $transformedRequest['Field_Slug_' . $this->convertToSlug($key)] = $this->convertToSlug1($key);
                         }
                     }
@@ -311,8 +307,8 @@ class PostStoreController extends Controller
                         if (is_string($fieldValue) && strpos($fieldValue, 'data:image/') === 0) {
                             // This is base64 data, decode and save it
                             list($type, $base64Data) = explode(';', $fieldValue);
-                            list(, $base64Data) = explode(',', $base64Data); // Get the base64 data part
-                            $imageData = base64_decode($base64Data);
+                            list(, $base64Data)      = explode(',', $base64Data); // Get the base64 data part
+                            $imageData               = base64_decode($base64Data);
 
                             // Extract the file extension from the base64 data (e.g., jpeg, png)
                             preg_match('/data:image\/(.*?);/', $type, $matches);
@@ -320,8 +316,8 @@ class PostStoreController extends Controller
 
                             // Generate the file name for saving the image
                             $fieldnameforimg = str_replace(' ', '_', $fieldKey);
-                            $postname = str_replace(' ', '_', $postTitle);
-                            $fileName = $postname . '_' . $postStore->id . '_' . $sectionKey . '_' . $fieldnameforimg . '.' . $extension;
+                            $postname        = str_replace(' ', '_', $postTitle);
+                            $fileName        = $postname . '_' . $postStore->id . '_' . $sectionKey . '_' . $fieldnameforimg . '.' . $extension;
 
                             // Define the path where the image will be saved
                             $destinationPath = public_path('uploads/dynamic_post_store');
@@ -346,15 +342,15 @@ class PostStoreController extends Controller
 
             if ($postStore) {
                 return response()->json([
-                    'status' => true,
-                    'code' => '200',
+                    'status'  => true,
+                    'code'    => '200',
                     'message' => 'Post Store Data Added Successfully',
                 ], 200);
             } else {
                 return response()->json([
-                    'status' => false,
-                    'code' => '404',
-                    'message' => 'Something Went Wrong',
+                    'status'  => false,
+                    'code'    => '404',
+                    'message' => 'Something Went Wrong', 
                 ], 404);
             }
         } catch (Exception $e) {
@@ -363,8 +359,8 @@ class PostStoreController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             return response()->json([
-                'status' => false,
-                'code' => '500',
+                'status'  => false,
+                'code'    => '500',
                 'message' => 'Internal Server Error',
             ], 500);
         }
@@ -390,8 +386,8 @@ class PostStoreController extends Controller
             $user = Auth::user()->id;
             if (! $user) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '401',
+                    'status'  => false,
+                    'code'    => '401',
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
@@ -400,31 +396,31 @@ class PostStoreController extends Controller
 
             if (! $post) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '404',
+                    'status'  => false,
+                    'code'    => '404',
                     'message' => 'Post Store Data Not Found',
                 ], 404);
             }
 
             if ($post->deleted_at != 0) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '410',
+                    'status'  => false,
+                    'code'    => '410',
                     'message' => 'This Record Is Deleted',
                 ], 410);
             }
 
             return response()->json([
-                'status' => true,
-                'code' => '200',
+                'status'  => true,
+                'code'    => '200',
                 'message' => 'Post Store Data Fetch Successfully',
                 'results' => $post,
             ], 200);
         } catch (Exception $e) {
             Log::error('Error showing post', ['error' => $e->getMessage()]);
             return response()->json([
-                'status' => false,
-                'code' => '500',
+                'status'  => false,
+                'code'    => '500',
                 'message' => 'Internal Server Error',
             ], 500);
         }
@@ -440,8 +436,8 @@ class PostStoreController extends Controller
             $user = Auth::user()->id;
             if (! $user) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '401',
+                    'status'  => false,
+                    'code'    => '401',
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
@@ -450,16 +446,16 @@ class PostStoreController extends Controller
 
             if (! $post) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '404',
+                    'status'  => false,
+                    'code'    => '404',
                     'message' => 'Post Store Data Not Found',
                 ], 404);
             }
 
             if ($post->deleted_at != 0) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '410',
+                    'status'  => false,
+                    'code'    => '410',
                     'message' => 'This Record Is Deleted',
                 ], 410);
             }
@@ -485,8 +481,8 @@ class PostStoreController extends Controller
             $postArray['data'] = $dataArray;
 
             return response()->json([
-                'status' => true,
-                'code' => '200',
+                'status'  => true,
+                'code'    => '200',
                 'message' => 'Post Store Data Fetch Successfully',
                 'results' => [
                     'data' => $postArray,
@@ -494,8 +490,8 @@ class PostStoreController extends Controller
             ], 200);
         } catch (Exception $e) {
             return response()->json([
-                'status' => false,
-                'code' => '500',
+                'status'  => false,
+                'code'    => '500',
                 'message' => 'Internal Server Error',
             ], 500);
         }
@@ -509,40 +505,42 @@ class PostStoreController extends Controller
     {
         try {
             $user = Auth::user();
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '401',
+                    'status'  => false,
+                    'code'    => '401',
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
-     
+
             $post = PostStore::where('id', $id)->where('deleted_at', 0)->first();
-            if (!$post) {
+            if (! $post) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '404',
+                    'status'  => false,
+                    'code'    => '404',
                     'message' => 'Post Store Data Not Found',
                 ], 404);
             }
-     
+
             $postData = DynamicPost::where('id', $post->post_id)->first();
-            if (!$postData) {
+            if (! $postData) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '404',
+                    'status'  => false,
+                    'code'    => '404',
                     'message' => 'Post Data Not Found',
                 ], 404);
             }
-     
-            $requestData = $request->all();
-            $existingData = $post->data ?? [];
+
+            $requestData        = $request->all();
+            $existingData       = $post->data ?? [];
             $transformedRequest = [];
-     
+
             // Process main level fields
             foreach ($requestData as $key => $value) {
-                if (is_numeric($key)) continue;
-     
+                if (is_numeric($key)) {
+                    continue;
+                }
+
                 if (is_array($value)) {
                     foreach ($value as $subKey => $subValue) {
                         if (filter_var($subValue, FILTER_VALIDATE_URL)) {
@@ -566,65 +564,83 @@ class PostStoreController extends Controller
                     }
                 }
             }
-     
+
             // Handle file uploads and base64 images
-            foreach ($request->all() as $key => $file) {
-                if (is_numeric($key)) continue;
-                if (filter_var($file, FILTER_VALIDATE_URL)) {
-                    // Skip if it's already a valid URL
-                    continue;
-                }
-     
-                if (is_string($file) && strpos($file, 'data:image/') === 0) {
-                    list($type, $base64Data) = explode(';', $file);
-                    list(, $base64Data) = explode(',', $base64Data);
-                    $imageData = base64_decode($base64Data);
-     
-                    preg_match('/data:image\/(.*?);/', $type, $matches);
-                    $extension = $matches[1] ?? 'jpg';
-     
-                    if (strpos($key, 'Section_image_') === 0) continue;
-     
-                    $postname = str_replace(' ', '_', $post->post_name);
-                    $fileNameOuter = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
-                    $destinationPath = public_path('uploads/dynamic_post_store');
-     
-                    if (!file_exists($destinationPath)) mkdir($destinationPath, 0777, true);
-                    file_put_contents($destinationPath . '/' . $fileNameOuter, $imageData);
-     
-                    $transformedRequest[$key] = $fileNameOuter;
-                } elseif ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
-                    if (strpos($key, 'Section_image_') === 0) continue;
-     
-                    $destinationPath = public_path('uploads/dynamic_post_store');
-                    $extension = $file->getClientOriginalExtension();
-                    $postname = str_replace(' ', '_', $post->post_name);
-                    $fileNameOuter = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
-                    $file->move($destinationPath, $fileNameOuter);
-     
-                    $transformedRequest[$key] = $fileNameOuter;
-                } elseif (is_array($file)) {
-                    foreach ($file as $individualFile) {
-                        if ($individualFile instanceof \Illuminate\Http\UploadedFile && $individualFile->isValid()) {
-                            $destinationPath = public_path('uploads/dynamic_post_store');
-                            $extension = $individualFile->getClientOriginalExtension();
-                            $postname = str_replace(' ', '_', $post->post_name);
-                            $fileNameOuter = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
-                            $individualFile->move($destinationPath, $fileNameOuter);
-     
-                            $transformedRequest[$key] = basename($fileNameOuter);
-                        }
-                    }
-                } else {
-                    if (!empty($file)) {
-                        $extension = pathinfo(parse_url($file, PHP_URL_PATH), PATHINFO_EXTENSION);
-                        $fileName = !empty($extension) ? basename($file) : $file;
-                    }
-     
-                    $transformedRequest[$key] = $fileName;
-                }
+           // Handle file uploads and base64 images
+foreach ($request->all() as $key => $file) {
+    if (is_numeric($key)) {
+        continue;
+    }
+
+    // Initialize $fileName
+    $fileName = null;
+
+    if (filter_var($file, FILTER_VALIDATE_URL)) {
+        // Skip if it's already a valid URL
+        continue;
+    }
+
+    // Handle base64 image data
+    if (is_string($file) && strpos($file, 'data:image/') === 0) {
+        list($type, $base64Data) = explode(';', $file);
+        list(, $base64Data)      = explode(',', $base64Data);
+        $imageData               = base64_decode($base64Data);
+
+        preg_match('/data:image\/(.*?);/', $type, $matches);
+        $extension = $matches[1] ?? 'jpg';
+
+        // Handle filename and directory
+        $postname        = str_replace(' ', '_', $post->post_name);
+        $fileNameOuter   = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
+        $destinationPath = public_path('uploads/dynamic_post_store');
+
+        if (! file_exists($destinationPath)) {
+            mkdir($destinationPath, 0777, true);
+        }
+
+        file_put_contents($destinationPath . '/' . $fileNameOuter, $imageData);
+        $fileName = $fileNameOuter; // Ensure $fileName is set
+    }
+
+    // Handle regular file uploads
+    elseif ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
+        $destinationPath = public_path('uploads/dynamic_post_store');
+        $extension = $file->getClientOriginalExtension();
+        $postname        = str_replace(' ', '_', $post->post_name);
+        $fileNameOuter   = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
+
+        $file->move($destinationPath, $fileNameOuter);
+        $fileName = $fileNameOuter; // Ensure $fileName is set
+    }
+
+    // Handle file arrays
+    elseif (is_array($file)) {
+        foreach ($file as $individualFile) {
+            if ($individualFile instanceof \Illuminate\Http\UploadedFile && $individualFile->isValid()) {
+                $destinationPath = public_path('uploads/dynamic_post_store');
+                $extension = $individualFile->getClientOriginalExtension();
+                $postname        = str_replace(' ', '_', $post->post_name);
+                $fileNameOuter   = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
+
+                $individualFile->move($destinationPath, $fileNameOuter);
+                $fileName = basename($fileNameOuter); // Ensure $fileName is set
             }
-     
+        }
+    } else {
+        // If the file is a URL or non-file field, just use the original value
+        if (! empty($file)) {
+            $extension = pathinfo(parse_url($file, PHP_URL_PATH), PATHINFO_EXTENSION);
+            $fileName  = ! empty($extension) ? basename($file) : $file;
+        }
+    }
+
+    // Now set the $transformedRequest with the file name
+    if ($fileName) {
+        $transformedRequest[$key] = $fileName;
+    }
+}
+
+
             // Handle nested image fields inside sections
             foreach ($transformedRequest as $sectionKey => $sectionValue) {
                 if (is_array($sectionValue)) {
@@ -639,70 +655,67 @@ class PostStoreController extends Controller
                             }
                         } elseif (is_string($fieldValue) && strpos($fieldValue, 'data:image/') === 0) {
                             list($type, $base64Data) = explode(';', $fieldValue);
-                            list(, $base64Data) = explode(',', $base64Data);
-                            $imageData = base64_decode($base64Data);
-     
+                            list(, $base64Data)      = explode(',', $base64Data);
+                            $imageData               = base64_decode($base64Data);
+
                             preg_match('/data:image\/(.*?);/', $type, $matches);
                             $extension = $matches[1] ?? 'jpg';
-     
+
                             $fieldnameforimg = str_replace(' ', '_', $fieldKey);
-                            $postname = str_replace(' ', '_', $post->post_name);
-                            $fileName = $postname . '_' . $post->id . '_' . $sectionKey . '_' . $fieldnameforimg . '.' . $extension;
-     
+                            $postname        = str_replace(' ', '_', $post->post_name);
+                            $fileName        = $postname . '_' . $post->id . '_' . $sectionKey . '_' . $fieldnameforimg . '.' . $extension;
+
                             $destinationPath = public_path('uploads/dynamic_post_store');
-                            if (!file_exists($destinationPath)) {
+                            if (! file_exists($destinationPath)) {
                                 mkdir($destinationPath, 0777, true);
                             }
-     
+
                             file_put_contents($destinationPath . '/' . $fileName, $imageData);
                             $transformedRequest[$sectionKey][$fieldKey] = $fileName;
                         } elseif (is_string($fieldValue)) {
-                            if (!empty($fieldValue)) {
+                            if (! empty($fieldValue)) {
                                 $extension = pathinfo(parse_url($fieldValue, PHP_URL_PATH), PATHINFO_EXTENSION);
-                                $fileName = !empty($extension) ? basename($fieldValue) : $fieldValue;
+                                $fileName  = ! empty($extension) ? basename($fieldValue) : $fieldValue;
                             }
                             $transformedRequest[$sectionKey][$fieldKey] = basename($fieldValue);
                         }
                     }
                 }
             }
-     
+
             // Merge updated values with old ones
             $finalData = array_replace_recursive($existingData, $transformedRequest);
             Log::info('Final Data:', $finalData);
             $post->data = $finalData;
-     
+
             if ($post->save()) {
                 return response()->json([
-                    'status' => true,
-                    'code' => '200',
+                    'status'  => true,
+                    'code'    => '200',
                     'message' => 'Post Store Data Updated Successfully',
                 ], 200);
             } else {
                 Log::error('Failed to update post', ['id' => $id]);
                 return response()->json([
-                    'status' => false,
-                    'code' => '500',
+                    'status'  => false,
+                    'code'    => '500',
                     'message' => 'Failed To Update Post Store',
                 ], 500);
             }
         } catch (Exception $e) {
             Log::error('Error updating post', ['error' => $e->getMessage()]);
             return response()->json([
-                'status' => false,
-                'code' => '500',
+                'status'  => false,
+                'code'    => '500',
                 'message' => 'Internal Server Error',
             ], 500);
         }
     }
-    
-     
-     
-    
-private function convertToSlugBase($string)
-{
-    return strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $string));
-}
+
+    private function convertToSlugBase($string)
+    {
+        return strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $string));
+    }
 
     /**
      * Soft delete a post by its title.
@@ -715,8 +728,8 @@ private function convertToSlugBase($string)
             $user = Auth::user();
             if (! $user) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '401',
+                    'status'  => false,
+                    'code'    => '401',
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
@@ -729,15 +742,15 @@ private function convertToSlugBase($string)
 
                 if ($deletedCount > 0) {
                     return response()->json([
-                        'status' => true,
-                        'code' => '200',
-                        'message' => 'Multi Post Store Data Deleted Successfully',
+                        'status'        => true,
+                        'code'          => '200',
+                        'message'       => 'Multi Post Store Data Deleted Successfully',
                         'deleted_count' => $deletedCount,
                     ], 200);
                 } else {
                     return response()->json([
-                        'status' => false,
-                        'code' => '404',
+                        'status'  => false,
+                        'code'    => '404',
                         'message' => 'No Post Store Found To Delete',
                     ], 404);
                 }
@@ -747,8 +760,8 @@ private function convertToSlugBase($string)
                 if ($post) {
                     if ($post->deleted_at == 1) {
                         return response()->json([
-                            'status' => false,
-                            'code' => '400',
+                            'status'  => false,
+                            'code'    => '400',
                             'message' => 'Record Already Deleted',
                         ], 400);
                     }
@@ -756,25 +769,25 @@ private function convertToSlugBase($string)
                     $post->deleted_at = 1;
                     if ($post->save()) {
                         return response()->json([
-                            'status' => true,
-                            'code' => '200',
+                            'status'  => true,
+                            'code'    => '200',
                             'message' => 'Post Store Data Deleted Successfully',
                         ], 200);
                     }
                 } else {
                     return response()->json([
-                        'status' => false,
-                        'code' => '500',
+                        'status'  => false,
+                        'code'    => '500',
                         'message' => 'Failed To Delete Post Store',
                     ], 500);
                 }
             }
         } catch (\Exception $e) {
             return response()->json([
-                'status' => false,
-                'code' => '500',
+                'status'  => false,
+                'code'    => '500',
                 'message' => 'An Error Occurred',
-                'error' => $e->getMessage(),
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }
@@ -790,8 +803,8 @@ private function convertToSlugBase($string)
             $user = Auth::user();
             if (! $user) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '401',
+                    'status'  => false,
+                    'code'    => '401',
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
@@ -807,10 +820,10 @@ private function convertToSlugBase($string)
 
             if ($validatedData->fails()) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '422',
+                    'status'  => false,
+                    'code'    => '422',
                     'message' => 'Validation Failed',
-                    'errors' => $validatedData->errors(),
+                    'errors'  => $validatedData->errors(),
                 ], 422);
             }
 
@@ -818,8 +831,8 @@ private function convertToSlugBase($string)
 
             if ($posts->isEmpty()) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '404',
+                    'status'  => false,
+                    'code'    => '404',
                     'message' => 'No Records Found',
                 ], 404);
             }
@@ -830,24 +843,24 @@ private function convertToSlugBase($string)
                 postStore::whereIn('id', $idsArray)->update(['status' => $newStatus]);
 
                 return response()->json([
-                    'status' => true,
-                    'code' => '200',
+                    'status'  => true,
+                    'code'    => '200',
                     'message' => 'Post Store Data Updated Successfully',
                 ]);
             } else {
                 return response()->json([
-                    'status' => false,
-                    'code' => '422',
+                    'status'  => false,
+                    'code'    => '422',
                     'message' => 'Invalid Status Value',
                 ], 422);
             }
         } catch (\Exception $e) {
             Log::error('Error occurred:', ['error' => $e->getMessage()]);
             return response()->json([
-                'status' => false,
-                'code' => '500',
+                'status'  => false,
+                'code'    => '500',
                 'message' => 'An Error occurred',
-                'error' => $e->getMessage(),
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }
@@ -862,8 +875,8 @@ private function convertToSlugBase($string)
             $user = Auth::user();
             if (! $user) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '401',
+                    'status'  => false,
+                    'code'    => '401',
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
@@ -872,16 +885,16 @@ private function convertToSlugBase($string)
 
             if (! $post) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '404',
+                    'status'  => false,
+                    'code'    => '404',
                     'message' => 'Post Store Data Not Found',
                 ], 404);
             }
 
-            $data = $post->data;
+            $data         = $post->data;
             $imageDeleted = false;
 
-            $normalizedImageName = trim($imageName);
+            $normalizedImageName      = trim($imageName);
             $normalizedImageNameLower = strtolower($normalizedImageName);
 
             foreach ($data as $key => $value) {
@@ -890,14 +903,14 @@ private function convertToSlugBase($string)
                         $normalizedSubValue = strtolower(trim($subValue));
                         if ($normalizedSubValue === $normalizedImageNameLower) {
                             $data[$key][$subKey] = "";
-                            $imageDeleted = true;
+                            $imageDeleted        = true;
                             break 2;
                         }
                     }
                 } else {
                     $normalizedValue = strtolower(trim($value));
                     if ($normalizedValue === $normalizedImageNameLower) {
-                        $data[$key]  = "";
+                        $data[$key]   = "";
                         $imageDeleted = true;
                         break;
                     }
@@ -906,8 +919,8 @@ private function convertToSlugBase($string)
 
             if (! $imageDeleted) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '404',
+                    'status'  => false,
+                    'code'    => '404',
                     'message' => 'No Image Found',
                 ], 404);
             }
@@ -916,15 +929,15 @@ private function convertToSlugBase($string)
             $post->save();
 
             return response()->json([
-                'status' => true,
-                'code' => '200',
+                'status'  => true,
+                'code'    => '200',
                 'message' => 'Image Reference Deleted Successfully',
             ], 200);
         } catch (Exception $e) {
             Log::error('Error deleting image', ['error' => $e->getMessage()]);
             return response()->json([
-                'status' => false,
-                'code' => '500',
+                'status'  => false,
+                'code'    => '500',
                 'message' => 'Internal Server Error',
             ], 500);
         }
@@ -955,7 +968,7 @@ private function convertToSlugBase($string)
                 Log::error('Validation failed', $validator->errors()->toArray());
                 return response()->json([
                     'status' => false,
-                    'code' => '422',
+                    'code'   => '422',
                     'errors' => $validator->errors(),
                 ], 422);
             }
@@ -963,18 +976,18 @@ private function convertToSlugBase($string)
             $postStore = PostStore::create($parsedData);
 
             return response()->json([
-                'status' => true,
-                'code' => '200',
+                'status'  => true,
+                'code'    => '200',
                 'message' => 'Data added successfully',
-                'data' => $postStore,
+                'data'    => $postStore,
             ], 200);
         } catch (Exception $e) {
             Log::error('Error adding data', ['error' => $e->getMessage()]);
             return response()->json([
-                'status' => false,
-                'code' => '500',
+                'status'  => false,
+                'code'    => '500',
                 'message' => 'Internal Server Error',
-                'error' => $e->getMessage(),
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }
@@ -992,8 +1005,8 @@ private function convertToSlugBase($string)
             $user = Auth::user();
             if (! $user) {
                 return response()->json([
-                    'status' => false,
-                    'code' => '401',
+                    'status'  => false,
+                    'code'    => '401',
                     'message' => 'User Not Authenticated',
                 ], 401);
             }
@@ -1007,17 +1020,17 @@ private function convertToSlugBase($string)
                     ->update(['deleted_at' => 0]);
             }
             return response()->json([
-                'status' => true,
-                'code' => '200',
-                'message' => 'Post Store Data Restored Successfully',
+                'status'         => true,
+                'code'           => '200',
+                'message'        => 'Post Store Data Restored Successfully',
                 'restored_count' => $restoredCount,
             ], 200);
         } catch (Exception $e) {
             return response()->json([
-                'status' => false,
-                'code' => '500',
+                'status'  => false,
+                'code'    => '500',
                 'message' => 'An Error Occurred',
-                'error' => $e->getMessage(),
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }
