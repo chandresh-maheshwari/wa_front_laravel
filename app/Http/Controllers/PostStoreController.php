@@ -52,6 +52,8 @@ class PostStoreController extends Controller
 
                     if ($this->isImageFileName($value)) {
                         $data[$key] = URL::to('/uploads/dynamic_post_store/' . $value);
+                    } elseif ($this->isFileName($value)) {
+                        $data[$key] = basename($value);
                     }
                 }
 
@@ -124,18 +126,29 @@ class PostStoreController extends Controller
 
     private function isImageFileName($value)
     {
-        if (! is_string($value)) {
+        if (!is_string($value)) {
             return false;
         }
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'];
+        $extension = pathinfo($value, PATHINFO_EXTENSION);
+        return in_array(strtolower($extension), $allowedExtensions);
+    }
 
-        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'];
-        $extension       = pathinfo($value, PATHINFO_EXTENSION);
-        return in_array(strtolower($extension), $imageExtensions);
+    private function isFileName($value)
+    {
+        if (!is_string($value)) {
+            return false;
+        }
+        $allowedExtensions = [
+            'jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg',
+            'pdf', 'xls', 'xlsx', 'doc', 'docx', 'txt'
+        ];
+        $extension = pathinfo($value, PATHINFO_EXTENSION);
+        return in_array(strtolower($extension), $allowedExtensions);
     }
 
     public function postStore(Request $request, $postTitle)
     {
-
         try {
             $user = Auth::user()->id;
             if (! $user) {
@@ -156,187 +169,203 @@ class PostStoreController extends Controller
                 ], 404);
             }
 
+            // First create the post store to get the ID
+            $postStore = PostStore::create([
+                'post_name' => $postTitle,
+                'post_id'   => $postData->id,
+                'data'      => [],
+            ]);
+
             $requestData = $request->all();
             $transformedRequest = [];
 
             foreach ($requestData as $reqDatakey => $value) {
+                try {
+                    if (strpos($reqDatakey, 'Section ') === 0) {
+                        if (strpos($reqDatakey, 'Section_image_') === 0) {
+                            continue;
+                        }
 
-                if (strpos($reqDatakey, 'Section ') === 0) {
-                    if (strpos($reqDatakey, 'Section_image_') === 0) {
-                        continue;
-                    }
+                        if ($this->isJson($value)) {
+                            if (is_string($value)) {
+                                $sectionData = json_decode($value, true);
+                                if (is_array($sectionData)) {
+                                    $sectionTransformed = [];
+                                    foreach ($sectionData as $sectionKey => $sectionValue) {
+                                        // Handle base64 files inside sections
+                                        if (is_string($sectionValue) && strpos($sectionValue, 'data:') === 0) {
+                                            // Extract file type and generate filename
+                                            preg_match('/data:(.*?);/', $sectionValue, $matches);
+                                            $mimeType = $matches[1] ?? '';
+                                            
+                                            // Map MIME types to extensions
+                                            $mimeToExt = [
+                                                'image/jpeg' => 'jpg',
+                                                'image/png' => 'png',
+                                                'image/gif' => 'gif',
+                                                'image/bmp' => 'bmp',
+                                                'image/svg+xml' => 'svg',
+                                                'application/pdf' => 'pdf',
+                                                'application/vnd.ms-excel' => 'xls',
+                                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+                                                'application/msword' => 'doc',
+                                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+                                                'text/plain' => 'txt'
+                                            ];
 
-                    if ($this->isJson($value)) {
-                        if (is_string($value)) {
-                            $sectionData = json_decode($value, true);
-                            if (is_array($sectionData)) {
-                                $sectionTransformed = [];
-                                foreach ($sectionData as $sectionKey => $sectionValue) {
-                                    $sectionTransformed[$sectionKey] = $sectionValue;
-                                    $slugKey                         = 'Field_Slug_' . $this->convertToSlug($sectionKey);
-                                    $sectionTransformed[$slugKey]    = $this->convertToSlug1($sectionKey);
+                                            $extension = $mimeToExt[$mimeType] ?? 'bin';
+                                            
+                                            // Generate filename with poststore ID and section name
+                                            $postname = str_replace(' ', '_', $postTitle);
+                                            $sectionName = str_replace(' ', '_', $reqDatakey);
+                                            $fileName = $postname . '_' . $postStore->id . '_' . $sectionName . '_' . $sectionKey . '.' . $extension;
+                                            
+                                            // Save only the filename in the section
+                                            $sectionTransformed[$sectionKey] = $fileName;
+                                            
+                                            // Save the actual file
+                                            list($type, $base64Data) = explode(';', $sectionValue);
+                                            list(, $base64Data) = explode(',', $base64Data);
+                                            $fileData = base64_decode($base64Data);
+                                            
+                                            $destinationPath = public_path('uploads/dynamic_post_store');
+                                            if (!file_exists($destinationPath)) {
+                                                mkdir($destinationPath, 0777, true);
+                                            }
+                                            
+                                            file_put_contents($destinationPath . '/' . $fileName, $fileData);
+                                        } else {
+                                            $sectionTransformed[$sectionKey] = $sectionValue;
+                                        }
+                                        $slugKey = 'Field_Slug_' . $this->convertToSlug($sectionKey);
+                                        $sectionTransformed[$slugKey] = $this->convertToSlug1($sectionKey);
+                                    }
+                                    $transformedRequest[$reqDatakey] = $sectionTransformed;
                                 }
-                                $transformedRequest[$reqDatakey] = $sectionTransformed;
                             }
-                        }
-                    } elseif (is_array($value)) {
-                        $sectionData        = $value;
-                        $sectionTransformed = [];
-                        foreach ($sectionData as $sectionKey => $sectionValue) {
-                            $sectionTransformed[$sectionKey] = $sectionValue;
-                            $slugKey                         = 'Field_Slug_' . $this->convertToSlug($sectionKey);
-                            $sectionTransformed[$slugKey]    = $this->convertToSlug1($sectionKey);
-                        }
-                        $transformedRequest[$reqDatakey] = $sectionTransformed;
-                    }
-                } else {
+                        } elseif (is_array($value)) {
+                            $sectionData = $value;
+                            $sectionTransformed = [];
+                            foreach ($sectionData as $sectionKey => $sectionValue) {
+                                // Handle base64 files inside sections
+                                if (is_string($sectionValue) && strpos($sectionValue, 'data:') === 0) {
+                                    // Extract file type and generate filename
+                                    preg_match('/data:(.*?);/', $sectionValue, $matches);
+                                    $mimeType = $matches[1] ?? '';
+                                    
+                                    // Map MIME types to extensions
+                                    $mimeToExt = [
+                                        'image/jpeg' => 'jpg',
+                                        'image/png' => 'png',
+                                        'image/gif' => 'gif',
+                                        'image/bmp' => 'bmp',
+                                        'image/svg+xml' => 'svg',
+                                        'application/pdf' => 'pdf',
+                                        'application/vnd.ms-excel' => 'xls',
+                                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+                                        'application/msword' => 'doc',
+                                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+                                        'text/plain' => 'txt'
+                                    ];
 
-                    if (strpos($reqDatakey, 'Section_image_') === 0) {
-                        continue;
-                    }
-
-                    if (is_array($value)) {
-                        $transformedRequest[$reqDatakey] = $value;
-                        $slugKey                         = 'Field_Slug_' . $this->convertToSlug($reqDatakey);
-                        $transformedRequest[$slugKey]    = $this->convertToSlug1($reqDatakey);
+                                    $extension = $mimeToExt[$mimeType] ?? 'bin';
+                                    
+                                    // Generate filename with poststore ID and section name
+                                    $postname = str_replace(' ', '_', $postTitle);
+                                    $sectionName = str_replace(' ', '_', $reqDatakey);
+                                    $fileName = $postname . '_' . $postStore->id . '_' . $sectionName . '_' . $sectionKey . '.' . $extension;
+                                    
+                                    // Save only the filename in the section
+                                    $sectionTransformed[$sectionKey] = $fileName;
+                                    
+                                    // Save the actual file
+                                    list($type, $base64Data) = explode(';', $sectionValue);
+                                    list(, $base64Data) = explode(',', $base64Data);
+                                    $fileData = base64_decode($base64Data);
+                                    
+                                    $destinationPath = public_path('uploads/dynamic_post_store');
+                                    if (!file_exists($destinationPath)) {
+                                        mkdir($destinationPath, 0777, true);
+                                    }
+                                    
+                                    file_put_contents($destinationPath . '/' . $fileName, $fileData);
+                                } else {
+                                    $sectionTransformed[$sectionKey] = $sectionValue;
+                                }
+                                $slugKey = 'Field_Slug_' . $this->convertToSlug($sectionKey);
+                                $sectionTransformed[$slugKey] = $this->convertToSlug1($sectionKey);
+                            }
+                            $transformedRequest[$reqDatakey] = $sectionTransformed;
+                        }
                     } else {
-                        $labelKey                                                              = $reqDatakey;
-                        $transformedRequest[$labelKey]                                         = (string) $value;
-                        $transformedRequest['Field_Slug_' . $this->convertToSlug($reqDatakey)] = $this->convertToSlug1($reqDatakey);
+                        // Handle base64 files outside sections
+                        if (is_string($value) && strpos($value, 'data:') === 0) {
+                            // Extract file type and generate filename
+                            preg_match('/data:(.*?);/', $value, $matches);
+                            $mimeType = $matches[1] ?? '';
+                            
+                            // Map MIME types to extensions
+                            $mimeToExt = [
+                                'image/jpeg' => 'jpg',
+                                'image/png' => 'png',
+                                'image/gif' => 'gif',
+                                'image/bmp' => 'bmp',
+                                'image/svg+xml' => 'svg',
+                                'application/pdf' => 'pdf',
+                                'application/vnd.ms-excel' => 'xls',
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+                                'application/msword' => 'doc',
+                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+                                'text/plain' => 'txt'
+                            ];
 
-                    }
-                }
-            }
-
-            // Log::info("TESTTTTTTTTTTTTTTTTTTTTTT");
-            // Log::info($transformedRequest);
-            $postStore = PostStore::create([
-                'post_name' => $postTitle,
-                'post_id'   => $postData->id,
-                'data'      => $transformedRequest,
-            ]);
-
-            foreach ($request->all() as $key => $file) {
-                if (is_string($file) && strpos($file, 'data:image/') === 0) {
-
-                    list($type, $base64Data) = explode(';', $file);
-                    list(, $base64Data)      = explode(',', $base64Data);
-
-                    // Decode the base64 data
-                    $imageData = base64_decode($base64Data);
-
-                    preg_match('/data:image\/(.*?);/', $type, $matches);
-                    $extension = $matches[1] ?? 'jpg'; // Default to jpg if no extension found
-
-                    if (strpos($key, 'Section_image_') === 0) {
-                        continue;
-                    }
-
-                    $postname      = str_replace(' ', '_', $postTitle);
-                    $fileNameOuter = $postname . '_' . $postStore->id . '_' . $key . '.' . $extension;
-
-                    $destinationPath = public_path('uploads/dynamic_post_store');
-
-                    // Ensure the directory exists; if not, create it
-                    if (! file_exists($destinationPath)) {
-                        mkdir($destinationPath, 0777, true);
-                    }
-
-                    // Save the decoded image data to a file
-                    file_put_contents($destinationPath . '/' . $fileNameOuter, $imageData);
-
-                    // Handle dynamic fields
-                    $labelKey                                                       = $key;
-                    $transformedRequest[$labelKey]                                  = $fileNameOuter;
-                    $transformedRequest['Field_Slug_' . $this->convertToSlug($key)] = $this->convertToSlug1($key);
-                }
-                // Check if $file is an instance of UploadedFile (regular file upload)
-                elseif ($file instanceof \Illuminate\Http\UploadedFile  && $file->isValid()) {
-                    // Handle Section-related field names (replace spaces with underscores)
-                    if (strpos($key, 'Section ') === 0) {
-                        $key = str_replace(' ', '_', $key);
-                    }
-
-                    // Skip files with keys starting with Section_image_
-                    if (strpos($key, 'Section_image_') === 0) {
-                        continue;
-                    }
-
-                    // Regular file handling
-                    $destinationPath = public_path('uploads/dynamic_post_store');
-                    $originalName    = $file->getClientOriginalName();
-                    $extension       = $file->getClientOriginalExtension();
-                    $postname        = str_replace(' ', '_', $postTitle);
-                    $fileNameOuter   = $postname . '_' . $postStore->id . '_' . $key . '.' . $extension;
-                    $file->move($destinationPath, $fileNameOuter);
-
-                    // Handle dynamic fields
-                    $labelKey                                                       = $key;
-                    $transformedRequest[$labelKey]                                  = $fileNameOuter;
-                    $transformedRequest['Field_Slug_' . $this->convertToSlug($key)] = $this->convertToSlug1($key);
-                }
-                // In case of an array, loop through the files
-                elseif (is_array($file)) {
-                    foreach ($file as $individualFile) {
-                        // Check if individualFile is an instance of UploadedFile (for file upload)
-                        if ($individualFile instanceof \Illuminate\Http\UploadedFile  && $individualFile->isValid()) {
+                            $extension = $mimeToExt[$mimeType] ?? 'bin';
+                            
+                            // Generate filename with poststore ID
+                            $postname = str_replace(' ', '_', $postTitle);
+                            $fileName = $postname . '_' . $postStore->id . '_' . $reqDatakey . '.' . $extension;
+                            
+                            // Save only the filename in the transformed request
+                            $transformedRequest[$reqDatakey] = $fileName;
+                            $transformedRequest['Field_Slug_' . $this->convertToSlug($reqDatakey)] = $this->convertToSlug1($reqDatakey);
+                            
+                            // Save the actual file
+                            list($type, $base64Data) = explode(';', $value);
+                            list(, $base64Data) = explode(',', $base64Data);
+                            $fileData = base64_decode($base64Data);
+                            
                             $destinationPath = public_path('uploads/dynamic_post_store');
-                            $originalName    = $individualFile->getClientOriginalName();
-                            $extension       = $individualFile->getClientOriginalExtension();
-                            $postname        = str_replace(' ', '_', $postTitle);
-                            $fileNameOuter   = $postname . '_' . $postStore->id . '_' . $key . '.' . $extension;
-                            $individualFile->move($destinationPath, $fileNameOuter);
-
-                            // Handle dynamic fields
-                            $labelKey                                                       = $key;
-                            $transformedRequest[$labelKey]                                  = $fileNameOuter;
-                            $transformedRequest['Field_Slug_' . $this->convertToSlug($key)] = $this->convertToSlug1($key);
-                        }
-                    }
-                }
-            }
-
-            // Save the transformed data back to the PostStore
-            $updated = false;
-            foreach ($transformedRequest as $sectionKey => $sectionValue) {
-                // Check if the value for the section is an array or object (fields inside the section)
-                if (is_array($sectionValue) || is_object($sectionValue)) {
-                    // Iterate through each key-value pair in the section (fields within the section)
-                    foreach ($sectionValue as $fieldKey => $fieldValue) {
-                        // Check if the field value is a base64 string (image data)
-                        if (is_string($fieldValue) && strpos($fieldValue, 'data:image/') === 0) {
-                            // This is base64 data, decode and save it
-                            list($type, $base64Data) = explode(';', $fieldValue);
-                            list(, $base64Data)      = explode(',', $base64Data); // Get the base64 data part
-                            $imageData               = base64_decode($base64Data);
-
-                            // Extract the file extension from the base64 data (e.g., jpeg, png)
-                            preg_match('/data:image\/(.*?);/', $type, $matches);
-                            $extension = $matches[1] ?? 'jpg'; // Default to jpg if no extension found
-
-                            // Generate the file name for saving the image
-                            $fieldnameforimg = str_replace(' ', '_', $fieldKey);
-                            $postname        = str_replace(' ', '_', $postTitle);
-                            $fileName        = $postname . '_' . $postStore->id . '_' . $sectionKey . '_' . $fieldnameforimg . '.' . $extension;
-
-                            // Define the path where the image will be saved
-                            $destinationPath = public_path('uploads/dynamic_post_store');
-
-                            // Ensure the destination directory exists
-                            if (! file_exists($destinationPath)) {
+                            if (!file_exists($destinationPath)) {
                                 mkdir($destinationPath, 0777, true);
                             }
+                            
+                            file_put_contents($destinationPath . '/' . $fileName, $fileData);
+                            continue;
+                        }
 
-                            // Save the decoded image data to the file
-                            file_put_contents($destinationPath . '/' . $fileName, $imageData);
+                        if (strpos($reqDatakey, 'Section_image_') === 0) {
+                            continue;
+                        }
 
-                            // Update the transformed request with the file name
-                            $transformedRequest[$sectionKey][$fieldKey] = $fileName;
+                        if (is_array($value)) {
+                            $transformedRequest[$reqDatakey] = $value;
+                            $slugKey = 'Field_Slug_' . $this->convertToSlug($reqDatakey);
+                            $transformedRequest[$slugKey] = $this->convertToSlug1($reqDatakey);
+                        } else {
+                            $labelKey = $reqDatakey;
+                            $transformedRequest[$labelKey] = (string) $value;
+                            $transformedRequest['Field_Slug_' . $this->convertToSlug($reqDatakey)] = $this->convertToSlug1($reqDatakey);
                         }
                     }
+                } catch (Exception $e) {
+                    Log::error('Error processing request data item', [
+                        'key' => $reqDatakey,
+                        'error' => $e->getMessage()
+                    ]);
                 }
             }
 
+            // Update the post store with the transformed data
             $postStore->data = $transformedRequest;
             $postStore->save();
 
@@ -354,14 +383,16 @@ class PostStoreController extends Controller
                 ], 404);
             }
         } catch (Exception $e) {
-            Log::error('Error storing post', [
+            Log::error('Error in postStore method', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
+                'postTitle' => $postTitle,
+                'requestData' => $request->all()
             ]);
             return response()->json([
                 'status'  => false,
                 'code'    => '500',
-                'message' => 'Internal Server Error',
+                'message' => 'Internal Server Error: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -467,12 +498,12 @@ class PostStoreController extends Controller
                 if (is_array($value)) {
                     // If the value is an array, it might be a section
                     foreach ($value as $sectionKey => $sectionValue) {
-                        if ($this->isImageFileName($sectionValue)) {
+                        if ($this->isFileName($sectionValue)) {
                             $dataArray[$key][$sectionKey] = URL::to('/uploads/dynamic_post_store/' . $sectionValue);
                         }
                     }
                 } else {
-                    if ($this->isImageFileName($value)) {
+                    if ($this->isFileName($value)) {
                         $dataArray[$key] = URL::to('/uploads/dynamic_post_store/' . $value);
                     }
                 }
@@ -535,164 +566,165 @@ class PostStoreController extends Controller
             $existingData       = $post->data ?? [];
             $transformedRequest = [];
 
-            // Process main level fields
             foreach ($requestData as $key => $value) {
                 if (is_numeric($key)) {
                     continue;
                 }
 
-                if (is_array($value)) {
-                    foreach ($value as $subKey => $subValue) {
-                        if (filter_var($subValue, FILTER_VALIDATE_URL)) {
-                            // For URLs, store them as is without modification
-                            $transformedRequest[$key][$subKey] = $subValue;
+                // Handle base64 files (all supported types)
+                if (is_string($value) && strpos($value, 'data:') === 0) {
+                    preg_match('/data:(.*?);/', $value, $matches);
+                    $mimeType = $matches[1] ?? '';
+                    $mimeToExt = [
+                        'image/jpeg' => 'jpg',
+                        'image/png' => 'png',
+                        'image/gif' => 'gif',
+                        'image/bmp' => 'bmp',
+                        'image/svg+xml' => 'svg',
+                        'application/pdf' => 'pdf',
+                        'application/vnd.ms-excel' => 'xls',
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+                        'application/msword' => 'doc',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+                        'text/plain' => 'txt'
+                    ];
+                    $extension = $mimeToExt[$mimeType] ?? 'bin';
+                    $postname = str_replace(' ', '_', $post->post_name);
+                    $fileName = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
+                    $transformedRequest[$key] = $fileName;
+                    $transformedRequest['Field_Slug_' . $this->convertToSlug($key)] = $this->convertToSlug1($key);
+                    list($type, $base64Data) = explode(';', $value);
+                    list(, $base64Data) = explode(',', $base64Data);
+                    $fileData = base64_decode($base64Data);
+                    $destinationPath = public_path('uploads/dynamic_post_store');
+                    if (!file_exists($destinationPath)) {
+                        mkdir($destinationPath, 0777, true);
+                    }
+                    file_put_contents($destinationPath . '/' . $fileName, $fileData);
+                    continue;
+                }
+
+                // Handle section fields
+                if (strpos($key, 'Section ') === 0 && (is_array($value) || $this->isJson($value))) {
+                    $sectionData = is_array($value) ? $value : json_decode($value, true);
+                    $sectionTransformed = [];
+                    foreach ($sectionData as $sectionKey => $sectionValue) {
+                        if (is_string($sectionValue) && strpos($sectionValue, 'data:') === 0) {
+                            preg_match('/data:(.*?);/', $sectionValue, $matches);
+                            $mimeType = $matches[1] ?? '';
+                            $mimeToExt = [
+                                'image/jpeg' => 'jpg',
+                                'image/png' => 'png',
+                                'image/gif' => 'gif',
+                                'image/bmp' => 'bmp',
+                                'image/svg+xml' => 'svg',
+                                'application/pdf' => 'pdf',
+                                'application/vnd.ms-excel' => 'xls',
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+                                'application/msword' => 'doc',
+                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+                                'text/plain' => 'txt'
+                            ];
+                            $extension = $mimeToExt[$mimeType] ?? 'bin';
+                            $postname = str_replace(' ', '_', $post->post_name);
+                            $sectionName = str_replace(' ', '_', $key);
+                            $fileName = $postname . '_' . $post->id . '_' . $sectionName . '_' . $sectionKey . '.' . $extension;
+                            $sectionTransformed[$sectionKey] = $fileName;
+                            list($type, $base64Data) = explode(';', $sectionValue);
+                            list(, $base64Data) = explode(',', $base64Data);
+                            $fileData = base64_decode($base64Data);
+                            $destinationPath = public_path('uploads/dynamic_post_store');
+                            if (!file_exists($destinationPath)) {
+                                mkdir($destinationPath, 0777, true);
+                            }
+                            file_put_contents($destinationPath . '/' . $fileName, $fileData);
                         } else {
-                            $transformedRequest[$key][$subKey] = $subValue;
+                            $sectionTransformed[$sectionKey] = $sectionValue;
+                        }
+                        $slugKey = 'Field_Slug_' . $this->convertToSlug($sectionKey);
+                        $sectionTransformed[$slugKey] = $this->convertToSlug1($sectionKey);
+                    }
+                    $transformedRequest[$key] = $sectionTransformed;
+                    continue;
+                }
+
+                // Handle file uploads (if any)
+                if ($value instanceof \Illuminate\Http\UploadedFile && $value->isValid()) {
+                    $destinationPath = public_path('uploads/dynamic_post_store');
+                    $extension = $value->getClientOriginalExtension();
+                    $postname = str_replace(' ', '_', $post->post_name);
+                    $fileName = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
+                    $value->move($destinationPath, $fileName);
+                    $transformedRequest[$key] = $fileName;
+                    $transformedRequest['Field_Slug_' . $this->convertToSlug($key)] = $this->convertToSlug1($key);
+                    continue;
+                }
+
+                // Default: keep value as is
+                if (is_array($value)) {
+                    $transformedRequest[$key] = $value;
+                    $slugKey = 'Field_Slug_' . $this->convertToSlug($key);
+                    $transformedRequest[$slugKey] = $this->convertToSlug1($key);
+                } else {
+                    $labelKey = $key;
+                    $transformedRequest[$labelKey] = (string) $value;
+                    $transformedRequest['Field_Slug_' . $this->convertToSlug($key)] = $this->convertToSlug1($key);
+                }
+            }
+
+            // If value is a URL to your uploads folder, convert to filename
+            foreach ($transformedRequest as $key => $value) {
+                if (is_string($value) && strpos($value, '/uploads/dynamic_post_store/') !== false) {
+                    $transformedRequest[$key] = basename($value);
+                }
+                // If value is an array (section), check inside it
+                if (is_array($value)) {
+                    foreach ($value as $sectionKey => $sectionValue) {
+                        if (is_string($sectionValue) && strpos($sectionValue, '/uploads/dynamic_post_store/') !== false) {
+                            $transformedRequest[$key][$sectionKey] = basename($sectionValue);
+                        }
+                    }
+                }
+            }
+
+            // Merge updated values with old ones, but keep old file if new one is not provided
+            $finalData = $existingData;
+
+            foreach ($transformedRequest as $key => $value) {
+                // If the value is not empty, update it; otherwise, keep the old value
+                if ($value !== null && $value !== '') {
+                    $finalData[$key] = $value;
+                }
+                // If the value is an array (section), merge recursively
+                if (is_array($value) && isset($existingData[$key]) && is_array($existingData[$key])) {
+                    $finalData[$key] = array_replace_recursive($existingData[$key], $value);
+                }
+            }
+
+            $post->data = $finalData;
+
+            // Transform all file/document fields to URLs for the response
+            $dataArray = $finalData;
+            foreach ($dataArray as $key => $value) {
+                if (is_array($value)) {
+                    foreach ($value as $sectionKey => $sectionValue) {
+                        if ($this->isFileName($sectionValue)) {
+                            $dataArray[$key][$sectionKey] = URL::to('/uploads/dynamic_post_store/' . $sectionValue);
                         }
                     }
                 } else {
-                    if (filter_var($value, FILTER_VALIDATE_URL)) {
-                        // Check if the URL is already a complete path to our upload directory
-                        if (strpos($value, '/uploads/dynamic_post_store/') !== false) {
-                            // Extract just the filename from the full URL
-                            $transformedRequest[$key] = basename($value);
-                        } else {
-                            $transformedRequest[$key] = $value;
-                        }
-                    } else {
-                        $transformedRequest[$key] = $value;
+                    if ($this->isFileName($value)) {
+                        $dataArray[$key] = URL::to('/uploads/dynamic_post_store/' . $value);
                     }
                 }
             }
-
-            // Handle file uploads and base64 images
-           // Handle file uploads and base64 images
-foreach ($request->all() as $key => $file) {
-    if (is_numeric($key)) {
-        continue;
-    }
-
-    // Initialize $fileName
-    $fileName = null;
-
-    if (filter_var($file, FILTER_VALIDATE_URL)) {
-        // Skip if it's already a valid URL
-        continue;
-    }
-
-    // Handle base64 image data
-    if (is_string($file) && strpos($file, 'data:image/') === 0) {
-        list($type, $base64Data) = explode(';', $file);
-        list(, $base64Data)      = explode(',', $base64Data);
-        $imageData               = base64_decode($base64Data);
-
-        preg_match('/data:image\/(.*?);/', $type, $matches);
-        $extension = $matches[1] ?? 'jpg';
-
-        // Handle filename and directory
-        $postname        = str_replace(' ', '_', $post->post_name);
-        $fileNameOuter   = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
-        $destinationPath = public_path('uploads/dynamic_post_store');
-
-        if (! file_exists($destinationPath)) {
-            mkdir($destinationPath, 0777, true);
-        }
-
-        file_put_contents($destinationPath . '/' . $fileNameOuter, $imageData);
-        $fileName = $fileNameOuter; // Ensure $fileName is set
-    }
-
-    // Handle regular file uploads
-    elseif ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
-        $destinationPath = public_path('uploads/dynamic_post_store');
-        $extension = $file->getClientOriginalExtension();
-        $postname        = str_replace(' ', '_', $post->post_name);
-        $fileNameOuter   = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
-
-        $file->move($destinationPath, $fileNameOuter);
-        $fileName = $fileNameOuter; // Ensure $fileName is set
-    }
-
-    // Handle file arrays
-    elseif (is_array($file)) {
-        foreach ($file as $individualFile) {
-            if ($individualFile instanceof \Illuminate\Http\UploadedFile && $individualFile->isValid()) {
-                $destinationPath = public_path('uploads/dynamic_post_store');
-                $extension = $individualFile->getClientOriginalExtension();
-                $postname        = str_replace(' ', '_', $post->post_name);
-                $fileNameOuter   = $postname . '_' . $post->id . '_' . $key . '.' . $extension;
-
-                $individualFile->move($destinationPath, $fileNameOuter);
-                $fileName = basename($fileNameOuter); // Ensure $fileName is set
-            }
-        }
-    } else {
-        // If the file is a URL or non-file field, just use the original value
-        if (! empty($file)) {
-            $extension = pathinfo(parse_url($file, PHP_URL_PATH), PATHINFO_EXTENSION);
-            $fileName  = ! empty($extension) ? basename($file) : $file;
-        }
-    }
-
-    // Now set the $transformedRequest with the file name
-    if ($fileName) {
-        $transformedRequest[$key] = $fileName;
-    }
-}
-
-
-            // Handle nested image fields inside sections
-            foreach ($transformedRequest as $sectionKey => $sectionValue) {
-                if (is_array($sectionValue)) {
-                    foreach ($sectionValue as $fieldKey => $fieldValue) {
-                        if (filter_var($fieldValue, FILTER_VALIDATE_URL)) {
-                            // Check if the URL is already a complete path to our upload directory
-                            if (strpos($fieldValue, '/uploads/dynamic_post_store/') !== false) {
-                                // Extract just the filename from the full URL
-                                $transformedRequest[$sectionKey][$fieldKey] = basename($fieldValue);
-                            } else {
-                                $transformedRequest[$sectionKey][$fieldKey] = $fieldValue;
-                            }
-                        } elseif (is_string($fieldValue) && strpos($fieldValue, 'data:image/') === 0) {
-                            list($type, $base64Data) = explode(';', $fieldValue);
-                            list(, $base64Data)      = explode(',', $base64Data);
-                            $imageData               = base64_decode($base64Data);
-
-                            preg_match('/data:image\/(.*?);/', $type, $matches);
-                            $extension = $matches[1] ?? 'jpg';
-
-                            $fieldnameforimg = str_replace(' ', '_', $fieldKey);
-                            $postname        = str_replace(' ', '_', $post->post_name);
-                            $fileName        = $postname . '_' . $post->id . '_' . $sectionKey . '_' . $fieldnameforimg . '.' . $extension;
-
-                            $destinationPath = public_path('uploads/dynamic_post_store');
-                            if (! file_exists($destinationPath)) {
-                                mkdir($destinationPath, 0777, true);
-                            }
-
-                            file_put_contents($destinationPath . '/' . $fileName, $imageData);
-                            $transformedRequest[$sectionKey][$fieldKey] = $fileName;
-                        } elseif (is_string($fieldValue)) {
-                            if (! empty($fieldValue)) {
-                                $extension = pathinfo(parse_url($fieldValue, PHP_URL_PATH), PATHINFO_EXTENSION);
-                                $fileName  = ! empty($extension) ? basename($fieldValue) : $fieldValue;
-                            }
-                            $transformedRequest[$sectionKey][$fieldKey] = basename($fieldValue);
-                        }
-                    }
-                }
-            }
-
-            // Merge updated values with old ones
-            $finalData = array_replace_recursive($existingData, $transformedRequest);
-            Log::info('Final Data:', $finalData);
-            $post->data = $finalData;
 
             if ($post->save()) {
                 return response()->json([
                     'status'  => true,
                     'code'    => '200',
                     'message' => 'Post Store Data Updated Successfully',
+                    'data'    => $dataArray,
                 ], 200);
             } else {
                 Log::error('Failed to update post', ['id' => $id]);
@@ -891,28 +923,39 @@ foreach ($request->all() as $key => $file) {
                 ], 404);
             }
 
-            $data         = $post->data;
+            $data = $post->data;
             $imageDeleted = false;
 
-            $normalizedImageName      = trim($imageName);
-            $normalizedImageNameLower = strtolower($normalizedImageName);
-
-            foreach ($data as $key => $value) {
-                if (is_array($value)) {
-                    foreach ($value as $subKey => $subValue) {
-                        $normalizedSubValue = strtolower(trim($subValue));
-                        if ($normalizedSubValue === $normalizedImageNameLower) {
-                            $data[$key][$subKey] = "";
-                            $imageDeleted        = true;
-                            break 2;
-                        }
+            // Check if the imageName contains a section (contains a dot)
+            if (strpos($imageName, '.') !== false) {
+                // Handle section image deletion
+                list($sectionName, $imageKey) = explode('.', $imageName);
+                
+                // Convert section name format (e.g., "Section_1" to "Section 1")
+                $sectionName = str_replace('_', ' ', $sectionName);
+                
+                if (isset($data[$sectionName][$imageKey])) {
+                    $imageValue = $data[$sectionName][$imageKey];
+                    $data[$sectionName][$imageKey] = null;
+                    $imageDeleted = true;
+                    
+                    // Delete the file from the uploads folder
+                    $filePath = public_path('uploads/dynamic_post_store/' . $imageValue);
+                    if (file_exists($filePath)) {
+                        @unlink($filePath);
                     }
-                } else {
-                    $normalizedValue = strtolower(trim($value));
-                    if ($normalizedValue === $normalizedImageNameLower) {
-                        $data[$key]   = "";
-                        $imageDeleted = true;
-                        break;
+                }
+            } else {
+                // Handle regular image deletion
+                if (isset($data[$imageName])) {
+                    $imageValue = $data[$imageName];
+                    $data[$imageName] = null;
+                    $imageDeleted = true;
+                    
+                    // Delete the file from the uploads folder
+                    $filePath = public_path('uploads/dynamic_post_store/' . $imageValue);
+                    if (file_exists($filePath)) {
+                        @unlink($filePath);
                     }
                 }
             }
@@ -921,7 +964,7 @@ foreach ($request->all() as $key => $file) {
                 return response()->json([
                     'status'  => false,
                     'code'    => '404',
-                    'message' => 'No Image Found',
+                    'message' => 'No File Found',
                 ], 404);
             }
 
@@ -931,10 +974,10 @@ foreach ($request->all() as $key => $file) {
             return response()->json([
                 'status'  => true,
                 'code'    => '200',
-                'message' => 'Image Reference Deleted Successfully',
+                'message' => 'File Reference Deleted Successfully',
             ], 200);
         } catch (Exception $e) {
-            Log::error('Error deleting image', ['error' => $e->getMessage()]);
+            Log::error('Error deleting file', ['error' => $e->getMessage()]);
             return response()->json([
                 'status'  => false,
                 'code'    => '500',
@@ -1034,4 +1077,6 @@ foreach ($request->all() as $key => $file) {
             ], 500);
         }
     }
+
+    
 }
