@@ -1078,5 +1078,93 @@ class PostStoreController extends Controller
         }
     }
 
-    
+    /**
+     * Get all supported file extensions
+     * Returns a list of all file extensions supported by the system
+     */
+    public function getFileExtensions()
+    {
+        try {
+            $user = Auth::user();
+            if (! $user) {
+                return response()->json([
+                    'status'  => false,
+                    'code'    => '401',
+                    'message' => 'User Not Authenticated',
+                ], 401);
+            }
+
+            $extensions = [
+                'images' => [
+                    'jpg',
+                    'jpeg',
+                    'png',
+                    'gif',
+                    'bmp',
+                    'svg'
+                ],
+                'documents' => [
+                    'pdf',
+                    'doc',
+                    'docx',
+                    'xls',
+                    'xlsx',
+                    'txt'
+                ]
+            ];
+
+            return response()->json([
+                'status'  => true,
+                'code'    => '200',
+                'message' => 'File Extensions Retrieved Successfully',
+                'data'    => $extensions
+            ], 200);
+        } catch (Exception $e) {
+            Log::error('Error getting file extensions', ['error' => $e->getMessage()]);
+            return response()->json([
+                'status'  => false,
+                'code'    => '500',
+                'message' => 'Internal Server Error',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Download a file from the uploads directory
+     */
+    public function downloadFile($filename)
+    {
+        try {
+            $user = Auth::user();
+            if (! $user) {
+                return response()->json([
+                    'status'  => false,
+                    'code'    => '401',
+                    'message' => 'User Not Authenticated',
+                ], 401);
+            }
+
+            $filePath = public_path('uploads/dynamic_post_store/' . $filename);
+
+            if (!file_exists($filePath)) {
+                return response()->json([
+                    'status'  => false,
+                    'code'    => '404',
+                    'message' => 'File Not Found',
+                ], 404);
+            }
+
+            return response()->download($filePath, $filename);
+        } catch (Exception $e) {
+            Log::error('Error downloading file', ['error' => $e->getMessage()]);
+            return response()->json([
+                'status'  => false,
+                'code'    => '500',
+                'message' => 'Internal Server Error',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }
