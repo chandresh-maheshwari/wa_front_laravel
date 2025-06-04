@@ -182,7 +182,7 @@ class PostStoreController extends Controller
             foreach ($requestData as $reqDatakey => $value) {
                 try {
                     if (is_array($value) || $this->isJson($value)) {
-                        // Yeh block ab har section ke liye chalega, chahe naam kuch bhi ho
+                        // for the any section name used 
                         $sectionData = is_array($value) ? $value : json_decode($value, true);
                         $sectionTransformed = [];
                         foreach ($sectionData as $sectionKey => $sectionValue) {
@@ -224,7 +224,7 @@ class PostStoreController extends Controller
                                             mkdir($destinationPath, 0777, true);
                                         }
                                         file_put_contents($destinationPath . '/' . $fileName, $fileData);
-                                        // **YAHAN SIRF FILE NAME SAVE KARO**
+                                        // for the save only file name 
                                         $sectionTransformed[$sectionKey] = $fileName;
                                     } else {
                                         $sectionTransformed[$sectionKey] = null;
